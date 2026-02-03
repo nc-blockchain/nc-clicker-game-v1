@@ -78,3 +78,18 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.increment_pvp_clicks(UUID, INTEGER) TO anon;
+
+-- 3) Referrals: friends list (who joined via your invite link)
+CREATE TABLE IF NOT EXISTS public.referrals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  inviter_ref_code TEXT NOT NULL,
+  invited_name TEXT NOT NULL,
+  invited_wallet TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can read referrals" ON public.referrals;
+CREATE POLICY "Anyone can read referrals" ON public.referrals FOR SELECT TO anon USING (true);
+DROP POLICY IF EXISTS "Anyone can insert referrals" ON public.referrals;
+CREATE POLICY "Anyone can insert referrals" ON public.referrals FOR INSERT TO anon WITH CHECK (true);
+CREATE INDEX IF NOT EXISTS idx_referrals_inviter ON public.referrals (inviter_ref_code);

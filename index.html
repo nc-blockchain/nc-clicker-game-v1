@@ -53,6 +53,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     * { -webkit-tap-highlight-color: transparent; }
+    /* Bottom nav: hide scrollbar but keep scroll on small devices */
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
     .pixel-border { border: 3px solid #333; image-rendering: pixelated; }
     .neon-text-cyan { color: #00fff7; text-shadow: 0 0 10px #00fff7; }
     .neon-text-pink { color: #ff00aa; text-shadow: 0 0 10px #ff00aa; }
@@ -205,7 +208,27 @@
     </div>
   </div>
 
-  <!-- PVP Onboarding: name + wallet + 1 $CARD (when joining from invite) -->
+  <!-- First-time only: set name when you first get the app (no name in storage) -->
+  <div id="welcome-name-modal" class="hidden" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+    <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-6 max-w-sm w-full text-center">
+      <p class="text-neon-cyan text-[10px] font-bold mb-3">WELCOME TO 1N TOKEN CLICKER</p>
+      <p class="text-gray-300 text-[9px] mb-4">Enter your display name once. You can change it later in Friends → Profile.</p>
+      <input type="text" id="welcome-name-input" placeholder="Your name" maxlength="20" class="w-full bg-black border-2 border-gray-600 rounded px-3 py-2 text-white text-[10px] mb-3" />
+      <button type="button" id="welcome-name-save" class="py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10">SAVE</button>
+    </div>
+  </div>
+  <!-- Profile: change name (opened from Friends) -->
+  <div id="profile-name-modal" class="hidden" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+    <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-6 max-w-sm w-full text-center">
+      <p class="text-neon-cyan text-[10px] font-bold mb-3">CHANGE DISPLAY NAME</p>
+      <input type="text" id="profile-name-input" placeholder="Your name" maxlength="20" class="w-full bg-black border-2 border-gray-600 rounded px-3 py-2 text-white text-[10px] mb-3" />
+      <div class="flex gap-2 justify-center">
+        <button type="button" id="profile-name-save" class="py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10">SAVE</button>
+        <button type="button" id="profile-name-cancel" class="py-2 px-4 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">CANCEL</button>
+      </div>
+    </div>
+  </div>
+  <!-- PVP Onboarding: name + wallet + 1 $CARD (only when creating/joining a room without name) -->
   <div id="pvp-onboarding-modal" class="hidden" style="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-pink rounded-lg p-6 max-w-sm w-full text-center">
       <p class="text-neon-pink text-[10px] font-bold mb-3">JOIN PVP DUEL</p>
@@ -371,7 +394,19 @@
     <!-- Friends -->
     <section id="page-friends" class="page p-4">
       <h2 class="text-neon-pink mb-4 border-b-2 border-gray-700 pb-2">FRIENDS</h2>
-      <p class="text-gray-400 mb-4">Leaderboard & invite friends.</p>
+      <p class="text-gray-400 mb-4">Leaderboard & invite friends. Names stay persistent when you connect your wallet.</p>
+      <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded mb-4">
+        <div class="text-[10px] text-gray-500 mb-2">PROFILE</div>
+        <p class="text-[10px] text-gray-300 mb-2">Your name: <span id="profile-display-name" class="neon-text-cyan">—</span></p>
+        <button type="button" id="profile-change-name-btn" class="py-1 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">CHANGE NAME</button>
+      </div>
+      <div class="bg-pixel-panel border-2 border-neon-pink/30 p-3 rounded mb-4">
+        <div class="text-[10px] text-gray-500 mb-2">FRIENDS (INVITED)</div>
+        <p class="text-gray-500 text-[9px] mb-1">People who used your invite link appear here.</p>
+        <ol id="friends-invited-list" class="space-y-1 text-[10px] min-h-[24px]">
+          <li class="text-gray-500">Loading…</li>
+        </ol>
+      </div>
       <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded mb-4">
         <div class="text-[10px] text-gray-500 mb-2">TOP CLICKERS (by tokens)</div>
         <ol id="leaderboard-list" class="space-y-1 text-[10px]">
@@ -394,11 +429,20 @@
     <!-- Wallet -->
     <section id="page-wallet" class="page p-4">
       <h2 class="text-neon-yellow mb-4 border-b-2 border-gray-700 pb-2">WALLET</h2>
-      <!-- In-game balance -->
-      <div class="bg-pixel-panel border-2 border-gray-700 p-4 rounded mb-4">
-        <div class="text-gray-500 text-[10px]">IN-GAME BALANCE</div>
-        <div id="wallet-balance" class="text-2xl neon-text-cyan">0</div>
-        <div class="text-gray-500 text-[10px]">tokens</div>
+      <!-- Balance summary: in-game + wallet $CARD -->
+      <div class="bg-pixel-panel border-2 border-neon-cyan/30 p-4 rounded mb-4">
+        <div class="grid grid-cols-2 gap-3 text-center">
+          <div>
+            <div class="text-gray-500 text-[10px]">IN-GAME</div>
+            <div id="wallet-balance" class="text-xl neon-text-cyan">0</div>
+            <div class="text-gray-500 text-[9px]">tokens</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-[10px]">WALLET $CARD</div>
+            <div id="wallet-card-balance-top" class="text-xl neon-text-cyan">—</div>
+            <div class="text-gray-500 text-[9px]">on-chain</div>
+          </div>
+        </div>
       </div>
       <!-- TON Wallet + $CARD -->
       <div class="bg-pixel-panel border-2 border-gray-700 p-4 rounded mb-4">
@@ -523,15 +567,15 @@
     </section>
   </main>
 
-  <!-- Bottom Nav -->
-  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-black/95 border-t-2 border-pixel-border max-w-lg mx-auto">
-    <div class="flex justify-around py-2">
-      <a href="#home" class="nav-link px-2 py-1 rounded" data-page="home">HOME</a>
-      <a href="#boosts" class="nav-link px-2 py-1 rounded" data-page="boosts">BOOSTS</a>
-      <a href="#bounties" class="nav-link px-2 py-1 rounded" data-page="bounties">BOUNTIES</a>
-      <a href="#friends" class="nav-link px-2 py-1 rounded" data-page="friends">FRIENDS</a>
-      <a href="#wallet" class="nav-link px-2 py-1 rounded" data-page="wallet">WALLET</a>
-      <a href="#multiplayer" class="nav-link px-2 py-1 rounded" data-page="multiplayer">PVP</a>
+  <!-- Bottom Nav: scrolls horizontally on small screens -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-black/95 border-t-2 border-pixel-border max-w-lg mx-auto overflow-hidden">
+    <div class="flex flex-nowrap justify-start gap-1 py-2 px-2 overflow-x-auto overflow-y-hidden scroll-smooth scrollbar-hide min-h-[44px] items-center" style="-webkit-overflow-scrolling: touch;">
+      <a href="#home" class="nav-link flex-shrink-0 px-3 py-2 rounded text-[10px] whitespace-nowrap" data-page="home">HOME</a>
+      <a href="#boosts" class="nav-link flex-shrink-0 px-3 py-2 rounded text-[10px] whitespace-nowrap" data-page="boosts">BOOSTS</a>
+      <a href="#bounties" class="nav-link flex-shrink-0 px-3 py-2 rounded text-[10px] whitespace-nowrap" data-page="bounties">BOUNTIES</a>
+      <a href="#friends" class="nav-link flex-shrink-0 px-3 py-2 rounded text-[10px] whitespace-nowrap" data-page="friends">FRIENDS</a>
+      <a href="#wallet" class="nav-link flex-shrink-0 px-3 py-2 rounded text-[10px] whitespace-nowrap" data-page="wallet">WALLET</a>
+      <a href="#multiplayer" class="nav-link flex-shrink-0 px-3 py-2 rounded text-[10px] whitespace-nowrap" data-page="multiplayer">PVP</a>
     </div>
   </nav>
   </div>
@@ -711,6 +755,8 @@
         ).join('\n');
       }
       if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
+      if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+      if (typeof updateProfileDisplayName === 'function') updateProfileDisplayName();
       let refCode = localStorage.getItem('tokenClicker_refCode');
       if (!refCode) {
         refCode = 'REF' + Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -968,7 +1014,23 @@
           cardBalanceEl.textContent = addr ? '…' : '—';
         }
       }
-      if (addr) fetchCardBalanceFromBackend();
+      var cardTop = document.getElementById('wallet-card-balance-top');
+      if (cardTop) {
+        if (TW.cardBalance != null && TW.cardBalance !== undefined) {
+          cardTop.textContent = String(TW.cardBalance);
+        } else {
+          cardTop.textContent = addr ? '…' : '—';
+        }
+      }
+      if (addr) {
+        fetchCardBalanceFromBackend();
+        persistNameToLeaderboard();
+        if (!getPlayerName() && window.supabaseClient) {
+          window.supabaseClient.from('leaderboard').select('name').eq('wallet_address', addr).maybeSingle().then(function(r) {
+            if (r.data && r.data.name) localStorage.setItem('tokenClicker_playerName', r.data.name.trim().slice(0, 20));
+          });
+        }
+      }
     }
     const tonConnectBtn = document.getElementById('ton-connect-btn');
     const tonDisconnectBtn = document.getElementById('ton-disconnect-btn');
@@ -1171,7 +1233,58 @@
     }
     function setPlayerName(name) {
       name = (name || '').trim().slice(0, 20);
-      if (name) localStorage.setItem('tokenClicker_playerName', name);
+      if (name) {
+        localStorage.setItem('tokenClicker_playerName', name);
+        registerReferralIfNeeded(name);
+        persistNameToLeaderboard();
+      }
+    }
+    function registerReferralIfNeeded(invitedName) {
+      var inviterCode = localStorage.getItem('tokenClicker_invitedBy');
+      if (!inviterCode || !invitedName) return;
+      var supabase = window.supabaseClient;
+      if (!supabase) { localStorage.removeItem('tokenClicker_invitedBy'); return; }
+      var wallet = getPvpPlayerId();
+      if (wallet && wallet.indexOf('guest_') === 0) wallet = null;
+      supabase.from('referrals').insert({ inviter_ref_code: inviterCode, invited_name: invitedName, invited_wallet: wallet }).then(function() {
+        localStorage.removeItem('tokenClicker_invitedBy');
+        if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+      }).catch(function() { localStorage.removeItem('tokenClicker_invitedBy'); });
+    }
+    function loadFriendsInvited() {
+      var supabase = window.supabaseClient;
+      var list = document.getElementById('friends-invited-list');
+      if (!supabase || !list) return;
+      var refCode = localStorage.getItem('tokenClicker_refCode') || '';
+      if (!refCode) { list.innerHTML = '<li class="text-gray-500">Your code not set yet.</li>'; return; }
+      supabase.from('referrals').select('invited_name, invited_wallet, created_at').eq('inviter_ref_code', refCode).order('created_at', { ascending: false }).limit(50)
+        .then(function(r) {
+          if (r.error || !r.data || r.data.length === 0) {
+            list.innerHTML = '<li class="text-gray-500">No one has used your invite link yet.</li>';
+            return;
+          }
+          list.innerHTML = r.data.map(function(e, i) {
+            var name = e.invited_name || 'Player';
+            var wallet = e.invited_wallet ? (e.invited_wallet.slice(0, 6) + '…') : '';
+            return (i + 1) + '. ' + name + (wallet ? ' (' + wallet + ')' : '');
+          }).join('\n');
+        })
+        .catch(function() { list.innerHTML = '<li class="text-gray-500">Could not load.</li>'; });
+    }
+    function persistNameToLeaderboard() {
+      var name = getPlayerName();
+      var wallet = getPvpPlayerId();
+      if (!name || !wallet || wallet.indexOf('guest_') === 0) return;
+      var supabase = window.supabaseClient;
+      if (!supabase) return;
+      supabase.from('leaderboard').select('id').eq('wallet_address', wallet).maybeSingle().then(function(r) {
+        var row = r.data;
+        if (row) {
+          supabase.from('leaderboard').update({ name: name, updated_at: new Date().toISOString() }).eq('id', row.id).then(function() {});
+        } else {
+          supabase.from('leaderboard').insert({ name: name, wallet_address: wallet, tokens: 0, ref_code: localStorage.getItem('tokenClicker_refCode') || null }).then(function() {});
+        }
+      });
     }
     function hasWalletAndStake() {
       if (!window.TonWallet || !window.TonWallet.getAddress()) return false;
@@ -1225,6 +1338,35 @@
       hidePvpOnboarding();
       if (window._pvpOnboardingRoomId && typeof window.loadPvpRooms === 'function') window.loadPvpRooms();
     });
+    function hideWelcomeNameModal() {
+      var m = document.getElementById('welcome-name-modal');
+      if (m) { m.classList.add('hidden'); m.style.display = 'none'; }
+    }
+    function hideProfileNameModal() {
+      var m = document.getElementById('profile-name-modal');
+      if (m) { m.classList.add('hidden'); m.style.display = 'none'; }
+    }
+    document.getElementById('welcome-name-save') && document.getElementById('welcome-name-save').addEventListener('click', function() {
+      var input = document.getElementById('welcome-name-input');
+      var name = input && input.value.trim().slice(0, 20);
+      if (name) { setPlayerName(name); hideWelcomeNameModal(); updateUI(); }
+    });
+    document.getElementById('profile-change-name-btn') && document.getElementById('profile-change-name-btn').addEventListener('click', function() {
+      var modal = document.getElementById('profile-name-modal');
+      var input = document.getElementById('profile-name-input');
+      if (input) input.value = getPlayerName() || '';
+      if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
+    });
+    document.getElementById('profile-name-save') && document.getElementById('profile-name-save').addEventListener('click', function() {
+      var input = document.getElementById('profile-name-input');
+      var name = input && input.value.trim().slice(0, 20);
+      if (name) { setPlayerName(name); hideProfileNameModal(); updateProfileDisplayName(); updateUI(); }
+    });
+    document.getElementById('profile-name-cancel') && document.getElementById('profile-name-cancel').addEventListener('click', hideProfileNameModal);
+    function updateProfileDisplayName() {
+      var el = document.getElementById('profile-display-name');
+      if (el) el.textContent = getPlayerName() || '—';
+    }
 
     // --- PVP: rooms from Supabase ---
     function getPvpPlayerId() {
@@ -1642,6 +1784,10 @@
         a.classList.toggle('text-neon-cyan', a.getAttribute('data-page') === pageId);
         a.classList.toggle('text-gray-400', a.getAttribute('data-page') !== pageId);
       });
+      if (pageId === 'friends') {
+        if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+        if (typeof updateProfileDisplayName === 'function') updateProfileDisplayName();
+      }
       if (pageId === 'multiplayer') {
         if (typeof window.loadPvpRooms === 'function') window.loadPvpRooms();
         var roomParam = new URLSearchParams(window.location.search).get('room');
@@ -1693,14 +1839,20 @@
       updateBountyProgress();
       save();
       var params = new URLSearchParams(window.location.search);
+      var refParam = params.get('ref');
+      if (refParam) localStorage.setItem('tokenClicker_invitedBy', refParam);
       if (params.get('room')) {
         window.location.hash = 'multiplayer';
         window._pvpInvitedRoomId = params.get('room');
-        if (!getPlayerName()) showPvpOnboarding('name', params.get('room'));
         if (typeof window.loadPvpRooms === 'function') setTimeout(window.loadPvpRooms, 300);
       }
       showPage(getPageFromHash());
       updateUI();
+      if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+      if (!getPlayerName()) {
+        var welcomeModal = document.getElementById('welcome-name-modal');
+        if (welcomeModal) { welcomeModal.classList.remove('hidden'); welcomeModal.style.display = 'flex'; }
+      }
     });
   </script>
 </body>
