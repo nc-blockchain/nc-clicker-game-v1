@@ -385,6 +385,16 @@
         <p class="text-[10px] text-gray-300 mb-2">Your name: <span id="profile-display-name" class="neon-text-cyan">—</span></p>
         <button type="button" id="profile-change-name-btn" class="py-1 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">CHANGE NAME</button>
       </div>
+      <div class="bg-pixel-panel border-2 border-neon-green/30 p-3 rounded mb-4">
+        <div class="text-[10px] text-gray-500 mb-2">ADD FRIEND</div>
+        <p class="text-gray-500 text-[9px] mb-2">Paste a friend's invite link or their referral code to add them.</p>
+        <div class="flex gap-2 flex-wrap items-center">
+          <input type="text" id="friend-invite-input" placeholder="Paste link or code (e.g. REFABC123)" maxlength="256" class="flex-1 min-w-0 bg-black border-2 border-gray-600 rounded px-3 py-2 text-white text-[10px] placeholder-gray-500" />
+          <button type="button" id="friend-invite-add-btn" class="flex-shrink-0 py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10 whitespace-nowrap">ADD FRIEND</button>
+        </div>
+        <p id="friend-invite-feedback" class="text-[10px] mt-2 min-h-[14px] hidden"></p>
+        <p id="friend-invite-current" class="text-gray-500 text-[9px] mt-1 min-h-[12px]"></p>
+      </div>
       <div class="bg-pixel-panel border-2 border-neon-pink/30 p-3 rounded mb-4">
         <div class="text-[10px] text-gray-500 mb-2">FRIENDS (INVITED)</div>
         <p class="text-gray-500 text-[9px] mb-1">People who used your invite link appear here.</p>
@@ -914,6 +924,51 @@
             if (inviteFeedback) { inviteFeedback.classList.remove('hidden'); setTimeout(() => inviteFeedback.classList.add('hidden'), 3000); }
           }).catch(function() { fallbackCopy(url, inviteFeedback); });
         } else { fallbackCopy(url, inviteFeedback); }
+      });
+    }
+
+    // Friends: enter invite link or code to add friend
+    function parseInviteCodeFromInput(value) {
+      var s = (value || '').trim();
+      if (!s) return null;
+      try {
+        if (/^[A-Za-z0-9_-]+$/.test(s)) return s;
+        var url = s;
+        if (!/^https?:\/\//i.test(url)) url = 'https://dummy.example/?' + (s.indexOf('ref=') !== -1 ? s : 'ref=' + encodeURIComponent(s));
+        var parsed = new URL(url);
+        var ref = parsed.searchParams.get('ref');
+        if (ref) return ref.trim();
+        var match = s.match(/[?&]ref=([^&\s#]+)/i);
+        return match ? decodeURIComponent(match[1].replace(/\+/g, ' ')).trim() : null;
+      } catch (e) { return null; }
+    }
+    function updateFriendInviteCurrentDisplay() {
+      var el = document.getElementById('friend-invite-current');
+      if (!el) return;
+      var code = localStorage.getItem('tokenClicker_invitedBy');
+      if (code) el.textContent = "You've added a friend (code: " + code + "). Your next name/wallet action will link you.";
+      else el.textContent = '';
+    }
+    var friendInviteAddBtn = document.getElementById('friend-invite-add-btn');
+    var friendInviteInput = document.getElementById('friend-invite-input');
+    var friendInviteFeedback = document.getElementById('friend-invite-feedback');
+    if (friendInviteAddBtn && friendInviteFeedback) {
+      friendInviteAddBtn.addEventListener('click', function() {
+        var raw = friendInviteInput ? friendInviteInput.value : '';
+        var code = parseInviteCodeFromInput(raw);
+        friendInviteFeedback.classList.remove('hidden');
+        friendInviteFeedback.classList.remove('text-neon-green', 'text-neon-pink');
+        if (!code) {
+          friendInviteFeedback.textContent = "Couldn't find a code. Paste a full invite link or a code like REFABC123.";
+          friendInviteFeedback.classList.add('text-neon-pink');
+          return;
+        }
+        localStorage.setItem('tokenClicker_invitedBy', code);
+        if (friendInviteInput) friendInviteInput.value = '';
+        friendInviteFeedback.textContent = "Friend added! You're linked to code " + code + ".";
+        friendInviteFeedback.classList.add('text-neon-green');
+        updateFriendInviteCurrentDisplay();
+        setTimeout(function() { friendInviteFeedback.classList.add('hidden'); }, 4000);
       });
     }
 
@@ -1819,6 +1874,7 @@
       if (pageId === 'friends') {
         if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
         if (typeof updateProfileDisplayName === 'function') updateProfileDisplayName();
+        if (typeof updateFriendInviteCurrentDisplay === 'function') updateFriendInviteCurrentDisplay();
       }
       if (pageId === 'multiplayer') {
         if (typeof window.loadPvpRooms === 'function') window.loadPvpRooms();
