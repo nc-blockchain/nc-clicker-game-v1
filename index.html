@@ -506,6 +506,9 @@
           </div>
         </div>
         <p id="pvp-duel-waiting" class="text-center text-gray-500 text-[9px] mt-2 hidden">Waiting for opponent… Share the room link.</p>
+        <div class="mt-3 text-center">
+          <button type="button" id="pvp-duel-end-game-btn" class="py-2 px-4 border-2 border-neon-pink text-neon-pink rounded text-[9px] hover:bg-neon-pink/10">END GAME</button>
+        </div>
       </div>
 
       <!-- Duel result: winner / loser + rematch -->
@@ -1384,6 +1387,17 @@
       if (!window.TonWallet || !window.TonWallet.getAddress()) { showPvpOnboarding('wallet', roomId); return; }
       if (!hasWalletAndStake()) { showPvpOnboarding('card', roomId); return; }
       var me = getPvpPlayerId();
+      supabase.from('rooms').select('status, player1_wallet, player2_wallet').eq('id', roomId).single().then(function(check) {
+        if (check.error || !check.data) { if (errEl) { errEl.textContent = 'Room not found.'; errEl.classList.remove('hidden'); } return; }
+        var room = check.data;
+        if (room.status !== 'open') { if (errEl) { errEl.textContent = 'Room is full or game already started. No other players can enter.'; errEl.classList.remove('hidden'); } return; }
+        if (room.player2_wallet) { if (errEl) { errEl.textContent = 'Room is full. Only 2 players per game.'; errEl.classList.remove('hidden'); } return; }
+        if (room.player1_wallet === me) { if (errEl) { errEl.textContent = 'You already created this room. Wait for opponent or close it.'; errEl.classList.remove('hidden'); } return; }
+        doJoinPvpRoom(roomId, me, name, errEl);
+      });
+    }
+    function doJoinPvpRoom(roomId, me, name, errEl) {
+      var supabase = window.supabaseClient;
       var now = new Date();
       var endsAt = new Date(now.getTime() + PVP_GAME_DURATION_SEC * 1000);
       supabase.from('rooms').update({
@@ -1517,6 +1531,12 @@
         });
       });
     }
+    function endDuelEarly() {
+      if (!pvpDuelRoomId) return;
+      if (pvpDuelTimerId) { clearInterval(pvpDuelTimerId); pvpDuelTimerId = null; }
+      if (pvpDuelPollId) { clearInterval(pvpDuelPollId); pvpDuelPollId = null; }
+      endDuelGame();
+    }
     function showDuelResult(room) {
       if (pvpDuelRealtimeUnsub) { pvpDuelRealtimeUnsub(); pvpDuelRealtimeUnsub = null; }
       document.getElementById('pvp-duel-view').classList.add('hidden');
@@ -1562,6 +1582,9 @@
       supabase.rpc('increment_pvp_clicks', { room_id: pvpDuelRoomId, player_num: pvpDuelMyRole }).then(function(r) {
         if (r.data && r.data.clicks != null) document.getElementById('pvp-duel-you-clicks').textContent = String(r.data.clicks);
       });
+    });
+    document.getElementById('pvp-duel-end-game-btn') && document.getElementById('pvp-duel-end-game-btn').addEventListener('click', function() {
+      endDuelEarly();
     });
     document.getElementById('pvp-duel-rematch-btn') && document.getElementById('pvp-duel-rematch-btn').addEventListener('click', function() {
       showDuelLobby();
