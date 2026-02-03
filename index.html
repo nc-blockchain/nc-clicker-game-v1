@@ -228,26 +228,6 @@
       </div>
     </div>
   </div>
-  <!-- PVP Onboarding: name + wallet + 1 $CARD (only when creating/joining a room without name) -->
-  <div id="pvp-onboarding-modal" class="hidden" style="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;padding:20px;">
-    <div class="bg-pixel-panel border-2 border-neon-pink rounded-lg p-6 max-w-sm w-full text-center">
-      <p class="text-neon-pink text-[10px] font-bold mb-3">JOIN PVP DUEL</p>
-      <p id="pvp-onboarding-msg" class="text-gray-300 text-[9px] mb-4">Enter your name to play. You need a connected wallet and 1 $CARD to duel.</p>
-      <input type="text" id="pvp-onboarding-name" placeholder="Your name" maxlength="20" class="w-full bg-black border-2 border-gray-600 rounded px-3 py-2 text-white text-[10px] mb-3" />
-      <div id="pvp-onboarding-step-connect" class="hidden mb-3">
-        <p class="text-neon-yellow text-[9px] mb-2">Connect your TON wallet (Wallet tab) and have at least 1 $CARD to play.</p>
-        <a href="#wallet" class="inline-block py-2 px-4 border-2 border-neon-cyan text-neon-cyan rounded text-[10px]">GO TO WALLET</a>
-      </div>
-      <div id="pvp-onboarding-step-card" class="hidden mb-3">
-        <p class="text-neon-yellow text-[9px]">You need at least <strong>1 $CARD</strong> in your wallet to enter a duel. Loser loses their stake.</p>
-      </div>
-      <div class="flex gap-2 justify-center flex-wrap">
-        <button type="button" id="pvp-onboarding-save" class="py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10">SAVE & CONTINUE</button>
-        <button type="button" id="pvp-onboarding-skip" class="py-2 px-4 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">SKIP (lobby only)</button>
-      </div>
-    </div>
-  </div>
-
   <div id="app" style="display:block;">
   <!-- Top Bar: 1N BLOCKCHAIN logo + tokens + PVP/bell -->
   <header class="sticky top-0 z-50 bg-black/90 border-b-2 border-pixel-border backdrop-blur-sm">
@@ -1293,54 +1273,26 @@
       return Number(bal) >= PVP_STAKE;
     }
     function showPvpOnboarding(reason, roomId) {
-      window._pvpOnboardingRoomId = roomId || null;
-      var modal = document.getElementById('pvp-onboarding-modal');
-      var nameInput = document.getElementById('pvp-onboarding-name');
-      var stepConnect = document.getElementById('pvp-onboarding-step-connect');
-      var stepCard = document.getElementById('pvp-onboarding-step-card');
-      if (!modal) return;
-      stepConnect.classList.add('hidden');
-      stepCard.classList.add('hidden');
-      if (nameInput) nameInput.value = getPlayerName() || '';
-      if (reason === 'name') {
-        document.getElementById('pvp-onboarding-msg').textContent = 'Enter your name to play PVP. Then connect wallet and have 1 $CARD to duel.';
-      } else if (reason === 'wallet') {
-        if (nameInput) nameInput.value = getPlayerName() || '';
-        document.getElementById('pvp-onboarding-msg').textContent = 'Connect your TON wallet to play.';
-        stepConnect.classList.remove('hidden');
-      } else if (reason === 'card') {
-        document.getElementById('pvp-onboarding-msg').textContent = 'You need at least 1 $CARD in your wallet to enter a duel. Loser loses their stake.';
-        stepCard.classList.remove('hidden');
-      }
-      modal.classList.remove('hidden');
-      modal.style.display = 'flex';
-    }
-    function hidePvpOnboarding() {
-      var modal = document.getElementById('pvp-onboarding-modal');
-      if (modal) {
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
-      }
-      window._pvpOnboardingRoomId = null;
-    }
-    document.getElementById('pvp-onboarding-save') && document.getElementById('pvp-onboarding-save').addEventListener('click', function() {
-      var nameInput = document.getElementById('pvp-onboarding-name');
-      var name = nameInput && nameInput.value.trim().slice(0, 20);
-      if (name) setPlayerName(name);
-      var roomId = window._pvpOnboardingRoomId || window._pvpInvitedRoomId || (new URLSearchParams(window.location.search).get('room'));
-      hidePvpOnboarding();
       window.location.hash = 'multiplayer';
-      showPage('multiplayer');
-      if (roomId && typeof joinPvpRoom === 'function') {
-        joinPvpRoom(roomId);
-      } else if (typeof window.loadPvpRooms === 'function') {
-        window.loadPvpRooms();
+      if (typeof showPage === 'function') showPage('multiplayer');
+      var errEl = document.getElementById('pvp-error');
+      if (!errEl) return;
+      errEl.classList.remove('hidden');
+      if (reason === 'name') {
+        if (!getPlayerName()) setPlayerName('Player');
+        errEl.textContent = '';
+        errEl.classList.add('hidden');
+        return;
       }
-    });
-    document.getElementById('pvp-onboarding-skip') && document.getElementById('pvp-onboarding-skip').addEventListener('click', function() {
-      hidePvpOnboarding();
-      if (window._pvpOnboardingRoomId && typeof window.loadPvpRooms === 'function') window.loadPvpRooms();
-    });
+      if (reason === 'wallet') {
+        errEl.textContent = 'Connect your TON wallet (Wallet tab) to play.';
+        return;
+      }
+      if (reason === 'card') {
+        errEl.textContent = 'You need at least 1 $CARD in your wallet to duel. Loser loses their stake.';
+        return;
+      }
+    }
     function hideWelcomeNameModal() {
       var m = document.getElementById('welcome-name-modal');
       if (m) { m.classList.add('hidden'); m.style.display = 'none'; }
@@ -1400,7 +1352,7 @@
       // Auto-close open rooms that no one joined after 1 minute
       var oneMinAgo = new Date(Date.now() - 60 * 1000).toISOString();
       supabase.from('rooms').update({ status: 'finished', updated_at: new Date().toISOString() }).eq('status', 'open').lt('created_at', oneMinAgo).then(function() {});
-      supabase.from('rooms').select('id, status, player1_wallet, player2_wallet, player1_name, player2_name, player1_clicks, player2_clicks, game_started_at, game_ends_at, winner_wallet, created_at').order('created_at', { ascending: false }).limit(20)
+      supabase.from('rooms').select('id, status, player1_wallet, player2_wallet, player1_name, player2_name, player1_clicks, player2_clicks, game_started_at, game_ends_at, winner_wallet, created_at').in('status', ['open', 'in_progress']).order('created_at', { ascending: false }).limit(20)
         .then(function(r) {
           if (status) status.textContent = '';
           if (r.error) {
@@ -1409,8 +1361,11 @@
             list.innerHTML = '';
             return;
           }
-          var rooms = r.data || [];
-          var order = { open: 0, in_progress: 1, finished: 2 };
+          var rooms = (r.data || []).filter(function(room) {
+            var s = (room.status || '').toLowerCase();
+            return s === 'open' || s === 'in_progress';
+          });
+          var order = { open: 0, in_progress: 1 };
           rooms.sort(function(a, b) {
             var oa = order[a.status] !== undefined ? order[a.status] : 3;
             var ob = order[b.status] !== undefined ? order[b.status] : 3;
@@ -1425,8 +1380,9 @@
             var isOpen = room.status === 'open' && count < 2;
             var isMine = p1 === me || p2 === me;
             var shortId = room.id.slice(0, 8);
-            var joinBtn = isOpen && p1 !== me ? '<button type="button" class="pvp-join-btn mt-2 py-1 px-2 border border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10" data-room-id="' + room.id + '">JOIN</button>' : '';
+            var joinBtn = isOpen && p1 !== me ? '<button type="button" class="pvp-join-btn mt-2 py-1 px-2 border border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10" data-room-id="' + room.id + '">JOIN GAME</button>' : '';
             var enterDuelBtn = room.status === 'in_progress' && isMine ? '<button type="button" class="pvp-enter-duel-btn mt-2 py-1 px-2 border border-neon-green text-neon-green rounded text-[9px] hover:bg-neon-green/10" data-room-id="' + room.id + '">ENTER DUEL</button>' : '';
+            var endGameBtn = room.status === 'in_progress' && isMine ? '<button type="button" class="pvp-end-game-btn flex-shrink-0 py-2 px-3 border-2 border-neon-pink text-neon-pink rounded text-[10px] font-bold hover:bg-neon-pink/10 min-h-[36px]" data-room-id="' + room.id + '">END GAME</button>' : '';
             var isCreator = p1 === me;
             var closeBtn = room.status === 'open' && isCreator ? '<button type="button" class="pvp-close-room-btn flex-shrink-0 py-2 px-3 border-2 border-neon-pink text-neon-pink rounded text-[10px] font-bold hover:bg-neon-pink/10 min-h-[36px]" data-room-id="' + room.id + '">CLOSE ROOM</button>' : '';
             var base = (window.TON_CONFIG && window.TON_CONFIG.gameBaseUrl ? window.TON_CONFIG.gameBaseUrl : (window.location.origin + window.location.pathname)).replace(/\/?$/, '');
@@ -1435,7 +1391,7 @@
             return '<div class="pvp-room-card bg-pixel-panel border-2 border-gray-700 p-3 rounded text-left cursor-pointer hover:border-gray-500" data-room-id="' + room.id + '" data-room-action="' + cardAction + '">' +
               '<div class="text-[10px] text-neon-pink">Room ' + shortId + (isMine ? ' (you)' : '') + (isCreator && room.status === 'open' ? ' · You created' : '') + '</div>' +
               '<div class="text-gray-500 text-[9px] mt-1">' + count + '/2 · ' + room.status + '</div>' +
-              '<div class="mt-2 flex flex-wrap gap-2 items-center">' + closeBtn + joinBtn + enterDuelBtn +
+              '<div class="mt-2 flex flex-wrap gap-2 items-center">' + closeBtn + endGameBtn + joinBtn + enterDuelBtn +
               '<button type="button" class="pvp-copy-link-btn py-1 px-2 border border-gray-500 text-gray-400 rounded text-[9px] hover:bg-gray-700" data-room-id="' + room.id + '" data-room-url="' + shareLink + '">COPY LINK</button>' +
               '</div></div>';
           }).join('');
@@ -1457,6 +1413,7 @@
             if (target.classList && target.classList.contains('pvp-join-btn')) { ev.preventDefault(); joinPvpRoom(roomId); return; }
             if (target.classList && target.classList.contains('pvp-enter-duel-btn')) { ev.preventDefault(); enterDuel(roomId); return; }
             if (target.classList && target.classList.contains('pvp-close-room-btn')) { ev.preventDefault(); closePvpRoom(roomId); return; }
+            if (target.classList && target.classList.contains('pvp-end-game-btn')) { ev.preventDefault(); endPvpGameFromLobby(roomId); return; }
             if (target.classList && target.classList.contains('pvp-copy-link-btn')) {
               ev.preventDefault();
               var url = target.getAttribute('data-room-url');
@@ -1488,7 +1445,8 @@
       var errEl = document.getElementById('pvp-error');
       if (!supabase) { if (errEl) { errEl.textContent = 'Supabase not configured.'; errEl.classList.remove('hidden'); } return; }
       var name = getPlayerName();
-      if (!name) { showPvpOnboarding('name'); return; }
+      if (!name) setPlayerName('Player');
+      name = getPlayerName();
       if (!window.TonWallet || !window.TonWallet.getAddress()) { showPvpOnboarding('wallet'); return; }
       if (!hasWalletAndStake()) { showPvpOnboarding('card'); return; }
       if (btn) btn.disabled = true;
@@ -1524,12 +1482,54 @@
           if (errEl) { errEl.textContent = e.message || 'Error'; errEl.classList.remove('hidden'); }
         });
     }
+    function endPvpGameFromLobby(roomId) {
+      var supabase = window.supabaseClient;
+      var errEl = document.getElementById('pvp-error');
+      if (!supabase || !roomId) return;
+      var me = getPvpPlayerId();
+      supabase.from('rooms').select('*').eq('id', roomId).single().then(function(r) {
+        if (r.error || !r.data) { if (errEl) { errEl.textContent = 'Room not found.'; errEl.classList.remove('hidden'); } return; }
+        var room = r.data;
+        if (room.status === 'finished') {
+          loadPvpRooms();
+          if (pvpDuelRoomId === roomId) { pvpDuelRoomId = null; pvpDuelMyRole = 0; showDuelLobby(); }
+          return;
+        }
+        var isMine = room.player1_wallet === me || room.player2_wallet === me;
+        if (!isMine) { if (errEl) { errEl.textContent = 'You are not in this game.'; errEl.classList.remove('hidden'); } return; }
+        var c1 = room.player1_clicks || 0, c2 = room.player2_clicks || 0;
+        var winner = c1 > c2 ? room.player1_wallet : (c2 > c1 ? room.player2_wallet : null);
+        supabase.from('rooms').update({ status: 'finished', winner_wallet: winner, updated_at: new Date().toISOString() }).eq('id', roomId)
+          .then(function(up) {
+            if (up.error) { if (errEl) { errEl.textContent = up.error.message || 'Could not end game'; errEl.classList.remove('hidden'); } return; }
+            if (errEl) errEl.classList.add('hidden');
+            room.status = 'finished';
+            room.winner_wallet = winner;
+            if (winner) upsertLeaderboardWin(winner, room.player1_wallet === winner ? room.player1_name : room.player2_name);
+            if (pvpDuelRoomId === roomId) {
+              if (pvpDuelTimerId) { clearInterval(pvpDuelTimerId); pvpDuelTimerId = null; }
+              if (pvpDuelPollId) { clearInterval(pvpDuelPollId); pvpDuelPollId = null; }
+              if (pvpDuelRealtimeUnsub) { pvpDuelRealtimeUnsub(); pvpDuelRealtimeUnsub = null; }
+              pvpDuelRoomId = null;
+              pvpDuelMyRole = 0;
+              showDuelResult(room);
+            } else {
+              loadPvpRooms();
+              var statusEl = document.getElementById('pvp-status');
+              if (statusEl) { statusEl.textContent = 'Game ended.'; statusEl.className = 'text-[9px] text-neon-green mb-2 min-h-[14px]'; setTimeout(function() { statusEl.textContent = ''; statusEl.className = 'text-[9px] text-gray-500 mb-2 min-h-[14px]'; }, 3000); }
+            }
+          });
+      }).catch(function(e) {
+        if (errEl) { errEl.textContent = e.message || 'Error'; errEl.classList.remove('hidden'); }
+      });
+    }
     function joinPvpRoom(roomId) {
       var supabase = window.supabaseClient;
       var errEl = document.getElementById('pvp-error');
       if (!supabase || !roomId) return;
       var name = getPlayerName();
-      if (!name) { showPvpOnboarding('name', roomId); return; }
+      if (!name) setPlayerName('Player');
+      name = getPlayerName();
       if (!window.TonWallet || !window.TonWallet.getAddress()) { showPvpOnboarding('wallet', roomId); return; }
       if (!hasWalletAndStake()) { showPvpOnboarding('card', roomId); return; }
       var me = getPvpPlayerId();
@@ -1853,10 +1853,6 @@
       showPage(getPageFromHash());
       updateUI();
       if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
-      if (!getPlayerName()) {
-        var welcomeModal = document.getElementById('welcome-name-modal');
-        if (welcomeModal) { welcomeModal.classList.remove('hidden'); welcomeModal.style.display = 'flex'; }
-      }
     });
   </script>
 </body>
