@@ -1327,11 +1327,14 @@
       var nameInput = document.getElementById('pvp-onboarding-name');
       var name = nameInput && nameInput.value.trim().slice(0, 20);
       if (name) setPlayerName(name);
+      var roomId = window._pvpOnboardingRoomId || window._pvpInvitedRoomId || (new URLSearchParams(window.location.search).get('room'));
       hidePvpOnboarding();
-      if (window._pvpOnboardingRoomId && typeof window.loadPvpRooms === 'function') window.loadPvpRooms();
-      if (window._pvpInvitedRoomId) {
-        window.location.hash = 'multiplayer';
-        if (typeof window.loadPvpRooms === 'function') window.loadPvpRooms();
+      window.location.hash = 'multiplayer';
+      showPage('multiplayer');
+      if (roomId && typeof joinPvpRoom === 'function') {
+        joinPvpRoom(roomId);
+      } else if (typeof window.loadPvpRooms === 'function') {
+        window.loadPvpRooms();
       }
     });
     document.getElementById('pvp-onboarding-skip') && document.getElementById('pvp-onboarding-skip').addEventListener('click', function() {
