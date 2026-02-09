@@ -6,7 +6,7 @@ A black, 8-bit–style clicker game: click the NFT to earn tokens (10 clicks = 1
 
 ---
 
-**→ Site 404?** Enable GitHub Pages: repo **Settings → Pages** → Source **Deploy from a branch** → Branch **main** → Folder **/ (root)** → **Save**. Wait 2–5 min, then open **https://biggleem.github.io/nc-clicker-game-v1/**.
+**→ Site 404?** Enable GitHub Pages: **Settings → Pages →** Source **Deploy from a branch** → Branch **main** → Folder **/ (root)** → **Save**. See **[ENABLE-PAGES.md](./ENABLE-PAGES.md)**.
 
 ---
 
@@ -18,9 +18,9 @@ See **[RESEARCH.md](./RESEARCH.md)** for:
 - Daily rewards, progression, leaderboards
 - NFT integration in casual games (simplified for average users)
 
-## GitHub Pages
+## GitHub Pages (live URL)
 
-Deploy: **Settings → Pages** → **Deploy from a branch** → **main** → **/ (root)**. Full deploy (frontend + backend): **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+To get **https://biggleem.github.io/nc-clicker-game-v1/** working: **[ENABLE-PAGES.md](./ENABLE-PAGES.md)** (3 steps in Settings → Pages). Use **Deploy from a branch** with branch **main** and folder **/ (root)**. If the Pages workflow keeps getting cancelled, see **[PAGES-WORKFLOW-FIX.md](./PAGES-WORKFLOW-FIX.md)**.
 
 ## Run locally
 

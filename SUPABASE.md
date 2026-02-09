@@ -16,8 +16,6 @@ You’ll get two tables:
 - **`leaderboard`** – for the Friends page (name, tokens, wallet, ref_code).
 - **`rooms`** – for PVP (status, player1/player2, winner).
 
-Then run **`supabase/migrations/002_pvp_duel_columns.sql`** in the SQL Editor to add PVP duel columns (player names, live clicks, game timing, stake) and the `increment_pvp_clicks` function. Optionally enable **Realtime** for `rooms` in Dashboard → Database → Replication so opponent clicks update live (the app also polls as fallback).
-
 They will show up in **Table Editor** and already have RLS enabled with basic policies (public read; anon can insert/update). You can change policies later under **Authentication → Policies** or via SQL.
 
 ---

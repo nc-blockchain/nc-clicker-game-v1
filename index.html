@@ -53,14 +53,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     * { -webkit-tap-highlight-color: transparent; }
+    html, body { -webkit-user-select: none; user-select: none; }
+    input, textarea { -webkit-user-select: text; user-select: text; }
+    ::selection { background: transparent; color: inherit; }
+    ::-moz-selection { background: transparent; color: inherit; }
     /* Bottom nav: hide scrollbar but keep scroll on small devices */
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
-    /* Responsive bottom nav: safe area + compact on small screens */
-    .nav-bottom { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
-    .nav-link { font-size: 0.5rem; padding: 0.35rem 0.5rem; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
-    @media (min-width: 380px) { .nav-link { font-size: 0.5625rem; padding: 0.4rem 0.6rem; } }
-    @media (min-width: 480px) { .nav-link { font-size: 0.625rem; padding: 0.5rem 0.75rem; } }
     .pixel-border { border: 3px solid #333; image-rendering: pixelated; }
     .neon-text-cyan { color: #00fff7; text-shadow: 0 0 10px #00fff7; }
     .neon-text-pink { color: #ff00aa; text-shadow: 0 0 10px #ff00aa; }
@@ -72,6 +71,40 @@
     .nft-clicker:active { transform: scale(0.97); }
     .nft-clicker.cooldown { opacity: 0.7; pointer-events: none; }
     .image-pixel { image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; }
+    /* Bounties: square colored cards + bird card */
+    .bounty-row { position: relative; border-radius: 8px; border: 2px solid; }
+    .bounty-row.bounty-card-green { border-color: #00ff88; background: rgba(0,255,136,0.12); }
+    .bounty-row.bounty-card-yellow { border-color: #ffff00; background: rgba(255,255,0,0.12); }
+    .bounty-row.bounty-card-cyan { border-color: #00fff7; background: rgba(0,255,247,0.12); }
+    .bounty-row.bounty-card-pink { border-color: #ff00aa; background: rgba(255,0,170,0.12); }
+    .bounty-bird-card {
+      flex-shrink: 0;
+      width: 44px; height: 44px; border: 2px solid; border-radius: 6px;
+      overflow: hidden; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.6); box-shadow: 0 0 8px currentColor;
+    }
+    .bounty-bird-card img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+    .bounty-bird-card.bird-green { border-color: #00ff88; color: #00ff88; }
+    .bounty-bird-card.bird-yellow { border-color: #ffff00; color: #ffff00; }
+    .bounty-bird-card.bird-cyan { border-color: #00fff7; color: #00fff7; }
+    .bounty-bird-card.bird-pink { border-color: #ff00aa; color: #ff00aa; }
+    .bounty-collection-card {
+      border: 2px solid; border-radius: 8px;
+      padding: 0.5rem; text-align: center; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .bounty-collection-card .bird-thumb { width: 36px; height: 36px; object-fit: contain; image-rendering: pixelated; margin-bottom: 4px; }
+    .bounty-collection-card .bird-name { font-size: 9px; line-height: 1.2; color: #e5e5e5; }
+    .bounty-collection-card .bird-reward { font-size: 8px; color: currentColor; }
+    .bounty-collection-card .bounty-card-claim { color: inherit; background: transparent; }
+    .bounty-collection-card.bird-green { border-color: #00ff88; color: #00ff88; background: rgba(0,255,136,0.2); }
+    .bounty-collection-card.bird-yellow { border-color: #ffff00; color: #ffff00; background: rgba(255,255,0,0.2); }
+    .bounty-collection-card.bird-cyan { border-color: #00fff7; color: #00fff7; background: rgba(0,255,247,0.2); }
+    .bounty-collection-card.bird-pink { border-color: #ff00aa; color: #ff00aa; background: rgba(255,0,170,0.2); }
+    /* TO CLAIM list: same design as Boosts (gray panels) */
+    #bounties-list.bounty-toclaim-list .bounty-row { border-color: #374151; background: #1a1a1a; }
+    #bounties-list.bounty-toclaim-list .bounty-bird-card { display: none; }
+    .bounty-category { margin-bottom: 1.25rem; }
+    .bounty-category-title { font-size: 11px; font-weight: bold; color: #9ca3af; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
     /* Loading / intro screen */
     .splash-screen {
       position: fixed; inset: 0; z-index: 9999;
@@ -153,32 +186,37 @@
       100% { transform: translateY(-20px) translateX(0) scale(0.5); opacity: 0; }
     }
 
-    /* Click effect: 8-bit feather */
-    .feather-float {
+    /* Click effect: feather with falling physics */
+    .feather-fall {
       position: fixed;
       pointer-events: none;
       z-index: 100;
-      font-size: 14px;
-      opacity: 1;
-      animation: featherFloat 1.2s ease-out forwards;
+      width: 52px;
+      height: auto;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      transform-origin: center center;
+      animation: featherFall 1.4s ease-in forwards;
     }
-    .feather-float .feather-pixel {
-      width: 8px; height: 12px;
-      background: linear-gradient(135deg, #e63946, #ff6b6b);
-      transform: rotate(var(--r, 0deg));
-      border-radius: 1px;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
-    }
-    @keyframes featherFloat {
+    .feather-fall.feather-sway1 { animation: featherFall1 1.4s ease-in forwards; }
+    .feather-fall.feather-sway2 { animation: featherFall2 1.4s ease-in forwards; }
+    .feather-fall.feather-sway3 { animation: featherFall3 1.4s ease-in forwards; }
+    @keyframes featherFall {
       0% { opacity: 1; transform: translateY(0) translateX(0) rotate(0deg) scale(1); }
-      100% { opacity: 0; transform: translateY(-80px) translateX(0) rotate(360deg) scale(0.5); }
+      100% { opacity: 0.6; transform: translateY(120px) translateX(0) rotate(180deg) scale(0.9); }
     }
-    .feather-float.feather-drift-1 { animation: featherFloat1 1.2s ease-out forwards; }
-    .feather-float.feather-drift-2 { animation: featherFloat2 1.2s ease-out forwards; }
-    .feather-float.feather-drift-3 { animation: featherFloat3 1.2s ease-out forwards; }
-    @keyframes featherFloat1 { 0% { opacity: 1; transform: translateY(0) translateX(0) rotate(0deg) scale(1); } 100% { opacity: 0; transform: translateY(-80px) translateX(-25px) rotate(360deg) scale(0.5); } }
-    @keyframes featherFloat2 { 0% { opacity: 1; transform: translateY(0) translateX(0) rotate(0deg) scale(1); } 100% { opacity: 0; transform: translateY(-80px) translateX(25px) rotate(-300deg) scale(0.5); } }
-    @keyframes featherFloat3 { 0% { opacity: 1; transform: translateY(0) translateX(0) rotate(0deg) scale(1); } 100% { opacity: 0; transform: translateY(-90px) translateX(15px) rotate(280deg) scale(0.5); } }
+    @keyframes featherFall1 {
+      0% { opacity: 1; transform: translateY(0) translateX(0) rotate(0deg) scale(1); }
+      100% { opacity: 0.6; transform: translateY(130px) translateX(18px) rotate(220deg) scale(0.9); }
+    }
+    @keyframes featherFall2 {
+      0% { opacity: 1; transform: translateY(0) translateX(0) rotate(0deg) scale(1); }
+      100% { opacity: 0.6; transform: translateY(125px) translateX(-15px) rotate(-160deg) scale(0.9); }
+    }
+    @keyframes featherFall3 {
+      0% { opacity: 1; transform: translateY(0) translateX(0) rotate(0deg) scale(1); }
+      100% { opacity: 0.6; transform: translateY(115px) translateX(8px) rotate(90deg) scale(0.9); }
+    }
 
     /* Click effect: +N token text */
     .tap-value-float {
@@ -217,12 +255,12 @@
   <div id="welcome-name-modal" class="hidden" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-6 max-w-sm w-full text-center">
       <p class="text-neon-cyan text-[10px] font-bold mb-3">WELCOME TO 1N TOKEN CLICKER</p>
-      <p class="text-gray-300 text-[9px] mb-4">Enter your display name once. You can change it later in Friends → Profile.</p>
+      <p class="text-gray-300 text-[9px] mb-4">Enter your display name once. You can change it later in Wallet → Settings.</p>
       <input type="text" id="welcome-name-input" placeholder="Your name" maxlength="20" class="w-full bg-black border-2 border-gray-600 rounded px-3 py-2 text-white text-[10px] mb-3" />
       <button type="button" id="welcome-name-save" class="py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10">SAVE</button>
     </div>
   </div>
-  <!-- Profile: change name (opened from Friends) -->
+  <!-- Profile: change name (opened from Wallet → Settings) -->
   <div id="profile-name-modal" class="hidden" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-6 max-w-sm w-full text-center">
       <p class="text-neon-cyan text-[10px] font-bold mb-3">CHANGE DISPLAY NAME</p>
@@ -233,6 +271,70 @@
       </div>
     </div>
   </div>
+  <!-- Notifications center -->
+  <div id="notifications-modal" class="hidden" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+    <div class="bg-pixel-panel border-2 border-neon-yellow rounded-lg p-4 max-w-sm w-full max-h-[80vh] flex flex-col">
+      <p class="text-neon-yellow text-[10px] font-bold mb-3">NOTIFICATIONS</p>
+      <div class="mb-3">
+        <p class="text-gray-400 text-[9px] mb-1">Browser notifications: <span id="notifications-permission">—</span></p>
+        <button type="button" id="notifications-request-btn" class="py-1 px-2 border-2 border-neon-yellow text-neon-yellow rounded text-[9px] hover:bg-neon-yellow/10">ENABLE</button>
+      </div>
+      <div class="text-gray-500 text-[9px] mb-1">Recent activity</div>
+      <ul id="notifications-list" class="space-y-1 text-[9px] text-gray-300 overflow-y-auto flex-1 min-h-0 max-h-48"></ul>
+      <button type="button" id="notifications-close" class="mt-3 py-2 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">CLOSE</button>
+    </div>
+  </div>
+  <!-- Wallet Settings modal (opened by SETTINGS button in Wallet) -->
+  <div id="wallet-settings-modal" class="hidden" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+    <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-4 max-w-sm w-full max-h-[90vh] overflow-y-auto">
+      <p class="text-neon-cyan text-[10px] font-bold mb-3">SETTINGS</p>
+      <div class="space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-[10px] text-gray-400">Player · Profile name:</span>
+          <span id="wallet-settings-name" class="neon-text-cyan text-[10px]">—</span>
+          <button type="button" id="wallet-settings-btn" class="py-1 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">CHANGE NAME</button>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-[10px] text-gray-400">Game · Feather effects:</span>
+          <label class="inline-flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" id="wallet-setting-feather-effects" class="rounded border-2 border-gray-500 bg-black text-neon-cyan focus:ring-neon-cyan" checked />
+            <span id="wallet-setting-feather-label" class="text-[9px] text-gray-300">On</span>
+          </label>
+        </div>
+      </div>
+      <div class="mt-4 pt-3 border-t border-gray-700">
+        <p class="text-neon-cyan text-[10px] font-bold mb-2">WALLET HELP</p>
+        <div class="p-2 rounded border-2 border-neon-green/50 bg-neon-green/5 mb-2">
+          <p class="text-neon-green text-[9px] font-bold">📱 On phone</p>
+          <p class="text-gray-300 text-[9px] mt-1">Open <a href="https://biggleem.github.io/nc-clicker-game-v1" target="_blank" rel="noopener" class="text-neon-cyan underline">biggleem.github.io/nc-clicker-game-v1</a> in your browser. Tap CONNECT WALLET → Tonkeeper opens → Approve. No desktop needed.</p>
+        </div>
+        <p class="text-gray-400 text-[9px] mb-1">1) Tap CONNECT WALLET on the Wallet tab → 2) Approve in Tonkeeper (green button) → 3) Return here. If it didn’t detect, tap below:</p>
+        <button type="button" id="ton-check-connection-btn" class="w-full mt-2 py-2 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10 font-bold">I APPROVED – CHECK CONNECTION</button>
+        <p class="text-neon-yellow text-[8px] mt-2">On desktop localhost: run the backend or use the <a href="https://biggleem.github.io/nc-clicker-game-v1" target="_blank" rel="noopener" class="underline">live site</a>.</p>
+      </div>
+      <button type="button" id="wallet-settings-modal-close" class="mt-4 w-full py-2 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">CLOSE</button>
+    </div>
+  </div>
+  <!-- PVP Onboarding: name + wallet + 1 $CARD (only when creating/joining a room without name) -->
+  <div id="pvp-onboarding-modal" class="hidden" style="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+    <div class="bg-pixel-panel border-2 border-neon-pink rounded-lg p-6 max-w-sm w-full text-center">
+      <p class="text-neon-pink text-[10px] font-bold mb-3">JOIN PVP DUEL</p>
+      <p id="pvp-onboarding-msg" class="text-gray-300 text-[9px] mb-4">Enter your name to play. You need a connected wallet and 1 $CARD to duel.</p>
+      <input type="text" id="pvp-onboarding-name" placeholder="Your name" maxlength="20" class="w-full bg-black border-2 border-gray-600 rounded px-3 py-2 text-white text-[10px] mb-3" />
+      <div id="pvp-onboarding-step-connect" class="hidden mb-3">
+        <p class="text-neon-yellow text-[9px] mb-2">Connect your TON wallet (Wallet tab) and have at least 1 $CARD to play.</p>
+        <a href="#wallet" class="inline-block py-2 px-4 border-2 border-neon-cyan text-neon-cyan rounded text-[10px]">GO TO WALLET</a>
+      </div>
+      <div id="pvp-onboarding-step-card" class="hidden mb-3">
+        <p class="text-neon-yellow text-[9px]">You need at least <strong>1 $CARD</strong> in your wallet to enter a duel. Loser loses their stake.</p>
+      </div>
+      <div class="flex gap-2 justify-center flex-wrap">
+        <button type="button" id="pvp-onboarding-save" class="py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10">SAVE & CONTINUE</button>
+        <button type="button" id="pvp-onboarding-skip" class="py-2 px-4 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">SKIP (lobby only)</button>
+      </div>
+    </div>
+  </div>
+
   <div id="app" style="display:block;">
   <!-- Top Bar: 1N BLOCKCHAIN logo + tokens + PVP/bell -->
   <header class="sticky top-0 z-50 bg-black/90 border-b-2 border-pixel-border backdrop-blur-sm">
@@ -244,7 +346,7 @@
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <a href="#multiplayer" class="p-2 rounded border-2 border-neon-pink text-neon-pink hover:shadow-neon-sm text-[10px]">PVP</a>
-        <button type="button" aria-label="Notifications" class="p-2 rounded border-2 border-gray-500 text-gray-400 hover:border-neon-yellow hover:text-neon-yellow">🔔</button>
+        <button type="button" id="notifications-btn" aria-label="Notifications" class="p-2 rounded border-2 border-gray-500 text-gray-400 hover:border-neon-yellow hover:text-neon-yellow">🔔</button>
       </div>
     </div>
   </header>
@@ -255,15 +357,15 @@
       <!-- Metric windows above NFT -->
       <div class="grid grid-cols-3 gap-2 mb-4">
         <div class="bg-pixel-panel border-2 border-gray-700 p-2 text-center rounded">
-          <div class="text-gray-500 text-[10px]">CLICKS/SEC</div>
+          <div class="text-gray-500 text-[10px]">TAP/SEC</div>
           <div id="clicks-per-sec" class="neon-text-green">0</div>
         </div>
         <div class="bg-pixel-panel border-2 border-gray-700 p-2 text-center rounded">
-          <div class="text-gray-500 text-[10px]">Total Taps</div>
+          <div class="text-gray-500 text-[10px]">TOTAL TAPS</div>
           <div id="total-clicks" class="neon-text-cyan">0</div>
         </div>
         <div class="bg-pixel-panel border-2 border-gray-700 p-2 text-center rounded">
-          <div class="text-gray-500 text-[10px]">Tap Rate</div>
+          <div class="text-gray-500 text-[10px]">TAP RATE</div>
           <div id="token-rate" class="neon-text-yellow">1 / 10</div>
         </div>
       </div>
@@ -278,9 +380,6 @@
           >
             <img src="assets/cardinal.png" alt="NFT Cardinal" class="w-full h-full object-contain image-pixel" />
           </button>
-          <div class="absolute bottom-1 right-1 bg-black/80 px-2 py-1 rounded border border-gray-600">
-            <span id="click-count-label">0</span> clicks
-          </div>
         </div>
       </div>
       <p class="text-center text-gray-500 mt-4">Every 10 clicks = 1 token</p>
@@ -349,51 +448,117 @@
     <!-- Bounties -->
     <section id="page-bounties" class="page p-4">
       <h2 class="text-neon-green mb-4 border-b-2 border-gray-700 pb-2">BOUNTIES</h2>
-      <p class="text-gray-400 mb-4">Daily rewards, weekly challenges, click milestones.</p>
-      <div class="space-y-3">
-        <div id="bounty-daily" class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
-          <div>
-            <div>Daily login</div>
-            <div class="text-neon-yellow text-[10px]">Claim: 5 tokens</div>
-          </div>
+      <p class="text-gray-400 mb-4">Daily rewards, weekly challenges, click milestones. Collect the bird cards!</p>
+      <div class="flex gap-2 mb-3">
+        <button type="button" id="bounty-tab-toclaim" class="bounty-tab border-2 border-neon-green text-neon-green px-3 py-1.5 rounded text-[10px] hover:bg-neon-green/10 bg-neon-green/10">TO CLAIM</button>
+        <button type="button" id="bounty-tab-claimed" class="bounty-tab border-2 border-gray-500 text-gray-400 px-3 py-1.5 rounded text-[10px] hover:bg-gray-700">MY CLAIMED</button>
+      </div>
+      <div class="space-y-3 hidden" id="bounties-list">
+        <!-- Daily Bounties -->
+        <div class="bounty-category">
+          <div class="bounty-category-title">Daily Bounties</div>
+          <div class="space-y-3">
+        <div id="bounty-daily" class="bounty-row bounty-card-yellow p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="daily" data-bounty-name="Daily login" data-bounty-reward="5">
+          <div><div>Daily login</div><div class="text-neon-yellow text-[10px]">Claim: 5 tokens</div></div>
           <button type="button" id="claim-daily" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="daily" data-reward="5">CLAIM</button>
+          <div class="bounty-bird-card bird-yellow"><img src="assets/cardinal.png" alt="" /></div>
         </div>
-        <div id="bounty-100" class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
-          <div>
-            <div>100 clicks today</div>
-            <div class="text-[10px]">Progress: <span id="bounty-100-progress">0</span>/100 · Reward: 10 tokens</div>
-          </div>
+        <div id="bounty-50today" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="50today" data-bounty-name="50 taps today" data-bounty-reward="5">
+          <div><div>50 taps today</div><div class="text-[10px]">Progress: <span id="bounty-50-progress">0</span>/50 · Reward: 5 tokens</div></div>
+          <button type="button" id="claim-50" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="50today" data-reward="5">CLAIM</button>
+          <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
+        </div>
+        <div id="bounty-100" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="100today" data-bounty-name="100 clicks today" data-bounty-reward="10">
+          <div><div>100 clicks today</div><div class="text-[10px]">Progress: <span id="bounty-100-progress">0</span>/100 · Reward: 10 tokens</div></div>
           <button type="button" id="claim-100" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="100today" data-reward="10">CLAIM</button>
+          <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
         </div>
-        <div id="bounty-weekly" class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
-          <div>
-            <div>Weekly: 500 clicks</div>
-            <div class="text-[10px]">Progress: <span id="bounty-weekly-progress">0</span>/500 · Reward: 50 tokens</div>
-          </div>
+        <div id="bounty-weekly" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="weekly" data-bounty-name="Weekly 500" data-bounty-reward="50">
+          <div><div>Weekly: 500 clicks</div><div class="text-[10px]">Progress: <span id="bounty-weekly-progress">0</span>/500 · Reward: 50 tokens</div></div>
           <button type="button" id="claim-weekly" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="weekly" data-reward="50">CLAIM</button>
+          <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
+        </div>
+          </div>
+        </div>
+        <!-- Graduating Bounties -->
+        <div class="bounty-category">
+          <div class="bounty-category-title">Graduating Bounties</div>
+          <div class="space-y-3">
+        <div id="bounty-500" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="500total" data-bounty-name="500 taps" data-bounty-reward="15">
+          <div><div>500 total taps</div><div class="text-[10px]">Progress: <span id="bounty-500-progress">0</span>/500 · Reward: 15 tokens</div></div>
+          <button type="button" id="claim-500" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="500total" data-reward="15">CLAIM</button>
+          <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
+        </div>
+        <div id="bounty-1000" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="1000total" data-bounty-name="1,000 taps" data-bounty-reward="25">
+          <div><div>1,000 total taps</div><div class="text-[10px]">Progress: <span id="bounty-1000-progress">0</span>/1,000 · Reward: 25 tokens</div></div>
+          <button type="button" id="claim-1000" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="1000total" data-reward="25">CLAIM</button>
+          <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
+        </div>
+        <div id="bounty-2500" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="2500total" data-bounty-name="2,500 taps" data-bounty-reward="50">
+          <div><div>2,500 total taps</div><div class="text-[10px]">Progress: <span id="bounty-2500-progress">0</span>/2,500 · Reward: 50 tokens</div></div>
+          <button type="button" id="claim-2500" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="2500total" data-reward="50">CLAIM</button>
+          <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
+        </div>
+        <div id="bounty-5000" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="5000total" data-bounty-name="5,000 taps" data-bounty-reward="100">
+          <div><div>5,000 total taps</div><div class="text-[10px]">Progress: <span id="bounty-5000-progress">0</span>/5,000 · Reward: 100 tokens</div></div>
+          <button type="button" id="claim-5000" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="5000total" data-reward="100">CLAIM</button>
+          <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
+        </div>
+        <div id="bounty-10000" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="10000total" data-bounty-name="10,000 taps" data-bounty-reward="200">
+          <div><div>10,000 total taps</div><div class="text-[10px]">Progress: <span id="bounty-10000-progress">0</span>/10,000 · Reward: 200 tokens</div></div>
+          <button type="button" id="claim-10000" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="10000total" data-reward="200">CLAIM</button>
+          <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
+        </div>
+          </div>
+        </div>
+        <!-- Fun Bounties -->
+        <div class="bounty-category">
+          <div class="bounty-category-title">Fun Bounties</div>
+          <div class="space-y-3">
+        <div id="bounty-share" class="bounty-row bounty-card-cyan p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="share" data-bounty-name="Share the game" data-bounty-reward="15">
+          <div><div>Share the game</div><div class="text-[10px]">Copy game or invite link once · Reward: 15 tokens</div></div>
+          <button type="button" id="claim-share" class="bounty-claim border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50" data-id="share" data-reward="15">CLAIM</button>
+          <div class="bounty-bird-card bird-cyan"><img src="assets/cardinal.png" alt="" /></div>
+        </div>
+        <div id="bounty-firstfriend" class="bounty-row bounty-card-pink p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="firstfriend" data-bounty-name="First friend" data-bounty-reward="10">
+          <div><div>Add your first friend</div><div class="text-[10px]">Paste a friend's code or link · Reward: 10 tokens</div></div>
+          <button type="button" id="claim-firstfriend" class="bounty-claim border-2 border-neon-pink text-neon-pink px-3 py-1 rounded text-[10px] hover:bg-neon-pink/10 disabled:opacity-50" data-id="firstfriend" data-reward="10">CLAIM</button>
+          <div class="bounty-bird-card bird-pink"><img src="assets/cardinal.png" alt="" /></div>
+        </div>
+        <div id="bounty-lucky7" class="bounty-row bounty-card-yellow p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="lucky777" data-bounty-name="Lucky 777" data-bounty-reward="17">
+          <div><div>Lucky 777</div><div class="text-[10px]">Reach 777 total taps · Reward: 17 tokens</div></div>
+          <button type="button" id="claim-lucky7" class="bounty-claim border-2 border-neon-yellow text-neon-yellow px-3 py-1 rounded text-[10px] hover:bg-neon-yellow/10 disabled:opacity-50" data-id="lucky777" data-reward="17">CLAIM</button>
+          <div class="bounty-bird-card bird-yellow"><img src="assets/cardinal.png" alt="" /></div>
+        </div>
+        <div id="bounty-speed" class="bounty-row bounty-card-pink p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="speeddemon" data-bounty-name="Speed demon" data-bounty-reward="20">
+          <div><div>Speed demon</div><div class="text-[10px]">Hit 8+ taps in one second · Reward: 20 tokens</div></div>
+          <button type="button" id="claim-speed" class="bounty-claim border-2 border-neon-pink text-neon-pink px-3 py-1 rounded text-[10px] hover:bg-neon-pink/10 disabled:opacity-50" data-id="speeddemon" data-reward="20">CLAIM</button>
+          <div class="bounty-bird-card bird-pink"><img src="assets/cardinal.png" alt="" /></div>
+        </div>
+        <div id="bounty-hoarder" class="bounty-row bounty-card-cyan p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="hoarder" data-bounty-name="Token hoarder" data-bounty-reward="25">
+          <div><div>Token hoarder</div><div class="text-[10px]">Reach 100 tokens balance · Reward: 25 tokens</div></div>
+          <button type="button" id="claim-hoarder" class="bounty-claim border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50" data-id="hoarder" data-reward="25">CLAIM</button>
+          <div class="bounty-bird-card bird-cyan"><img src="assets/cardinal.png" alt="" /></div>
+        </div>
+          </div>
         </div>
       </div>
+      <div id="bounties-toclaim-cards" class="hidden grid grid-cols-3 sm:grid-cols-4 gap-3"></div>
+      <p id="bounties-toclaim-empty" class="hidden text-gray-500 text-[10px] py-4">All bounties claimed! Check MY CLAIMED for your collection.</p>
+      <div id="bounties-claimed-cards" class="hidden grid grid-cols-3 sm:grid-cols-4 gap-3"></div>
+      <p id="bounties-claimed-empty" class="hidden text-gray-500 text-[10px] py-4">No claimed bounties yet. Claim bounties from the TO CLAIM tab!</p>
       <p class="text-gray-500 mt-4 text-[10px]">Balance: <span id="bounties-balance" class="neon-text-cyan">0</span> tokens</p>
     </section>
 
     <!-- Friends -->
     <section id="page-friends" class="page p-4">
       <h2 class="text-neon-pink mb-4 border-b-2 border-gray-700 pb-2">FRIENDS</h2>
-      <p class="text-gray-400 mb-4">Leaderboard & invite friends. Names stay persistent when you connect your wallet.</p>
-      <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded mb-4">
-        <div class="text-[10px] text-gray-500 mb-2">PROFILE</div>
-        <p class="text-[10px] text-gray-300 mb-2">Your name: <span id="profile-display-name" class="neon-text-cyan">—</span></p>
-        <button type="button" id="profile-change-name-btn" class="py-1 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">CHANGE NAME</button>
-      </div>
-      <div class="bg-pixel-panel border-2 border-neon-green/30 p-3 rounded mb-4">
-        <div class="text-[10px] text-gray-500 mb-2">ADD FRIEND</div>
-        <p class="text-gray-500 text-[9px] mb-2">Paste a friend's invite link or their referral code to add them.</p>
-        <div class="flex gap-2 flex-wrap items-center">
-          <input type="text" id="friend-invite-input" placeholder="Paste link or code (e.g. REFABC123)" maxlength="256" class="flex-1 min-w-0 bg-black border-2 border-gray-600 rounded px-3 py-2 text-white text-[10px] placeholder-gray-500" />
-          <button type="button" id="friend-invite-add-btn" class="flex-shrink-0 py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10 whitespace-nowrap">ADD FRIEND</button>
-        </div>
-        <p id="friend-invite-feedback" class="text-[10px] mt-2 min-h-[14px] hidden"></p>
-        <p id="friend-invite-current" class="text-gray-500 text-[9px] mt-1 min-h-[12px]"></p>
+      <p class="text-gray-400 mb-4">Leaderboard & invite friends. Edit your name in Wallet → Settings.</p>
+      <div class="bg-pixel-panel border-2 border-neon-pink/30 p-3 rounded mb-4">
+        <div class="text-[10px] text-gray-500 mb-2">PVP DUEL WINS (TOP 5)</div>
+        <ol id="leaderboard-pvp-list" class="space-y-1 text-[10px] list-decimal list-inside text-gray-300 min-h-[24px]">
+          <li class="text-gray-500">Loading…</li>
+        </ol>
       </div>
       <div class="bg-pixel-panel border-2 border-neon-pink/30 p-3 rounded mb-4">
         <div class="text-[10px] text-gray-500 mb-2">FRIENDS (INVITED)</div>
@@ -413,29 +578,26 @@
       <button type="button" id="invite-btn" class="w-full py-2 border-2 border-neon-cyan text-neon-cyan rounded hover:bg-neon-cyan/10 min-h-[44px] text-[10px]">COPY INVITE LINK</button>
       <p id="invite-feedback" class="text-neon-green text-[10px] mt-2 hidden">Link copied! Send it to friends – when they open it on their phone, the game loads and your code is applied.</p>
       <p class="text-gray-500 mt-2 text-[10px]">Your code: <span id="referral-code" class="neon-text-cyan">------</span></p>
-      <div class="mt-3 pt-3 border-t border-gray-700">
-        <div class="text-[10px] text-gray-500 mb-2">PVP DUEL WINS</div>
-        <ol id="leaderboard-pvp-list" class="space-y-1 text-[10px]">
-          <!-- Filled from Supabase leaderboard (pvp_wins) -->
-        </ol>
-      </div>
     </section>
 
     <!-- Wallet -->
     <section id="page-wallet" class="page p-4">
-      <h2 class="text-neon-yellow mb-4 border-b-2 border-gray-700 pb-2">WALLET</h2>
-      <!-- Balance summary: in-game + wallet $CARD -->
-      <div class="bg-pixel-panel border-2 border-neon-cyan/30 p-4 rounded mb-4">
-        <div class="grid grid-cols-2 gap-3 text-center">
+      <div class="flex items-center justify-between gap-2 mb-4 border-b-2 border-gray-700 pb-2">
+        <h2 class="text-neon-yellow">WALLET</h2>
+        <button type="button" id="wallet-settings-open-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[10px] hover:bg-neon-cyan/10">SETTINGS</button>
+      </div>
+      <!-- Balances -->
+      <div class="bg-pixel-panel border-2 border-gray-700 p-4 rounded mb-4">
+        <div class="grid grid-cols-2 gap-4 text-center">
           <div>
             <div class="text-gray-500 text-[10px]">IN-GAME</div>
             <div id="wallet-balance" class="text-xl neon-text-cyan">0</div>
             <div class="text-gray-500 text-[9px]">tokens</div>
           </div>
           <div>
-            <div class="text-gray-500 text-[10px]">WALLET $CARD</div>
-            <div id="wallet-card-balance-top" class="text-xl neon-text-cyan">—</div>
-            <div class="text-gray-500 text-[9px]">on-chain</div>
+            <div class="text-gray-500 text-[10px]">$CARD (on-chain)</div>
+            <div id="card-balance" class="text-xl neon-text-cyan">—</div>
+            <div class="text-gray-500 text-[9px]" id="wallet-config-hint">connect wallet</div>
           </div>
         </div>
       </div>
@@ -445,43 +607,39 @@
         <p id="wallet-file-warning" class="hidden text-neon-yellow text-[9px] mb-2 p-2 bg-black/50 rounded">Wallet needs the game opened from a URL. Run in project folder: <code class="text-[8px]">npx serve -p 3001</code> then open <code class="text-[8px]">http://localhost:3001</code></p>
         <div id="wallet-connect-area">
           <p id="wallet-connection-status" class="text-[9px] min-h-[14px] mb-2 text-gray-400"></p>
-          <div class="mb-2 p-2 rounded border-2 border-neon-green bg-neon-green/10">
-            <p class="text-neon-green text-[10px] font-bold">📱 Play & connect on your phone</p>
-            <p class="text-white text-[9px] mt-1">Open <a href="https://biggleem.github.io/nc-clicker-game-v1" target="_blank" rel="noopener" class="text-neon-cyan underline">biggleem.github.io/nc-clicker-game-v1</a> in your phone browser. Tap Connect → Tonkeeper opens on the same device → Approve → you’re connected. No desktop needed.</p>
-          </div>
           <button type="button" id="ton-connect-btn" class="w-full py-2 border-2 border-neon-cyan text-neon-cyan rounded hover:bg-neon-cyan/10 text-[10px]">CONNECT WALLET (Tonkeeper / Telegram)</button>
-          <p class="text-gray-500 text-[9px] mt-2">1) Tap Connect → 2) Approve in Tonkeeper (green button) → 3) Return to this tab. We’ll detect the connection automatically, or tap the green button below.</p>
-          <p class="text-neon-yellow text-[9px] mt-1">On desktop localhost: run the backend so the wallet can connect. Or use the <a href="https://biggleem.github.io/nc-clicker-game-v1" target="_blank" rel="noopener" class="underline">live site</a>.</p>
-          <button type="button" id="ton-check-connection-btn" class="w-full mt-2 py-2 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10 font-bold">I approved – check connection</button>
+          <p class="text-gray-500 text-[9px] mt-2">Need help? Open SETTINGS (top right) for instructions and I approved – check connection.</p>
+          <p class="text-neon-yellow text-[9px] mt-1 hidden" id="wallet-localhost-hint">On desktop localhost: run the backend so the wallet can connect. Or use the <a href="https://biggleem.github.io/nc-clicker-game-v1" target="_blank" rel="noopener" class="underline">live site</a>.</p>
         </div>
         <div id="wallet-connected-area" class="hidden">
           <div class="text-[10px] text-gray-400 mb-1">Address</div>
           <div id="ton-address" class="text-neon-green text-[10px] break-all mb-2">—</div>
           <button type="button" id="ton-disconnect-btn" class="py-1 px-2 border border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-800">DISCONNECT</button>
         </div>
-        <div class="mt-3 pt-3 border-t border-gray-700">
-          <div class="text-gray-500 text-[10px]">$CARD (on-chain)</div>
-          <div id="card-balance" class="text-xl neon-text-cyan">—</div>
-          <p class="text-gray-500 text-[10px] mt-1" id="wallet-config-hint">Minter from backend config.</p>
-        </div>
-        <div class="mt-3 pt-3 border-t border-gray-700" id="withdraw-area">
-          <div class="text-gray-500 text-[10px] mb-2">WITHDRAW TO $CARD</div>
-          <p class="text-[10px] text-gray-400 mb-2">Convert in-game tokens to on-chain $CARD (sent to your connected wallet).</p>
-          <div class="flex gap-2 items-center flex-wrap">
-            <input type="number" id="withdraw-amount" min="1" placeholder="Amount" class="bg-black border-2 border-gray-600 rounded px-2 py-2 text-neon-cyan w-24 text-[10px]" />
-            <button type="button" id="withdraw-btn" class="border-2 border-neon-green text-neon-green px-3 py-2 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50">WITHDRAW</button>
-          </div>
-          <p id="withdraw-feedback" class="text-[10px] mt-2 hidden"></p>
-        </div>
       </div>
-      <div class="text-[10px] text-gray-500 mb-2">OWNED NFTS (placeholder)</div>
-      <div class="flex gap-2 flex-wrap">
-        <div class="w-12 h-12 pixel-border rounded bg-neon-pink/20"></div>
-        <div class="w-12 h-12 pixel-border rounded bg-neon-cyan/20"></div>
+      <!-- Swap: $CARD to in-game tokens -->
+      <div class="bg-pixel-panel border-2 border-neon-green/30 p-4 rounded mb-4" id="swap-area">
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <span class="text-gray-500 text-[10px]">SWAP $CARD → TOKENS</span>
+          <span id="ton-price-display" class="text-[9px] text-gray-400">TON: —</span>
+        </div>
+        <p class="text-[10px] text-gray-400 mb-2">Exchange on-chain $CARD for in-game tokens to play.</p>
+        <div class="flex gap-2 items-center flex-wrap">
+          <input type="number" id="swap-amount" min="1" step="1" placeholder="$CARD amount" class="bg-black border-2 border-gray-600 rounded px-2 py-2 text-neon-cyan w-28 text-[10px]" />
+          <button type="button" id="swap-btn" class="border-2 border-neon-green text-neon-green px-3 py-2 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50">SWAP</button>
+        </div>
+        <p class="text-gray-500 text-[9px] mt-1">Rate: 1 $CARD = 10 in-game tokens</p>
+        <p id="swap-feedback" class="text-[10px] mt-2 hidden"></p>
       </div>
-      <div class="mt-4 border-t-2 border-gray-700 pt-4">
-        <div class="text-[10px] text-gray-500 mb-2">EXCHANGE</div>
-        <p class="text-gray-400 text-[10px]">Swap $CARD for other tokens. Coming after mainnet.</p>
+      <!-- Withdraw: tokens to $CARD -->
+      <div class="bg-pixel-panel border-2 border-gray-700 p-4 rounded mb-4" id="withdraw-area">
+        <div class="text-gray-500 text-[10px] mb-2">WITHDRAW TOKENS → $CARD</div>
+        <p id="withdraw-area-hint" class="text-[10px] text-gray-400 mb-2">Convert in-game tokens to on-chain $CARD (sent to your connected wallet).</p>
+        <div class="flex gap-2 items-center flex-wrap">
+          <input type="number" id="withdraw-amount" min="1" placeholder="Amount" class="bg-black border-2 border-gray-600 rounded px-2 py-2 text-neon-cyan w-24 text-[10px]" />
+          <button type="button" id="withdraw-btn" class="border-2 border-neon-green text-neon-green px-3 py-2 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50">WITHDRAW</button>
+        </div>
+        <p id="withdraw-feedback" class="text-[10px] mt-2 hidden"></p>
       </div>
     </section>
 
@@ -492,7 +650,7 @@
       <!-- Invited to duel: shown when URL has ?room= (open room link) -->
       <div id="pvp-invited-card" class="hidden mb-4 p-4 rounded-lg border-2 border-neon-cyan bg-neon-cyan/5">
         <p class="text-neon-cyan text-[10px] font-bold mb-1">YOU’RE INVITED TO A DUEL</p>
-        <p class="text-gray-300 text-[9px] mb-3">Open this link to join the room and play. Enter your name, then join the duel using your in-game tokens.</p>
+        <p class="text-gray-300 text-[9px] mb-3">Open this link to join the room and play. Enter your name, connect wallet (1 $CARD), then join.</p>
         <button type="button" id="pvp-invited-join-btn" class="w-full py-3 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] font-bold hover:bg-neon-green/10 min-h-[48px]">JOIN & PLAY</button>
         <p id="pvp-invited-room-id" class="text-gray-500 text-[8px] mt-2 truncate"></p>
       </div>
@@ -519,7 +677,7 @@
       </div>
 
       <p id="pvp-status" class="text-[9px] text-gray-500 mb-2 min-h-[14px]"></p>
-      <p class="text-gray-500 text-[9px] mb-1">Open rooms first, then recent. Stake: 10 tokens per player — loser loses their tokens.</p>
+      <p class="text-gray-500 text-[9px] mb-1">Open rooms first, then recent. Stake: 1 $CARD to play — loser loses it.</p>
       <div id="pvp-rooms-list" class="grid grid-cols-1 gap-2">
         <!-- Rooms loaded from Supabase -->
       </div>
@@ -562,15 +720,15 @@
     </section>
   </main>
 
-  <!-- Bottom Nav: scrolls horizontally on small screens, responsive sizing -->
-  <nav class="nav-bottom fixed bottom-0 left-0 right-0 z-50 bg-black/95 border-t-2 border-pixel-border max-w-lg mx-auto overflow-hidden">
-    <div class="flex flex-nowrap justify-start gap-0.5 sm:gap-1 py-1.5 sm:py-2 px-2 overflow-x-auto overflow-y-hidden scroll-smooth scrollbar-hide min-h-[44px] items-center pr-4" style="-webkit-overflow-scrolling: touch;">
-      <a href="#home" class="nav-link flex-shrink-0 rounded whitespace-nowrap" data-page="home">HOME</a>
-      <a href="#boosts" class="nav-link flex-shrink-0 rounded whitespace-nowrap" data-page="boosts">BOOSTS</a>
-      <a href="#bounties" class="nav-link flex-shrink-0 rounded whitespace-nowrap" data-page="bounties">BOUNTIES</a>
-      <a href="#friends" class="nav-link flex-shrink-0 rounded whitespace-nowrap" data-page="friends">FRIENDS</a>
-      <a href="#wallet" class="nav-link flex-shrink-0 rounded whitespace-nowrap" data-page="wallet">WALLET</a>
-      <a href="#multiplayer" class="nav-link flex-shrink-0 rounded whitespace-nowrap" data-page="multiplayer">PVP</a>
+  <!-- Bottom Nav: scrolls horizontally on small screens -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-black/95 border-t-2 border-pixel-border max-w-lg mx-auto overflow-hidden">
+    <div class="flex flex-nowrap justify-start gap-1 py-2 px-2 overflow-x-auto overflow-y-hidden scroll-smooth scrollbar-hide min-h-[44px] items-center" style="-webkit-overflow-scrolling: touch;">
+      <a href="#home" class="nav-link flex-shrink-0 px-3 py-2 rounded text-[10px] whitespace-nowrap" data-page="home">HOME</a>
+      <a href="#boosts" class="nav-link flex-shrink-0 px-3 py-2 rounded text-[10px] whitespace-nowrap" data-page="boosts">BOOSTS</a>
+      <a href="#bounties" class="nav-link flex-shrink-0 px-3 py-2 rounded text-[10px] whitespace-nowrap" data-page="bounties">BOUNTIES</a>
+      <a href="#friends" class="nav-link flex-shrink-0 px-3 py-2 rounded text-[10px] whitespace-nowrap" data-page="friends">FRIENDS</a>
+      <a href="#wallet" class="nav-link flex-shrink-0 px-3 py-2 rounded text-[10px] whitespace-nowrap" data-page="wallet">WALLET</a>
+      <a href="#multiplayer" class="nav-link flex-shrink-0 px-3 py-2 rounded text-[10px] whitespace-nowrap" data-page="multiplayer">PVP</a>
     </div>
   </nav>
   </div>
@@ -601,6 +759,18 @@
     let lastDailyClaim = localStorage.getItem('tokenClicker_lastDailyClaim') || '';
     let claimed100Today = localStorage.getItem('tokenClicker_claimed100Today') === '1';
     let claimedWeekly = localStorage.getItem('tokenClicker_claimedWeekly') === '1';
+    let claimed50Today = localStorage.getItem('tokenClicker_claimed50Today') === '1';
+    let claimedShare = localStorage.getItem('tokenClicker_claimedShare') === '1';
+    let claimedFirstFriend = localStorage.getItem('tokenClicker_claimedFirstFriend') === '1';
+    let claimed500total = localStorage.getItem('tokenClicker_claimed500total') === '1';
+    let claimed1000total = localStorage.getItem('tokenClicker_claimed1000total') === '1';
+    let claimed2500total = localStorage.getItem('tokenClicker_claimed2500total') === '1';
+    let claimed5000total = localStorage.getItem('tokenClicker_claimed5000total') === '1';
+    let claimed10000total = localStorage.getItem('tokenClicker_claimed10000total') === '1';
+    let claimedLucky777 = localStorage.getItem('tokenClicker_claimedLucky777') === '1';
+    let claimedSpeedDemon = localStorage.getItem('tokenClicker_speedDemonClaimed') === '1';
+    let claimedHoarder = localStorage.getItem('tokenClicker_claimedHoarder') === '1';
+    let currentBountyTab = localStorage.getItem('tokenClicker_bountyTab') || 'toclaim';
     let lastDate = localStorage.getItem('tokenClicker_lastDate') || '';
     let clicksToday = parseInt(localStorage.getItem('tokenClicker_clicksToday') || '0', 10);
     let weekStartKey = localStorage.getItem('tokenClicker_weekStart') || '';
@@ -640,18 +810,104 @@
       localStorage.setItem('tokenClicker_lastDailyClaim', lastDailyClaim);
       localStorage.setItem('tokenClicker_claimed100Today', claimed100Today ? '1' : '0');
       localStorage.setItem('tokenClicker_claimedWeekly', claimedWeekly ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed50Today', claimed50Today ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimedShare', claimedShare ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimedFirstFriend', claimedFirstFriend ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed500total', claimed500total ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed1000total', claimed1000total ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed2500total', claimed2500total ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed5000total', claimed5000total ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed10000total', claimed10000total ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimedLucky777', claimedLucky777 ? '1' : '0');
+      localStorage.setItem('tokenClicker_speedDemonClaimed', claimedSpeedDemon ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimedHoarder', claimedHoarder ? '1' : '0');
+      localStorage.setItem('tokenClicker_bountyTab', currentBountyTab);
       localStorage.setItem('tokenClicker_lastDate', lastDate);
       localStorage.setItem('tokenClicker_clicksToday', String(clicksToday));
       localStorage.setItem('tokenClicker_weekStart', weekStartKey);
       localStorage.setItem('tokenClicker_weeklyClicks', String(weeklyClicks));
     }
 
+    function getBountyClaimed(id) {
+      switch (id) {
+        case 'daily': return lastDailyClaim === todayKey();
+        case '50today': return claimed50Today;
+        case '100today': return claimed100Today;
+        case 'weekly': return claimedWeekly;
+        case 'share': return claimedShare;
+        case 'firstfriend': return claimedFirstFriend;
+        case '500total': return claimed500total;
+        case '1000total': return claimed1000total;
+        case '2500total': return claimed2500total;
+        case '5000total': return claimed5000total;
+        case '10000total': return claimed10000total;
+        case 'lucky777': return claimedLucky777;
+        case 'speeddemon': return claimedSpeedDemon;
+        case 'hoarder': return claimedHoarder;
+        default: return false;
+      }
+    }
+    function switchBountyTab(tab) {
+      currentBountyTab = tab;
+      var isClaimed = tab === 'claimed';
+      var list = document.getElementById('bounties-list');
+      var toclaimCardsEl = document.getElementById('bounties-toclaim-cards');
+      var claimedCardsEl = document.getElementById('bounties-claimed-cards');
+      var claimedCount = 0;
+      var claimedRows = [];
+      var toclaimCount = 0;
+      if (list) {
+        list.querySelectorAll('.bounty-row').forEach(function(el) {
+          var id = el.getAttribute('data-bounty-id');
+          var claimed = getBountyClaimed(id);
+          if (claimed) {
+            claimedCount++;
+            var cardEl = el.querySelector('.bounty-bird-card');
+            var birdClass = cardEl ? (cardEl.className.match(/\bbird-\w+/) || ['bird-green'])[0] : 'bird-green';
+            claimedRows.push({ id: id, name: el.getAttribute('data-bounty-name') || id, reward: el.getAttribute('data-bounty-reward') || '', birdClass: birdClass });
+            el.classList.add('hidden');
+          } else {
+            toclaimCount++;
+            el.classList.remove('hidden');
+          }
+        });
+        if (isClaimed) {
+          list.classList.add('hidden');
+          list.classList.remove('bounty-toclaim-list');
+        } else {
+          list.classList.toggle('hidden', toclaimCount === 0);
+          list.classList.add('bounty-toclaim-list');
+        }
+      }
+      if (toclaimCardsEl) toclaimCardsEl.classList.add('hidden');
+      if (claimedCardsEl) {
+        claimedCardsEl.classList.toggle('hidden', !isClaimed || claimedCount === 0);
+        claimedCardsEl.innerHTML = '';
+        if (isClaimed && claimedCount > 0) {
+          claimedRows.forEach(function(r) {
+            var card = document.createElement('div');
+            card.className = 'bounty-collection-card ' + r.birdClass;
+            card.innerHTML = '<img src="assets/cardinal.png" alt="" class="bird-thumb image-pixel" /><span class="bird-name">' + (r.name || r.id) + '</span><span class="bird-reward">+' + r.reward + ' tokens</span>';
+            claimedCardsEl.appendChild(card);
+          });
+        }
+      }
+      var toclaimEmptyEl = document.getElementById('bounties-toclaim-empty');
+      if (toclaimEmptyEl) toclaimEmptyEl.classList.toggle('hidden', isClaimed || toclaimCount > 0);
+      var claimedEmptyEl = document.getElementById('bounties-claimed-empty');
+      if (claimedEmptyEl) claimedEmptyEl.classList.toggle('hidden', !isClaimed || claimedCount > 0);
+      var toclaimTabBtn = document.getElementById('bounty-tab-toclaim');
+      var claimedTabBtn = document.getElementById('bounty-tab-claimed');
+      if (toclaimTabBtn) toclaimTabBtn.className = 'bounty-tab border-2 px-3 py-1.5 rounded text-[10px] ' + (isClaimed ? 'border-gray-500 text-gray-400 hover:bg-gray-700' : 'border-neon-green text-neon-green hover:bg-neon-green/10 bg-neon-green/10');
+      if (claimedTabBtn) claimedTabBtn.className = 'bounty-tab border-2 px-3 py-1.5 rounded text-[10px] ' + (isClaimed ? 'border-neon-green text-neon-green hover:bg-neon-green/10 bg-neon-green/10' : 'border-gray-500 text-gray-400 hover:bg-gray-700');
+    }
     function updateBountyProgress() {
       const today = todayKey();
       const week = weekKey();
       if (today !== lastDate) {
         clicksToday = 0;
         claimed100Today = false;
+        claimed50Today = false;
         lastDate = today;
       }
       if (week !== weekStartKey) {
@@ -709,10 +965,16 @@
       updateBountyProgress();
       const today = todayKey();
       const dailyClaimBtn = document.getElementById('claim-daily');
-      const dailyCanClaim = lastDailyClaim !== today;
       if (dailyClaimBtn) {
-        dailyClaimBtn.disabled = !dailyCanClaim;
-        dailyClaimBtn.textContent = dailyCanClaim ? 'CLAIM' : 'CLAIMED';
+        dailyClaimBtn.disabled = lastDailyClaim === today;
+        dailyClaimBtn.textContent = lastDailyClaim === today ? 'CLAIMED' : 'CLAIM';
+      }
+      const p50 = document.getElementById('bounty-50-progress');
+      if (p50) p50.textContent = clicksToday;
+      const claim50Btn = document.getElementById('claim-50');
+      if (claim50Btn) {
+        claim50Btn.disabled = clicksToday < 50 || claimed50Today;
+        claim50Btn.textContent = claimed50Today ? 'CLAIMED' : 'CLAIM';
       }
       const p100 = document.getElementById('bounty-100-progress');
       if (p100) p100.textContent = clicksToday;
@@ -728,6 +990,44 @@
         claimWeekBtn.disabled = weeklyClicks < 500 || claimedWeekly;
         claimWeekBtn.textContent = claimedWeekly ? 'CLAIMED' : 'CLAIM';
       }
+      var hasShared = localStorage.getItem('tokenClicker_hasSharedGame') === '1';
+      var claimShareBtn = document.getElementById('claim-share');
+      if (claimShareBtn) {
+        claimShareBtn.disabled = !hasShared || claimedShare;
+        claimShareBtn.textContent = claimedShare ? 'CLAIMED' : 'CLAIM';
+      }
+      var hasFriend = !!localStorage.getItem('tokenClicker_invitedBy');
+      var claimFirstFriendBtn = document.getElementById('claim-firstfriend');
+      if (claimFirstFriendBtn) {
+        claimFirstFriendBtn.disabled = !hasFriend || claimedFirstFriend;
+        claimFirstFriendBtn.textContent = claimedFirstFriend ? 'CLAIMED' : 'CLAIM';
+      }
+      [500, 1000, 2500, 5000, 10000].forEach(function(goal) {
+        var p = document.getElementById('bounty-' + goal + '-progress');
+        if (p) p.textContent = totalClicks;
+        var btn = document.getElementById('claim-' + goal);
+        if (!btn) return;
+        var claimed = goal === 500 ? claimed500total : goal === 1000 ? claimed1000total : goal === 2500 ? claimed2500total : goal === 5000 ? claimed5000total : claimed10000total;
+        btn.disabled = totalClicks < goal || claimed;
+        btn.textContent = claimed ? 'CLAIMED' : 'CLAIM';
+      });
+      var claimLuckyBtn = document.getElementById('claim-lucky7');
+      if (claimLuckyBtn) {
+        claimLuckyBtn.disabled = totalClicks < 777 || claimedLucky777;
+        claimLuckyBtn.textContent = claimedLucky777 ? 'CLAIMED' : 'CLAIM';
+      }
+      var speedUnlocked = localStorage.getItem('tokenClicker_speedDemon') === '1';
+      var claimSpeedBtn = document.getElementById('claim-speed');
+      if (claimSpeedBtn) {
+        claimSpeedBtn.disabled = !speedUnlocked || claimedSpeedDemon;
+        claimSpeedBtn.textContent = claimedSpeedDemon ? 'CLAIMED' : 'CLAIM';
+      }
+      var claimHoarderBtn = document.getElementById('claim-hoarder');
+      if (claimHoarderBtn) {
+        claimHoarderBtn.disabled = tokens < 100 || claimedHoarder;
+        claimHoarderBtn.textContent = claimedHoarder ? 'CLAIMED' : 'CLAIM';
+      }
+      switchBountyTab(currentBountyTab);
       save();
     }
 
@@ -763,16 +1063,37 @@
     function loadLeaderboardPvp() {
       var supabase = window.supabaseClient;
       var list = document.getElementById('leaderboard-pvp-list');
-      if (!supabase || !list) return;
-      supabase.from('leaderboard').select('name, pvp_wins').order('pvp_wins', { ascending: false }).limit(10).then(function(r) {
+      if (!list) return;
+      if (!supabase) {
+        list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>';
+        return;
+      }
+      list.innerHTML = '<li class="text-gray-500">Loading…</li>';
+      supabase.from('leaderboard').select('name, pvp_wins').order('pvp_wins', { ascending: false }).limit(5).then(function(r) {
         if (r.error || !r.data || r.data.length === 0) {
           list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>';
           return;
         }
         list.innerHTML = r.data.map(function(e, i) {
           var wins = e.pvp_wins != null ? e.pvp_wins : 0;
-          return (i + 1) + '. ' + (e.name || 'Player') + ' — ' + wins + ' win' + (wins !== 1 ? 's' : '');
-        }).join('\n');
+          return '<li>' + (e.name || 'Player') + ' — ' + wins + ' win' + (wins !== 1 ? 's' : '') + '</li>';
+        }).join('');
+      });
+    }
+    function loadPvpFullList() {
+      var supabase = window.supabaseClient;
+      var list = document.getElementById('pvp-full-list-content');
+      if (!supabase || !list) return;
+      list.innerHTML = '<li class="text-gray-500">Loading…</li>';
+      supabase.from('leaderboard').select('name, pvp_wins').order('pvp_wins', { ascending: false }).limit(100).then(function(r) {
+        if (r.error || !r.data || r.data.length === 0) {
+          list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>';
+          return;
+        }
+        list.innerHTML = r.data.map(function(e, i) {
+          var wins = e.pvp_wins != null ? e.pvp_wins : 0;
+          return '<li>' + (e.name || 'Player') + ' — ' + wins + ' win' + (wins !== 1 ? 's' : '') + '</li>';
+        }).join('');
       });
     }
 
@@ -808,10 +1129,11 @@
         clicksInLastSecond = 0;
       }
       clicksInLastSecond++;
+      if (clicksInLastSecond >= 8) try { localStorage.setItem('tokenClicker_speedDemon', '1'); } catch (e) {}
 
       const today = todayKey();
       const week = weekKey();
-      if (today !== lastDate) { clicksToday = 0; claimed100Today = false; lastDate = today; }
+      if (today !== lastDate) { clicksToday = 0; claimed100Today = false; claimed50Today = false; lastDate = today; }
       if (week !== weekStartKey) { weeklyClicks = 0; claimedWeekly = false; weekStartKey = week; }
       clicksToday++;
       weeklyClicks++;
@@ -822,37 +1144,48 @@
       return earned;
     }
 
-    function spawnClickEffects(earned) {
-      const btn = nftClicker;
-      const rect = btn.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
+    function spawnClickEffects(earned, clickEvent) {
+      var showFeathers = localStorage.getItem('tokenClicker_featherEffects') !== '0';
+      var cx = clickEvent && typeof clickEvent.clientX === 'number' ? clickEvent.clientX : (nftClicker && nftClicker.getBoundingClientRect().left + nftClicker.getBoundingClientRect().width / 2);
+      var cy = clickEvent && typeof clickEvent.clientY === 'number' ? clickEvent.clientY : (nftClicker && nftClicker.getBoundingClientRect().top + nftClicker.getBoundingClientRect().height / 2);
 
-      for (let i = 0; i < 5; i++) {
-        const el = document.createElement('div');
-        el.className = 'feather-float feather-drift-' + (1 + (i % 3));
-        el.style.left = cx + (Math.random() - 0.5) * 24 + 'px';
-        el.style.top = cy + (Math.random() - 0.5) * 24 + 'px';
-        el.style.setProperty('--r', (Math.random() * 120 - 60) + 'deg');
-        el.innerHTML = '<div class="feather-pixel"></div>';
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 1300);
+      if (showFeathers) {
+        for (var i = 0; i < 3; i++) {
+          var el = document.createElement('div');
+          el.className = 'feather-fall feather-sway' + (1 + (i % 3));
+          el.style.left = (cx + (Math.random() - 0.5) * 20) + 'px';
+          el.style.top = cy + 'px';
+          el.style.marginLeft = '-26px';
+          el.style.marginTop = '-16px';
+          var img = document.createElement('img');
+          img.src = 'assets/cardinal-feather.png';
+          img.alt = '';
+          img.className = 'image-pixel';
+          img.style.width = '52px';
+          img.style.height = 'auto';
+          img.style.display = 'block';
+          el.appendChild(img);
+          document.body.appendChild(el);
+          (function(featherEl) {
+            setTimeout(function() { if (featherEl.parentNode) featherEl.remove(); }, 1500);
+          })(el);
+        }
       }
 
-      const valueEl = document.createElement('div');
+      var valueEl = document.createElement('div');
       valueEl.className = 'tap-value-float';
       valueEl.textContent = '+1';
       valueEl.style.left = cx + 'px';
       valueEl.style.top = cy + 'px';
       document.body.appendChild(valueEl);
-      setTimeout(() => valueEl.remove(), 1100);
+      setTimeout(function() { if (valueEl.parentNode) valueEl.remove(); }, 1100);
     }
 
-    if (nftClicker) nftClicker.addEventListener('click', (e) => {
+    if (nftClicker) nftClicker.addEventListener('click', function(e) {
       nftClicker.classList.add('cooldown');
-      const earned = onValidClick();
-      if (earned >= 0) spawnClickEffects(earned);
-      setTimeout(() => nftClicker.classList.remove('cooldown'), cooldownMs());
+      var earned = onValidClick();
+      if (earned >= 0) spawnClickEffects(earned, e);
+      setTimeout(function() { nftClicker.classList.remove('cooldown'); }, cooldownMs());
     });
 
     // Boosts: buy
@@ -893,12 +1226,31 @@
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
         const reward = parseInt(btn.dataset.reward, 10);
-        if (id === 'daily' && lastDailyClaim !== todayKey()) { lastDailyClaim = todayKey(); addTokens(reward); }
-        if (id === '100today' && clicksToday >= 100 && !claimed100Today) { claimed100Today = true; addTokens(reward); }
-        if (id === 'weekly' && weeklyClicks >= 500 && !claimedWeekly) { claimedWeekly = true; addTokens(reward); }
+        if (!id || btn.disabled) return;
+        let didClaim = false;
+        if (id === 'daily' && lastDailyClaim !== todayKey()) { lastDailyClaim = todayKey(); addTokens(reward); didClaim = true; }
+        if (id === '50today' && clicksToday >= 50 && !claimed50Today) { claimed50Today = true; addTokens(reward); didClaim = true; }
+        if (id === '100today' && clicksToday >= 100 && !claimed100Today) { claimed100Today = true; addTokens(reward); didClaim = true; }
+        if (id === 'weekly' && weeklyClicks >= 500 && !claimedWeekly) { claimedWeekly = true; addTokens(reward); didClaim = true; }
+        if (id === 'share' && localStorage.getItem('tokenClicker_hasSharedGame') === '1' && !claimedShare) { claimedShare = true; addTokens(reward); didClaim = true; }
+        if (id === 'firstfriend' && !!localStorage.getItem('tokenClicker_invitedBy') && !claimedFirstFriend) { claimedFirstFriend = true; addTokens(reward); didClaim = true; }
+        if (id === '500total' && totalClicks >= 500 && !claimed500total) { claimed500total = true; addTokens(reward); didClaim = true; }
+        if (id === '1000total' && totalClicks >= 1000 && !claimed1000total) { claimed1000total = true; addTokens(reward); didClaim = true; }
+        if (id === '2500total' && totalClicks >= 2500 && !claimed2500total) { claimed2500total = true; addTokens(reward); didClaim = true; }
+        if (id === '5000total' && totalClicks >= 5000 && !claimed5000total) { claimed5000total = true; addTokens(reward); didClaim = true; }
+        if (id === '10000total' && totalClicks >= 10000 && !claimed10000total) { claimed10000total = true; addTokens(reward); didClaim = true; }
+        if (id === 'lucky777' && totalClicks >= 777 && !claimedLucky777) { claimedLucky777 = true; addTokens(reward); didClaim = true; }
+        if (id === 'speeddemon' && localStorage.getItem('tokenClicker_speedDemon') === '1' && !claimedSpeedDemon) { claimedSpeedDemon = true; addTokens(reward); didClaim = true; }
+        if (id === 'hoarder' && tokens >= 100 && !claimedHoarder) { claimedHoarder = true; addTokens(reward); didClaim = true; }
+        if (didClaim) {
+          save();
+          try { pushNotification('Bounty claimed: +' + reward + ' tokens'); } catch (e) {}
+        }
         updateBountiesUI();
       });
     });
+    document.getElementById('bounty-tab-toclaim') && document.getElementById('bounty-tab-toclaim').addEventListener('click', function() { switchBountyTab('toclaim'); });
+    document.getElementById('bounty-tab-claimed') && document.getElementById('bounty-tab-claimed').addEventListener('click', function() { switchBountyTab('claimed'); });
 
     // Share URL: use canonical game URL so shared links open on mobile (production site)
     function getShareBaseUrl() {
@@ -924,52 +1276,6 @@
             if (inviteFeedback) { inviteFeedback.classList.remove('hidden'); setTimeout(() => inviteFeedback.classList.add('hidden'), 3000); }
           }).catch(function() { fallbackCopy(url, inviteFeedback); });
         } else { fallbackCopy(url, inviteFeedback); }
-      });
-    }
-
-    // Friends: enter invite link or code to add friend
-    function parseInviteCodeFromInput(value) {
-      var s = (value || '').trim();
-      if (!s) return null;
-      try {
-        if (/^[A-Za-z0-9_-]+$/.test(s)) return s;
-        var url = s;
-        if (!/^https?:\/\//i.test(url)) url = 'https://dummy.example/?' + (s.indexOf('ref=') !== -1 ? s : 'ref=' + encodeURIComponent(s));
-        var parsed = new URL(url);
-        var ref = parsed.searchParams.get('ref');
-        if (ref) return ref.trim();
-        var match = s.match(/[?&]ref=([^&\s#]+)/i);
-        return match ? decodeURIComponent(match[1].replace(/\+/g, ' ')).trim() : null;
-      } catch (e) { return null; }
-    }
-    function updateFriendInviteCurrentDisplay() {
-      var el = document.getElementById('friend-invite-current');
-      if (!el) return;
-      var code = localStorage.getItem('tokenClicker_invitedBy');
-      if (code) el.textContent = "You've added a friend (code: " + code + "). Your next name/wallet action will link you.";
-      else el.textContent = '';
-    }
-    var friendInviteAddBtn = document.getElementById('friend-invite-add-btn');
-    var friendInviteInput = document.getElementById('friend-invite-input');
-    var friendInviteFeedback = document.getElementById('friend-invite-feedback');
-    if (friendInviteAddBtn && friendInviteFeedback) {
-      friendInviteAddBtn.addEventListener('click', function() {
-        var raw = friendInviteInput ? friendInviteInput.value : '';
-        var code = parseInviteCodeFromInput(raw);
-        friendInviteFeedback.classList.remove('hidden');
-        friendInviteFeedback.classList.remove('text-neon-green', 'text-neon-pink');
-        if (!code) {
-          friendInviteFeedback.textContent = "Couldn't find a code. Paste a full invite link or a code like REFABC123.";
-          friendInviteFeedback.classList.add('text-neon-pink');
-          return;
-        }
-        localStorage.setItem('tokenClicker_invitedBy', code);
-        if (friendInviteInput) friendInviteInput.value = '';
-        friendInviteFeedback.textContent = "Friend added! You're linked to code " + code + ".";
-        friendInviteFeedback.classList.add('text-neon-green');
-        updateFriendInviteCurrentDisplay();
-        if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
-        setTimeout(function() { friendInviteFeedback.classList.add('hidden'); }, 4000);
       });
     }
 
@@ -1021,44 +1327,41 @@
       } catch (e) { console.warn('TonConnect UI init:', e); }
     }
     var lastCardBalanceFetch = 0;
-    var balanceFetchFailed = false;
     function fetchCardBalanceFromBackend() {
       const TW = window.TonWallet;
       const backendUrl = (window.TON_CONFIG && window.TON_CONFIG.backendUrl) || '';
-      if (!TW) return;
+      if (!TW || !backendUrl) return;
       const addr = TW.getAddress();
       if (!addr) return;
-      if (!backendUrl) {
-        balanceFetchFailed = false;
-        updateWalletUI();
-        return;
-      }
-      if (Date.now() - lastCardBalanceFetch < 15000 && !balanceFetchFailed) return;
+      if (Date.now() - lastCardBalanceFetch < 15000) return;
       lastCardBalanceFetch = Date.now();
-      balanceFetchFailed = false;
       fetch(backendUrl.replace(/\/$/, '') + '/api/wallet/card-balance?address=' + encodeURIComponent(addr))
-        .then(function(r) {
-          if (!r.ok) throw new Error('Backend returned ' + r.status);
-          return r.json();
-        })
+        .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data && data.balance != null && TW.setCardBalance) TW.setCardBalance(data.balance);
-          balanceFetchFailed = false;
-          setWalletStatus('');
           updateWalletUI();
         })
-        .catch(function(e) {
-          balanceFetchFailed = true;
-          if (TW.setCardBalance) TW.setCardBalance(null);
-          setWalletStatus('Could not retrieve balance. Check backend URL and CORS.', true);
-          updateWalletUI();
-        });
+        .catch(function() { updateWalletUI(); });
+    }
+    var lastTonPriceFetch = 0;
+    function fetchTonPrice() {
+      var el = document.getElementById('ton-price-display');
+      if (!el) return;
+      if (Date.now() - lastTonPriceFetch < 60000) return;
+      lastTonPriceFetch = Date.now();
+      fetch('https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data && data['the-open-network'] && data['the-open-network'].usd != null) {
+            el.textContent = 'TON: $' + Number(data['the-open-network'].usd).toFixed(4);
+          } else { el.textContent = 'TON: —'; }
+        })
+        .catch(function() { el.textContent = 'TON: —'; });
     }
     function updateWalletUI() {
       const TW = window.TonWallet;
       if (!TW) return;
       const addr = TW.getAddress();
-      const backendUrl = (window.TON_CONFIG && window.TON_CONFIG.backendUrl) || '';
       const connectArea = document.getElementById('wallet-connect-area');
       const connectedArea = document.getElementById('wallet-connected-area');
       const tonAddress = document.getElementById('ton-address');
@@ -1066,22 +1369,21 @@
       if (connectArea) connectArea.classList.toggle('hidden', !!addr);
       if (connectedArea) connectedArea.classList.toggle('hidden', !addr);
       if (tonAddress && addr) tonAddress.textContent = addr.slice(0, 8) + '…' + addr.slice(-8);
-      var balanceText = '—';
-      if (addr) {
+      if (cardBalanceEl) {
         if (TW.cardBalance != null && TW.cardBalance !== undefined) {
-          balanceText = String(TW.cardBalance);
-        } else if (!backendUrl) {
-          balanceText = '—';
-          setWalletStatus('Backend not set. Add backendUrl in ton-config.js to see $CARD balance.', true);
-        } else if (balanceFetchFailed) {
-          balanceText = '—';
+          cardBalanceEl.textContent = String(TW.cardBalance);
         } else {
-          balanceText = '…';
+          cardBalanceEl.textContent = addr ? '…' : '—';
         }
       }
-      if (cardBalanceEl) cardBalanceEl.textContent = balanceText;
       var cardTop = document.getElementById('wallet-card-balance-top');
-      if (cardTop) cardTop.textContent = balanceText;
+      if (cardTop) {
+        if (TW.cardBalance != null && TW.cardBalance !== undefined) {
+          cardTop.textContent = String(TW.cardBalance);
+        } else {
+          cardTop.textContent = addr ? '…' : '—';
+        }
+      }
       if (addr) {
         fetchCardBalanceFromBackend();
         persistNameToLeaderboard();
@@ -1279,12 +1581,64 @@
         }
         withdrawBtn.disabled = false;
       });
-    } else if (document.getElementById('withdraw-area')) {
-      document.getElementById('withdraw-area').querySelector('.text-[10px]').textContent = 'Set backendUrl in ton-config.js to enable withdraw.';
+    } else {
+      var withdrawHint = document.getElementById('withdraw-area-hint');
+      if (withdrawHint) withdrawHint.textContent = 'Set backendUrl in ton-config.js to enable withdraw.';
+    }
+    // Swap: $CARD → in-game tokens (backend verifies balance, frontend credits tokens)
+    var swapAmountEl = document.getElementById('swap-amount');
+    var swapBtn = document.getElementById('swap-btn');
+    var swapFeedback = document.getElementById('swap-feedback');
+    if (swapBtn && backendUrl) {
+      swapBtn.addEventListener('click', async function() {
+        var amount = swapAmountEl ? parseInt(swapAmountEl.value, 10) : 0;
+        if (!amount || amount < 1) {
+          if (swapFeedback) { swapFeedback.textContent = 'Enter $CARD amount (1+).'; swapFeedback.classList.remove('hidden'); }
+          return;
+        }
+        var addr = window.TonWallet && window.TonWallet.getAddress();
+        if (!addr) {
+          if (swapFeedback) { swapFeedback.textContent = 'Connect wallet first.'; swapFeedback.classList.remove('hidden'); }
+          return;
+        }
+        swapBtn.disabled = true;
+        if (swapFeedback) { swapFeedback.textContent = 'Swapping…'; swapFeedback.classList.remove('hidden'); swapFeedback.classList.remove('text-neon-green', 'text-neon-pink'); }
+        try {
+          var res = await fetch(backendUrl.replace(/\/$/, '') + '/api/swap', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: addr, amount: amount }),
+          });
+          var data = await res.json().catch(function() { return {}; });
+          if (data.success && data.tokensToCredit) {
+            tokens += data.tokensToCredit;
+            save();
+            updateUI();
+            if (swapAmountEl) swapAmountEl.value = '';
+            if (swapFeedback) { swapFeedback.textContent = 'Swapped! +' + data.tokensToCredit + ' tokens.'; swapFeedback.classList.add('text-neon-green'); }
+            if (window.TonWallet && window.TonWallet.setCardBalance && data.cardAmount != null) {
+              var cur = window.TonWallet.cardBalance;
+              if (cur != null) window.TonWallet.setCardBalance(Math.max(0, Number(cur) - data.cardAmount));
+            }
+            fetchCardBalanceFromBackend();
+          } else {
+            if (swapFeedback) { swapFeedback.textContent = data.error || 'Swap failed.'; swapFeedback.classList.add('text-neon-pink'); }
+          }
+        } catch (e) {
+          if (swapFeedback) { swapFeedback.textContent = e.message || 'Network error.'; swapFeedback.classList.add('text-neon-pink'); }
+        }
+        swapBtn.disabled = false;
+      });
+    } else {
+      var swapArea = document.getElementById('swap-area');
+      if (swapArea) {
+        var desc = swapArea.querySelector('.text-gray-400');
+        if (desc) desc.textContent = 'Set backendUrl in ton-config.js to enable swap.';
+      }
     }
 
-    // --- PVP: player name + token stake ---
-    var PVP_STAKE = 10; // tokens required per duel participant
+    // --- PVP: player name, onboarding, 1 $CARD requirement ---
+    var PVP_STAKE = 1;
     var PVP_GAME_DURATION_SEC = 30;
     var PVP_CLICK_COOLDOWN_MS = 200;
 
@@ -1315,61 +1669,21 @@
       var supabase = window.supabaseClient;
       var list = document.getElementById('friends-invited-list');
       if (!supabase || !list) return;
-      var myRefCode = localStorage.getItem('tokenClicker_refCode') || '';
-      var friendCode = localStorage.getItem('tokenClicker_invitedBy') || '';
-      if (!myRefCode && !friendCode) {
-        list.innerHTML = '<li class="text-gray-500">No friends yet. Share your invite link or add a friend above.</li>';
-        return;
-      }
-      var tasks = [];
-      if (friendCode) {
-        tasks.push(
-          supabase.from('leaderboard').select('name, wallet_address, ref_code').eq('ref_code', friendCode).maybeSingle().then(function(r) {
-            return { kind: 'friend', result: r, code: friendCode };
-          })
-        );
-      }
-      if (myRefCode) {
-        tasks.push(
-          supabase.from('referrals').select('invited_name, invited_wallet, created_at').eq('inviter_ref_code', myRefCode).order('created_at', { ascending: false }).limit(50)
-            .then(function(r) { return { kind: 'invited', result: r }; })
-        );
-      }
-      Promise.all(tasks).then(function(results) {
-        var items = [];
-        results.forEach(function(entry) {
-          if (!entry || !entry.kind) return;
-          if (entry.kind === 'friend') {
-            var r = entry.result || {};
-            if (r.error) {
-              // If lookup fails, still show the code the user added
-              items.push('Friend (code: ' + entry.code + ') — you used their invite.');
-            } else if (r.data) {
-              var row = r.data;
-              var name = row.name || 'Friend';
-              var w = row.wallet_address ? (row.wallet_address.slice(0, 6) + '…') : '';
-              items.push('Friend: ' + name + (w ? ' (' + w + ')' : '') + ' — you used their invite.');
-            } else {
-              items.push('Friend (code: ' + entry.code + ') — you used their invite.');
-            }
-          } else if (entry.kind === 'invited') {
-            var rr = entry.result || {};
-            if (rr.error || !rr.data || rr.data.length === 0) return;
-            rr.data.forEach(function(e, i) {
-              var name2 = e.invited_name || 'Player';
-              var wallet2 = e.invited_wallet ? (e.invited_wallet.slice(0, 6) + '…') : '';
-              items.push((i + 1) + '. ' + name2 + (wallet2 ? ' (' + wallet2 + ')' : ''));
-            });
+      var refCode = localStorage.getItem('tokenClicker_refCode') || '';
+      if (!refCode) { list.innerHTML = '<li class="text-gray-500">Your code not set yet.</li>'; return; }
+      supabase.from('referrals').select('invited_name, invited_wallet, created_at').eq('inviter_ref_code', refCode).order('created_at', { ascending: false }).limit(50)
+        .then(function(r) {
+          if (r.error || !r.data || r.data.length === 0) {
+            list.innerHTML = '<li class="text-gray-500">No one has used your invite link yet.</li>';
+            return;
           }
-        });
-        if (!items.length) {
-          list.innerHTML = '<li class="text-gray-500">No friends yet. Share your invite link or add a friend above.</li>';
-        } else {
-          list.innerHTML = items.map(function(t) { return '<li class=\"text-gray-300\">' + t + '</li>'; }).join('\\n');
-        }
-      }).catch(function() {
-        list.innerHTML = '<li class=\"text-gray-500\">Could not load.</li>';
-      });
+          list.innerHTML = r.data.map(function(e, i) {
+            var name = e.invited_name || 'Player';
+            var wallet = e.invited_wallet ? (e.invited_wallet.slice(0, 6) + '…') : '';
+            return (i + 1) + '. ' + name + (wallet ? ' (' + wallet + ')' : '');
+          }).join('\n');
+        })
+        .catch(function() { list.innerHTML = '<li class="text-gray-500">Could not load.</li>'; });
     }
     function persistNameToLeaderboard() {
       var name = getPlayerName();
@@ -1393,26 +1707,34 @@
       return Number(bal) >= PVP_STAKE;
     }
     function showPvpOnboarding(reason, roomId) {
-      window.location.hash = 'multiplayer';
-      if (typeof showPage === 'function') showPage('multiplayer');
-      var errEl = document.getElementById('pvp-error');
-      if (!errEl) return;
-      errEl.classList.remove('hidden');
-      if (reason === 'name') {
-        if (!getPlayerName()) setPlayerName('Player');
-        errEl.textContent = '';
-        errEl.classList.add('hidden');
-        return;
-      }
-      if (reason === 'wallet') {
-        errEl.textContent = 'Connect your TON wallet (Wallet tab) to play.';
-        return;
-      }
-      if (reason === 'card') {
-        errEl.textContent = 'You need at least 1 $CARD in your wallet to duel. Loser loses their stake.';
-        return;
-      }
+      return;
     }
+    function hidePvpOnboarding() {
+      var modal = document.getElementById('pvp-onboarding-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+      }
+      window._pvpOnboardingRoomId = null;
+    }
+    document.getElementById('pvp-onboarding-save') && document.getElementById('pvp-onboarding-save').addEventListener('click', function() {
+      var nameInput = document.getElementById('pvp-onboarding-name');
+      var name = nameInput && nameInput.value.trim().slice(0, 20);
+      if (name) setPlayerName(name);
+      var roomId = window._pvpOnboardingRoomId || window._pvpInvitedRoomId || (new URLSearchParams(window.location.search).get('room'));
+      hidePvpOnboarding();
+      window.location.hash = 'multiplayer';
+      showPage('multiplayer');
+      if (roomId && typeof joinPvpRoom === 'function') {
+        joinPvpRoom(roomId);
+      } else if (typeof window.loadPvpRooms === 'function') {
+        window.loadPvpRooms();
+      }
+    });
+    document.getElementById('pvp-onboarding-skip') && document.getElementById('pvp-onboarding-skip').addEventListener('click', function() {
+      hidePvpOnboarding();
+      if (window._pvpOnboardingRoomId && typeof window.loadPvpRooms === 'function') window.loadPvpRooms();
+    });
     function hideWelcomeNameModal() {
       var m = document.getElementById('welcome-name-modal');
       if (m) { m.classList.add('hidden'); m.style.display = 'none'; }
@@ -1426,7 +1748,16 @@
       var name = input && input.value.trim().slice(0, 20);
       if (name) { setPlayerName(name); hideWelcomeNameModal(); updateUI(); }
     });
-    document.getElementById('profile-change-name-btn') && document.getElementById('profile-change-name-btn').addEventListener('click', function() {
+    document.getElementById('wallet-settings-open-btn') && document.getElementById('wallet-settings-open-btn').addEventListener('click', function() {
+      if (typeof updateProfileDisplayName === 'function') updateProfileDisplayName();
+      var modal = document.getElementById('wallet-settings-modal');
+      if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
+    });
+    document.getElementById('wallet-settings-modal-close') && document.getElementById('wallet-settings-modal-close').addEventListener('click', function() {
+      var modal = document.getElementById('wallet-settings-modal');
+      if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+    });
+    document.getElementById('wallet-settings-btn') && document.getElementById('wallet-settings-btn').addEventListener('click', function() {
       var modal = document.getElementById('profile-name-modal');
       var input = document.getElementById('profile-name-input');
       if (input) input.value = getPlayerName() || '';
@@ -1441,7 +1772,70 @@
     function updateProfileDisplayName() {
       var el = document.getElementById('profile-display-name');
       if (el) el.textContent = getPlayerName() || '—';
+      var walletName = document.getElementById('wallet-settings-name');
+      if (walletName) walletName.textContent = getPlayerName() || '—';
     }
+    var featherCb = document.getElementById('wallet-setting-feather-effects');
+    var featherLabel = document.getElementById('wallet-setting-feather-label');
+    if (featherCb) {
+      featherCb.checked = localStorage.getItem('tokenClicker_featherEffects') !== '0';
+      if (featherLabel) featherLabel.textContent = featherCb.checked ? 'On' : 'Off';
+      featherCb.addEventListener('change', function() {
+        localStorage.setItem('tokenClicker_featherEffects', featherCb.checked ? '1' : '0');
+        if (featherLabel) featherLabel.textContent = featherCb.checked ? 'On' : 'Off';
+      });
+    }
+    // PVP full list modal removed; TOP 5 only on Friends page.
+
+    // --- Notifications ---
+    var NOTIFICATIONS_MAX = 50;
+    function pushNotification(msg) {
+      try {
+        var list = JSON.parse(localStorage.getItem('tokenClicker_notifications') || '[]');
+        list.unshift({ t: Date.now(), msg: msg });
+        if (list.length > NOTIFICATIONS_MAX) list.length = NOTIFICATIONS_MAX;
+        localStorage.setItem('tokenClicker_notifications', JSON.stringify(list));
+      } catch (e) {}
+    }
+    function renderNotificationsList() {
+      var el = document.getElementById('notifications-list');
+      if (!el) return;
+      try {
+        var list = JSON.parse(localStorage.getItem('tokenClicker_notifications') || '[]');
+        if (list.length === 0) { el.innerHTML = '<li class="text-gray-500">No activity yet. Claim bounties and tap to see updates here.</li>'; return; }
+        el.innerHTML = list.slice(0, 20).map(function (n) {
+          var d = new Date(n.t);
+          var when = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return '<li class="border-b border-gray-700 pb-1">' + (n.msg || '') + ' <span class="text-gray-500">' + when + '</span></li>';
+        }).join('');
+      } catch (e) { el.innerHTML = '<li class="text-gray-500">No activity yet.</li>'; }
+    }
+    function updateNotificationsPermissionLabel() {
+      var el = document.getElementById('notifications-permission');
+      var btn = document.getElementById('notifications-request-btn');
+      if (!el) return;
+      if (typeof Notification === 'undefined') { el.textContent = 'not supported'; if (btn) btn.disabled = true; return; }
+      var p = Notification.permission;
+      el.textContent = p === 'granted' ? 'enabled' : p === 'denied' ? 'denied' : 'ask';
+      if (btn) { btn.style.display = (p === 'granted' ? 'none' : 'inline-block'); btn.disabled = (p === 'denied'); }
+    }
+    document.getElementById('notifications-btn') && document.getElementById('notifications-btn').addEventListener('click', function () {
+      var modal = document.getElementById('notifications-modal');
+      if (!modal) return;
+      updateNotificationsPermissionLabel();
+      renderNotificationsList();
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    });
+    document.getElementById('notifications-close') && document.getElementById('notifications-close').addEventListener('click', function () {
+      var modal = document.getElementById('notifications-modal');
+      if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+    });
+    document.getElementById('notifications-request-btn') && document.getElementById('notifications-request-btn').addEventListener('click', function () {
+      if (typeof Notification === 'undefined') return;
+      Notification.requestPermission().then(function () { updateNotificationsPermissionLabel(); });
+    });
+    updateNotificationsPermissionLabel();
 
     // --- PVP: rooms from Supabase ---
     function getPvpPlayerId() {
@@ -1472,7 +1866,7 @@
       // Auto-close open rooms that no one joined after 1 minute
       var oneMinAgo = new Date(Date.now() - 60 * 1000).toISOString();
       supabase.from('rooms').update({ status: 'finished', updated_at: new Date().toISOString() }).eq('status', 'open').lt('created_at', oneMinAgo).then(function() {});
-      supabase.from('rooms').select('id, status, player1_wallet, player2_wallet, player1_name, player2_name, player1_clicks, player2_clicks, game_started_at, game_ends_at, winner_wallet, created_at').in('status', ['open', 'in_progress']).order('created_at', { ascending: false }).limit(20)
+      supabase.from('rooms').select('id, status, player1_wallet, player2_wallet, player1_name, player2_name, player1_clicks, player2_clicks, game_started_at, game_ends_at, winner_wallet, created_at').order('created_at', { ascending: false }).limit(20)
         .then(function(r) {
           if (status) status.textContent = '';
           if (r.error) {
@@ -1482,10 +1876,11 @@
             return;
           }
           var rooms = (r.data || []).filter(function(room) {
-            var s = (room.status || '').toLowerCase();
-            return s === 'open' || s === 'in_progress';
+            if (room.status !== 'finished') return true;
+            var ageMs = Date.now() - new Date(room.created_at).getTime();
+            return ageMs < 60 * 60 * 1000;
           });
-          var order = { open: 0, in_progress: 1 };
+          var order = { open: 0, in_progress: 1, finished: 2 };
           rooms.sort(function(a, b) {
             var oa = order[a.status] !== undefined ? order[a.status] : 3;
             var ob = order[b.status] !== undefined ? order[b.status] : 3;
@@ -1500,18 +1895,16 @@
             var isOpen = room.status === 'open' && count < 2;
             var isMine = p1 === me || p2 === me;
             var shortId = room.id.slice(0, 8);
-            var joinBtn = isOpen && p1 !== me ? '<button type="button" class="pvp-join-btn mt-2 py-1 px-2 border border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10" data-room-id="' + room.id + '">JOIN GAME</button>' : '';
+            var joinBtn = isOpen && p1 !== me ? '<button type="button" class="pvp-join-btn mt-2 py-1 px-2 border border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10" data-room-id="' + room.id + '">JOIN</button>' : '';
             var enterDuelBtn = room.status === 'in_progress' && isMine ? '<button type="button" class="pvp-enter-duel-btn mt-2 py-1 px-2 border border-neon-green text-neon-green rounded text-[9px] hover:bg-neon-green/10" data-room-id="' + room.id + '">ENTER DUEL</button>' : '';
-            var endGameBtn = room.status === 'in_progress' && isMine ? '<button type="button" class="pvp-end-game-btn flex-shrink-0 py-2 px-3 border-2 border-neon-pink text-neon-pink rounded text-[10px] font-bold hover:bg-neon-pink/10 min-h-[36px]" data-room-id="' + room.id + '">END GAME</button>' : '';
-            var isCreator = p1 === me;
-            var closeBtn = room.status === 'open' && isCreator ? '<button type="button" class="pvp-close-room-btn flex-shrink-0 py-2 px-3 border-2 border-neon-pink text-neon-pink rounded text-[10px] font-bold hover:bg-neon-pink/10 min-h-[36px]" data-room-id="' + room.id + '">CLOSE ROOM</button>' : '';
+            var closeBtn = room.status === 'open' && p1 === me ? '<button type="button" class="pvp-close-room-btn mt-2 py-1 px-2 border border-neon-pink text-neon-pink rounded text-[9px] hover:bg-neon-pink/10" data-room-id="' + room.id + '">CLOSE ROOM</button>' : '';
             var base = (window.TON_CONFIG && window.TON_CONFIG.gameBaseUrl ? window.TON_CONFIG.gameBaseUrl : (window.location.origin + window.location.pathname)).replace(/\/?$/, '');
             var shareLink = base + '/play.html?room=' + room.id;
             var cardAction = isOpen && p1 !== me ? 'join' : (room.status === 'in_progress' && isMine ? 'enter-duel' : '');
             return '<div class="pvp-room-card bg-pixel-panel border-2 border-gray-700 p-3 rounded text-left cursor-pointer hover:border-gray-500" data-room-id="' + room.id + '" data-room-action="' + cardAction + '">' +
-              '<div class="text-[10px] text-neon-pink">Room ' + shortId + (isMine ? ' (you)' : '') + (isCreator && room.status === 'open' ? ' · You created' : '') + '</div>' +
+              '<div class="text-[10px] text-neon-pink">Room ' + shortId + (isMine ? ' (you)' : '') + '</div>' +
               '<div class="text-gray-500 text-[9px] mt-1">' + count + '/2 · ' + room.status + '</div>' +
-              '<div class="mt-2 flex flex-wrap gap-2 items-center">' + closeBtn + endGameBtn + joinBtn + enterDuelBtn +
+              '<div class="mt-2 flex flex-wrap gap-2 items-center">' + joinBtn + enterDuelBtn + closeBtn +
               '<button type="button" class="pvp-copy-link-btn py-1 px-2 border border-gray-500 text-gray-400 rounded text-[9px] hover:bg-gray-700" data-room-id="' + room.id + '" data-room-url="' + shareLink + '">COPY LINK</button>' +
               '</div></div>';
           }).join('');
@@ -1533,7 +1926,6 @@
             if (target.classList && target.classList.contains('pvp-join-btn')) { ev.preventDefault(); joinPvpRoom(roomId); return; }
             if (target.classList && target.classList.contains('pvp-enter-duel-btn')) { ev.preventDefault(); enterDuel(roomId); return; }
             if (target.classList && target.classList.contains('pvp-close-room-btn')) { ev.preventDefault(); closePvpRoom(roomId); return; }
-            if (target.classList && target.classList.contains('pvp-end-game-btn')) { ev.preventDefault(); endPvpGameFromLobby(roomId); return; }
             if (target.classList && target.classList.contains('pvp-copy-link-btn')) {
               ev.preventDefault();
               var url = target.getAttribute('data-room-url');
@@ -1565,12 +1957,9 @@
       var errEl = document.getElementById('pvp-error');
       if (!supabase) { if (errEl) { errEl.textContent = 'Supabase not configured.'; errEl.classList.remove('hidden'); } return; }
       var name = getPlayerName();
-      if (!name) setPlayerName('Player');
-      name = getPlayerName();
-      if (typeof tokens === 'number' && tokens < PVP_STAKE) {
-        if (errEl) { errEl.textContent = 'You need at least ' + PVP_STAKE + ' tokens to start a duel.'; errEl.classList.remove('hidden'); }
-        return;
-      }
+      if (!name) { showPvpOnboarding('name'); return; }
+      if (!window.TonWallet || !window.TonWallet.getAddress()) { showPvpOnboarding('wallet'); return; }
+      if (!hasWalletAndStake()) { showPvpOnboarding('card'); return; }
       if (btn) btn.disabled = true;
       var me = getPvpPlayerId();
       supabase.from('rooms').insert({ status: 'open', player1_wallet: me, player1_name: name, stake_amount: PVP_STAKE }).select('id').single()
@@ -1604,58 +1993,14 @@
           if (errEl) { errEl.textContent = e.message || 'Error'; errEl.classList.remove('hidden'); }
         });
     }
-    function endPvpGameFromLobby(roomId) {
-      var supabase = window.supabaseClient;
-      var errEl = document.getElementById('pvp-error');
-      if (!supabase || !roomId) return;
-      var me = getPvpPlayerId();
-      supabase.from('rooms').select('*').eq('id', roomId).single().then(function(r) {
-        if (r.error || !r.data) { if (errEl) { errEl.textContent = 'Room not found.'; errEl.classList.remove('hidden'); } return; }
-        var room = r.data;
-        if (room.status === 'finished') {
-          loadPvpRooms();
-          if (pvpDuelRoomId === roomId) { pvpDuelRoomId = null; pvpDuelMyRole = 0; showDuelLobby(); }
-          return;
-        }
-        var isMine = room.player1_wallet === me || room.player2_wallet === me;
-        if (!isMine) { if (errEl) { errEl.textContent = 'You are not in this game.'; errEl.classList.remove('hidden'); } return; }
-        var c1 = room.player1_clicks || 0, c2 = room.player2_clicks || 0;
-        var winner = c1 > c2 ? room.player1_wallet : (c2 > c1 ? room.player2_wallet : null);
-        supabase.from('rooms').update({ status: 'finished', winner_wallet: winner, updated_at: new Date().toISOString() }).eq('id', roomId)
-          .then(function(up) {
-            if (up.error) { if (errEl) { errEl.textContent = up.error.message || 'Could not end game'; errEl.classList.remove('hidden'); } return; }
-            if (errEl) errEl.classList.add('hidden');
-            room.status = 'finished';
-            room.winner_wallet = winner;
-            if (winner) upsertLeaderboardWin(winner, room.player1_wallet === winner ? room.player1_name : room.player2_name);
-            if (pvpDuelRoomId === roomId) {
-              if (pvpDuelTimerId) { clearInterval(pvpDuelTimerId); pvpDuelTimerId = null; }
-              if (pvpDuelPollId) { clearInterval(pvpDuelPollId); pvpDuelPollId = null; }
-              if (pvpDuelRealtimeUnsub) { pvpDuelRealtimeUnsub(); pvpDuelRealtimeUnsub = null; }
-              pvpDuelRoomId = null;
-              pvpDuelMyRole = 0;
-              showDuelResult(room);
-            } else {
-              loadPvpRooms();
-              var statusEl = document.getElementById('pvp-status');
-              if (statusEl) { statusEl.textContent = 'Game ended.'; statusEl.className = 'text-[9px] text-neon-green mb-2 min-h-[14px]'; setTimeout(function() { statusEl.textContent = ''; statusEl.className = 'text-[9px] text-gray-500 mb-2 min-h-[14px]'; }, 3000); }
-            }
-          });
-      }).catch(function(e) {
-        if (errEl) { errEl.textContent = e.message || 'Error'; errEl.classList.remove('hidden'); }
-      });
-    }
     function joinPvpRoom(roomId) {
       var supabase = window.supabaseClient;
       var errEl = document.getElementById('pvp-error');
       if (!supabase || !roomId) return;
       var name = getPlayerName();
-      if (!name) setPlayerName('Player');
-      name = getPlayerName();
-      if (typeof tokens === 'number' && tokens < PVP_STAKE) {
-        if (errEl) { errEl.textContent = 'You need at least ' + PVP_STAKE + ' tokens to join a duel.'; errEl.classList.remove('hidden'); }
-        return;
-      }
+      if (!name) { showPvpOnboarding('name', roomId); return; }
+      if (!window.TonWallet || !window.TonWallet.getAddress()) { showPvpOnboarding('wallet', roomId); return; }
+      if (!hasWalletAndStake()) { showPvpOnboarding('card', roomId); return; }
       var me = getPvpPlayerId();
       supabase.from('rooms').select('status, player1_wallet, player2_wallet').eq('id', roomId).single().then(function(check) {
         if (check.error || !check.data) { if (errEl) { errEl.textContent = 'Room not found.'; errEl.classList.remove('hidden'); } return; }
@@ -1818,11 +2163,11 @@
       if (winnerWallet === me) {
         document.getElementById('pvp-duel-result-title').textContent = 'YOU WIN!';
         document.getElementById('pvp-duel-result-title').className = 'text-lg font-bold mb-2 neon-text-green';
-        document.getElementById('pvp-duel-result-detail').textContent = 'You\'re on the leaderboard. Loser loses their token stake.';
+        document.getElementById('pvp-duel-result-detail').textContent = 'You\'re on the leaderboard. Loser loses 1 $CARD (transfer can be added later).';
       } else if (winnerWallet) {
         document.getElementById('pvp-duel-result-title').textContent = 'YOU LOSE';
         document.getElementById('pvp-duel-result-title').className = 'text-lg font-bold mb-2 neon-text-pink';
-        document.getElementById('pvp-duel-result-detail').textContent = winName + ' won. You lose your token stake.';
+        document.getElementById('pvp-duel-result-detail').textContent = winName + ' won. You lose your 1 $CARD stake.';
       } else {
         document.getElementById('pvp-duel-result-title').textContent = 'DRAW';
         document.getElementById('pvp-duel-result-title').className = 'text-lg font-bold mb-2 text-gray-400';
@@ -1914,24 +2259,16 @@
       });
       if (pageId === 'friends') {
         if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+        if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
+      }
+      if (pageId === 'wallet') {
         if (typeof updateProfileDisplayName === 'function') updateProfileDisplayName();
-        if (typeof updateFriendInviteCurrentDisplay === 'function') updateFriendInviteCurrentDisplay();
+        if (typeof fetchTonPrice === 'function') fetchTonPrice();
       }
       if (pageId === 'multiplayer') {
         if (typeof window.loadPvpRooms === 'function') window.loadPvpRooms();
-        var roomParam = new URLSearchParams(window.location.search).get('room');
         var invitedCard = document.getElementById('pvp-invited-card');
-        var invitedRoomEl = document.getElementById('pvp-invited-room-id');
-        if (invitedCard) {
-          if (roomParam) {
-            invitedCard.classList.remove('hidden');
-            if (invitedRoomEl) invitedRoomEl.textContent = 'Room: ' + roomParam;
-            window._pvpInvitedRoomId = roomParam;
-          } else {
-            invitedCard.classList.add('hidden');
-            window._pvpInvitedRoomId = null;
-          }
-        }
+        if (invitedCard) invitedCard.classList.add('hidden');
       }
     }
     window.addEventListener('hashchange', () => showPage(getPageFromHash()));
@@ -1971,13 +2308,13 @@
       var refParam = params.get('ref');
       if (refParam) localStorage.setItem('tokenClicker_invitedBy', refParam);
       if (params.get('room')) {
-        window.location.hash = 'multiplayer';
         window._pvpInvitedRoomId = params.get('room');
-        if (typeof window.loadPvpRooms === 'function') setTimeout(window.loadPvpRooms, 300);
       }
       showPage(getPageFromHash());
       updateUI();
       if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+      if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
+      // Welcome name modal no longer shown automatically; set name in Wallet → Settings.
     });
   </script>
 </body>

@@ -1,0 +1,43 @@
+# Product Requirements Document: Token Clicker Gameplay Improvements
+
+## Overview
+Improve UX and consistency: align Bounties TO CLAIM with Boosts design, keep MY CLAIMED as colored bird cards, centralize settings on Wallet, simplify Friends page, and improve PVP leaderboard visibility.
+
+## Requirements
+
+### 1. Settings on Wallet Tab
+- All game settings live on the Wallet tab.
+- Add a SETTINGS section or button on the Wallet page that opens profile/game settings.
+- Profile name is editable only in Wallet → Settings (not on Friends).
+
+### 2. Friends Page
+- Remove the PROFILE block (your name + CHANGE NAME) from the Friends page; name is managed in Wallet → Settings only.
+- Move PVP Duel Wins to the top of the Friends page.
+- Display PVP Duel Wins as a list (same style as current, but at top).
+- Add a button (e.g. "VIEW FULL LIST") that opens a popup/modal showing the full PVP leaderboard list.
+
+### 3. Bounties – TO CLAIM
+- Match the design of the Boosts section: vertical list of gray panels (bg-pixel-panel, border-2 border-gray-700, rounded, flex row with description left and CLAIM button right).
+- No card grid on TO CLAIM; use a list layout consistent with Boosts.
+
+### 4. Bounties – MY CLAIMED
+- MY CLAIMED tab shows only colored square cards (bird cards) in a grid.
+- Each card is a colored square corresponding to the bounty type (green, yellow, cyan, pink) with the bird image and bounty name/reward.
+
+### 5. Testing
+- Test core gameplay: tap to earn, claim bounties, view TO CLAIM vs MY CLAIMED.
+- Test Wallet: balance, Settings (profile name).
+- Test Friends: PVP list at top, full-list popup, no profile block.
+- Test Boosts: buy flow and balance display.
+
+## Out of Scope (for later)
+- New gameplay mechanics (e.g. new bounties or boosts) unless specified elsewhere.
+- Backend/Supabase schema changes for these UI-only changes.
+
+## Acceptance Criteria
+- [ ] Wallet tab has a way to open Settings (profile name).
+- [ ] Friends page has no profile/name block.
+- [ ] PVP Duel Wins is at the top of Friends in a list; a button opens full list in a popup.
+- [ ] TO CLAIM bounties look like Boosts (gray panel list).
+- [ ] MY CLAIMED shows colored square bird cards in a grid.
+- [ ] Manual test pass: home, boosts, bounties (both tabs), friends, wallet, settings.

@@ -53,7 +53,7 @@ app.get('/', (req, res) => {
   <h1 style="color:#00fff7;">Token Clicker Backend</h1>
   <p>API is running. Configure admin &amp; minter:</p>
   <p><a href="/setup" style="color:#00fff7;">Open Setup →</a></p>
-  <p style="color:#888;font-size:14px;">Endpoints: GET /api/config, POST /api/withdraw, POST /api/admin/mint, GET /api/admin/status</p>
+  <p style="color:#888;font-size:14px;">Endpoints: GET /api/config, POST /api/swap, POST /api/withdraw, POST /api/admin/mint, GET /api/admin/status</p>
 </body></html>`);
     return;
   }
@@ -63,6 +63,7 @@ app.get('/', (req, res) => {
       'GET /setup': 'Admin setup UI (mnemonic, minter, etc.)',
       'GET /api/config': 'minter address & network',
       'GET /api/wallet/card-balance': 'query: address – $CARD balance from chain',
+      'POST /api/swap': 'body: { address, amount } — verify $CARD balance, return tokensToCredit (1 $CARD = 10 tokens)',
       'POST /api/withdraw': 'body: { address, amount }',
       'POST /api/admin/mint': 'body: { address, amount }, header: x-api-key',
       'GET /api/admin/status': 'header: x-api-key',
@@ -160,6 +161,46 @@ function authAdmin(req) {
   const key = req.headers['x-api-key'] || req.query.api_key;
   return key === ADMIN_API_KEY;
 }
+
+// --- Swap: verify user has $CARD, return tokens to credit (1 $CARD = 10 tokens) ---
+const SWAP_RATE = 10; // 1 $CARD = 10 in-game tokens
+app.post('/api/swap', async (req, res) => {
+  const { address, amount } = req.body || {};
+  const cardAmount = typeof amount === 'number' ? amount : parseInt(amount, 10);
+  if (!address || !cardAmount || cardAmount < 1) {
+    return res.status(400).json({ error: 'Invalid address or amount' });
+  }
+  if (!MINTER_ADDRESS) {
+    return res.status(503).json({ error: 'Backend not configured: set TON_CARD_MINTER_ADDRESS' });
+  }
+  try {
+    const client = new TonClient({ endpoint });
+    const minterAddress = Address.parse(MINTER_ADDRESS);
+    const ownerAddress = Address.parse(address.trim());
+    const ownerSlice = beginCell().storeAddress(ownerAddress).endCell();
+    const getWalletRes = await client.runMethod(minterAddress, 'get_wallet_address', [
+      { type: 'slice', cell: ownerSlice },
+    ]);
+    if (getWalletRes.exit_code !== 0) {
+      return res.json({ success: false, error: 'Could not get $CARD wallet' });
+    }
+    const jettonWalletAddress = getWalletRes.stack.readAddress();
+    const dataRes = await client.runMethod(jettonWalletAddress, 'get_wallet_data');
+    if (dataRes.exit_code !== 0) {
+      return res.json({ success: false, error: 'Could not read balance' });
+    }
+    const balanceRaw = dataRes.stack.readBigNumber();
+    const balance = Number(balanceRaw) / Math.pow(10, JETTON_DECIMALS);
+    if (balance < cardAmount) {
+      return res.json({ success: false, error: 'Not enough $CARD. You have ' + balance + ', need ' + cardAmount });
+    }
+    const tokensToCredit = cardAmount * SWAP_RATE;
+    res.json({ success: true, tokensToCredit, cardAmount });
+  } catch (e) {
+    console.error('Swap error:', e);
+    res.status(500).json({ success: false, error: e.message || 'Swap failed' });
+  }
+});
 
 // --- Withdraw: mint $CARD to user (admin sends tx) ---
 app.post('/api/withdraw', async (req, res) => {
@@ -357,6 +398,7 @@ app.listen(PORT, () => {
   console.log(`Token Clicker backend on http://localhost:${PORT}`);
   console.log('  GET  /setup            - Admin setup UI (enter mnemonic, minter, etc.)');
   console.log('  GET  /api/config       - minter address & network');
+  console.log('  POST /api/swap        - body: { address, amount } ($CARD → tokens)');
   console.log('  POST /api/withdraw     - body: { address, amount }');
   console.log('  POST /api/admin/mint   - body: { address, amount }, header: x-api-key');
   console.log('  GET  /api/admin/status - header: x-api-key');
