@@ -66,6 +66,13 @@
     .bottom-nav-link { flex-shrink: 0; padding: 6px 8px; font-size: 8px; border-radius: 6px; white-space: nowrap; }
     @media (min-width: 360px) { .bottom-nav-link { padding: 6px 10px; font-size: 9px; } }
     @media (min-width: 400px) { .bottom-nav-link { padding: 8px 12px; font-size: 10px; } }
+    /* Home center: smaller font on small screens */
+    .home-center-text { font-size: 8px; }
+    @media (min-width: 360px) { .home-center-text { font-size: 9px; } }
+    @media (min-width: 400px) { .home-center-text { font-size: 10px; } }
+    .home-center-value { font-size: 12px; }
+    @media (min-width: 360px) { .home-center-value { font-size: 14px; } }
+    @media (min-width: 400px) { .home-center-value { font-size: 16px; } }
     .pixel-border { border: 3px solid #333; image-rendering: pixelated; }
     .neon-text-cyan { color: #00fff7; text-shadow: 0 0 10px #00fff7; }
     .neon-text-pink { color: #ff00aa; text-shadow: 0 0 10px #ff00aa; }
@@ -363,16 +370,16 @@
       <!-- Metric windows above NFT -->
       <div class="grid grid-cols-3 gap-2 mb-4">
         <div class="bg-pixel-panel border-2 border-gray-700 p-2 text-center rounded">
-          <div class="text-gray-500 text-[10px]">TAP/SEC</div>
-          <div id="clicks-per-sec" class="neon-text-green">0</div>
+          <div class="text-gray-500 home-center-text">TAP/SEC</div>
+          <div id="clicks-per-sec" class="neon-text-green home-center-value">0</div>
         </div>
         <div class="bg-pixel-panel border-2 border-gray-700 p-2 text-center rounded">
-          <div class="text-gray-500 text-[10px]">TOTAL TAPS</div>
-          <div id="total-clicks" class="neon-text-cyan">0</div>
+          <div class="text-gray-500 home-center-text">TOTAL TAPS</div>
+          <div id="total-clicks" class="neon-text-cyan home-center-value">0</div>
         </div>
         <div class="bg-pixel-panel border-2 border-gray-700 p-2 text-center rounded">
-          <div class="text-gray-500 text-[10px]">TAP RATE</div>
-          <div id="token-rate" class="neon-text-yellow">1 / 10</div>
+          <div class="text-gray-500 home-center-text">TAP RATE</div>
+          <div id="token-rate" class="neon-text-yellow home-center-value">1 / 10</div>
         </div>
       </div>
       <!-- NFT Clicker -->
@@ -388,9 +395,9 @@
           </button>
         </div>
       </div>
-      <p class="text-center text-gray-500 mt-4">Every 10 clicks = 1 token</p>
+      <p class="text-center text-gray-500 mt-4 home-center-text">Every 10 clicks = 1 token</p>
       <!-- Stats bar (match reference) -->
-      <div class="mt-4 bg-pixel-panel border-2 border-gray-700 rounded px-3 py-2 text-[10px] flex flex-wrap justify-center gap-x-4 gap-y-1">
+      <div class="mt-4 bg-pixel-panel border-2 border-gray-700 rounded px-3 py-2 home-center-text flex flex-wrap justify-center gap-x-4 gap-y-1">
         <span>Taps: <span id="home-taps" class="text-neon-yellow">0</span></span>
         <span>Tap Power: <span id="home-power" class="text-neon-yellow">1</span>x</span>
         <span>Multiplier: <span id="home-mult" class="text-neon-yellow">1.0</span>x</span>
@@ -398,7 +405,7 @@
       </div>
       <!-- Badges -->
       <div class="mt-4 text-center">
-        <div class="text-gray-500 text-[10px] mb-2">🏆 BADGES</div>
+        <div class="text-gray-500 home-center-text mb-2">🏆 BADGES</div>
         <div class="flex justify-center gap-2 flex-wrap">
           <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel" id="badge-1" title="First Click">👆</div>
           <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel opacity-50" id="badge-2" title="7-Day Streak">🔥</div>
@@ -411,18 +418,18 @@
       <div class="mt-4 grid grid-cols-3 gap-2">
         <a href="#boosts" class="bg-pixel-panel border-2 border-gray-700 p-3 rounded text-center hover:border-neon-cyan/50 transition-colors">
           <div class="text-neon-yellow text-base mb-1">⚡</div>
-          <div class="text-[10px]">Power</div>
-          <div class="text-gray-500 text-[10px]">Cost: 50</div>
+          <div class="home-center-text">Power</div>
+          <div class="text-gray-500 home-center-text">Cost: 50</div>
         </a>
         <a href="#boosts" class="bg-pixel-panel border-2 border-gray-700 p-3 rounded text-center hover:border-neon-green/50 transition-colors">
           <div class="text-neon-green text-base mb-1">🔋</div>
-          <div class="text-[10px]">Autoclick</div>
-          <div class="text-gray-500 text-[10px]">Cost: 100</div>
+          <div class="home-center-text">Autoclick</div>
+          <div class="text-gray-500 home-center-text">Cost: 100</div>
         </a>
         <a href="#boosts" class="bg-pixel-panel border-2 border-gray-700 p-3 rounded text-center hover:border-neon-cyan/50 transition-colors">
           <div class="text-neon-cyan text-base mb-1">♻️</div>
-          <div class="text-[10px]">Regen</div>
-          <div class="text-gray-500 text-[10px]">Cost: 75</div>
+          <div class="home-center-text">Regen</div>
+          <div class="text-gray-500 home-center-text">Cost: 75</div>
         </a>
       </div>
     </section>
