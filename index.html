@@ -581,6 +581,19 @@
           <li class="text-gray-500">Loading…</li>
         </ol>
       </div>
+      <div class="bg-pixel-panel border-2 border-neon-cyan/30 p-3 rounded mb-4">
+        <div class="text-[10px] text-gray-500 mb-2">ADD FRIEND BY INVITE CODE</div>
+        <p class="text-gray-500 text-[9px] mb-2">Enter a friend's invite code; their name will appear in your list below.</p>
+        <div class="flex gap-2 flex-wrap items-center mb-2">
+          <input type="text" id="friend-code-input" placeholder="e.g. REFABC12" maxlength="20" class="flex-1 min-w-[120px] bg-black border-2 border-gray-600 rounded px-3 py-2 text-neon-cyan text-[10px] uppercase" />
+          <button type="button" id="friend-code-add-btn" class="py-2 px-4 border-2 border-neon-cyan text-neon-cyan rounded text-[10px] hover:bg-neon-cyan/10 whitespace-nowrap">ADD</button>
+        </div>
+        <p id="friend-code-feedback" class="text-[9px] min-h-[14px] hidden"></p>
+        <div class="text-[10px] text-gray-500 mt-2 mb-1">FRIENDS (ADDED BY CODE)</div>
+        <ol id="friends-added-list" class="space-y-1 text-[10px] min-h-[24px]">
+          <li class="text-gray-500">Loading…</li>
+        </ol>
+      </div>
       <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded mb-4">
         <div class="text-[10px] text-gray-500 mb-2">TOP CLICKERS (by tokens)</div>
         <ol id="leaderboard-list" class="space-y-1 text-[10px]">
@@ -1308,6 +1321,10 @@
         } else { fallbackCopy(url, inviteFeedback); }
       });
     }
+    var friendCodeAddBtn = document.getElementById('friend-code-add-btn');
+    var friendCodeInput = document.getElementById('friend-code-input');
+    if (friendCodeAddBtn) friendCodeAddBtn.addEventListener('click', function() { addFriendByCode(); });
+    if (friendCodeInput) friendCodeInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addFriendByCode(); } });
 
     // PVP: Share game – copy link that opens on mobile
     const shareGameBtn = document.getElementById('share-game-btn');
@@ -1728,6 +1745,76 @@
         })
         .catch(function() { list.innerHTML = '<li class="text-gray-500">Could not load.</li>'; });
     }
+    function loadFriendsAddedByCode() {
+      var supabase = window.supabaseClient;
+      var list = document.getElementById('friends-added-list');
+      if (!list) return;
+      var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
+      if (!supabase) {
+        list.innerHTML = '<li class="text-gray-500">Cannot load (no connection).</li>';
+        return;
+      }
+      if (!me) {
+        list.innerHTML = '<li class="text-gray-500">Set your name in Wallet → Settings to add friends by code.</li>';
+        return;
+      }
+      list.innerHTML = '<li class="text-gray-500">Loading…</li>';
+      supabase.from('friends_by_code').select('friend_ref_code, friend_name, created_at').eq('user_wallet', me).order('created_at', { ascending: false }).limit(50)
+        .then(function(r) {
+          if (r.error || !r.data || r.data.length === 0) {
+            list.innerHTML = '<li class="text-gray-500">No friends added by code yet. Enter a code above.</li>';
+            return;
+          }
+          list.innerHTML = r.data.map(function(e, i) {
+            return (i + 1) + '. ' + (e.friend_name || e.friend_ref_code || 'Friend');
+          }).join('\n');
+        })
+        .catch(function() { list.innerHTML = '<li class="text-gray-500">Could not load.</li>'; });
+    }
+    function addFriendByCode() {
+      var input = document.getElementById('friend-code-input');
+      var feedback = document.getElementById('friend-code-feedback');
+      var code = (input && input.value ? input.value.trim() : '').toUpperCase();
+      if (!code) {
+        if (feedback) { feedback.textContent = 'Enter an invite code.'; feedback.classList.remove('hidden'); feedback.classList.remove('text-neon-green'); feedback.classList.add('text-neon-yellow'); }
+        return;
+      }
+      var supabase = window.supabaseClient;
+      var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
+      if (!supabase || !me) {
+        if (feedback) { feedback.textContent = 'Set your name in Wallet → Settings first.'; feedback.classList.remove('hidden'); feedback.classList.remove('text-neon-green'); feedback.classList.add('text-neon-yellow'); }
+        return;
+      }
+      var myRef = localStorage.getItem('tokenClicker_refCode') || '';
+      if (myRef && code === myRef.toUpperCase()) {
+        if (feedback) { feedback.textContent = "You can't add yourself."; feedback.classList.remove('hidden'); feedback.classList.remove('text-neon-green'); feedback.classList.add('text-neon-yellow'); }
+        return;
+      }
+      if (feedback) feedback.classList.add('hidden');
+      supabase.from('leaderboard').select('name, ref_code').not('ref_code', 'is', null).limit(100).then(function(r) {
+        if (r.error || !r.data || !r.data.length) {
+          if (feedback) { feedback.textContent = 'Unknown invite code. Ask your friend for their code.'; feedback.classList.remove('hidden'); feedback.classList.remove('text-neon-green'); feedback.classList.add('text-neon-yellow'); }
+          return;
+        }
+        var codeUpper = code.toUpperCase();
+        var row = r.data.find(function(x) { return (x.ref_code || '').toUpperCase() === codeUpper; });
+        if (!row) {
+          if (feedback) { feedback.textContent = 'Unknown invite code. Ask your friend for their code.'; feedback.classList.remove('hidden'); feedback.classList.remove('text-neon-green'); feedback.classList.add('text-neon-yellow'); }
+          return;
+        }
+        var friendName = (row.name || '').trim() || code;
+        supabase.from('friends_by_code').insert({ user_wallet: me, friend_ref_code: code, friend_name: friendName }).then(function(ins) {
+          if (ins.error) {
+            if (feedback) { feedback.textContent = (ins.error.code === '23505' ? 'Already in your list.' : (ins.error.message || 'Could not add.')); feedback.classList.remove('hidden'); feedback.classList.add('text-neon-yellow'); }
+            if (ins.error.code !== '23505' && typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
+            return;
+          }
+          if (input) input.value = '';
+          if (feedback) { feedback.textContent = 'Added ' + friendName + ' to your list.'; feedback.classList.remove('hidden'); feedback.classList.remove('text-neon-yellow'); feedback.classList.add('text-neon-green'); }
+          if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
+        });
+      });
+    }
     function persistNameToLeaderboard() {
       var name = getPlayerName();
       var wallet = getPvpPlayerId();
@@ -1737,7 +1824,7 @@
       supabase.from('leaderboard').select('id').eq('wallet_address', wallet).maybeSingle().then(function(r) {
         var row = r.data;
         if (row) {
-          supabase.from('leaderboard').update({ name: name, updated_at: new Date().toISOString() }).eq('id', row.id).then(function() {});
+          supabase.from('leaderboard').update({ name: name, updated_at: new Date().toISOString(), ref_code: localStorage.getItem('tokenClicker_refCode') || null }).eq('id', row.id).then(function() {});
         } else {
           supabase.from('leaderboard').insert({ name: name, wallet_address: wallet, tokens: 0, ref_code: localStorage.getItem('tokenClicker_refCode') || null }).then(function() {});
         }
@@ -2338,7 +2425,7 @@
         if (row) {
           supabase.from('leaderboard').update({ pvp_wins: wins + 1, name: name || row.name, updated_at: new Date().toISOString() }).eq('id', row.id).then(function() { if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp(); });
         } else {
-          supabase.from('leaderboard').insert({ name: name || 'Player', wallet_address: wallet, tokens: 0, pvp_wins: 1 }).then(function() { if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp(); });
+          supabase.from('leaderboard').insert({ name: name || 'Player', wallet_address: wallet, tokens: 0, pvp_wins: 1, ref_code: localStorage.getItem('tokenClicker_refCode') || null }).then(function() { if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp(); });
         }
       });
     }
@@ -2450,6 +2537,7 @@
       });
       if (pageId === 'friends') {
         if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+        if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
         if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
       }
       if (pageId === 'wallet') {
@@ -2502,7 +2590,7 @@
       updateBountyProgress();
       save();
       var params = new URLSearchParams(window.location.search);
-      var refParam = params.get('ref');
+      var refParam = params.get('ref') || (window.location.hash ? new URLSearchParams(window.location.hash.slice(1)).get('ref') : null);
       if (refParam) localStorage.setItem('tokenClicker_invitedBy', refParam);
       if (params.get('room')) {
         window._pvpInvitedRoomId = params.get('room');
@@ -2510,8 +2598,18 @@
       showPage(getPageFromHash());
       updateUI();
       if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+      if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
       if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
-      // Welcome name modal no longer shown automatically; set name in Wallet → Settings.
+      var invitedBy = localStorage.getItem('tokenClicker_invitedBy');
+      var playerName = typeof getPlayerName === 'function' ? getPlayerName() : null;
+      if (invitedBy && playerName) {
+        if (typeof registerReferralIfNeeded === 'function') registerReferralIfNeeded(playerName);
+      } else if (invitedBy && !playerName) {
+        var welcomeModal = document.getElementById('welcome-name-modal');
+        var welcomeText = welcomeModal && welcomeModal.querySelector('.text-gray-300');
+        if (welcomeText) welcomeText.textContent = 'You were invited! Enter your display name to accept and join. You can change it later in Wallet → Settings.';
+        if (welcomeModal) { welcomeModal.classList.remove('hidden'); welcomeModal.style.display = 'flex'; }
+      }
     });
   </script>
 </body>
