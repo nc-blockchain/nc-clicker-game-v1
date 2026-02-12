@@ -2297,7 +2297,7 @@
               var q = supabase.from('referrals').delete().eq('inviter_ref_code', refCode);
               if (wallet) q = q.eq('invited_wallet', wallet); else q = q.is('invited_wallet', null);
               q.then(function(res) {
-                if (res.error) return;
+                if (res.error) { console.error('Remove invited friend failed:', res.error); if (typeof loadFriendsInvited === 'function') loadFriendsInvited(); return; }
                 if (typeof removeFromFriendTokenCache === 'function') removeFromFriendTokenCache(wallet, null);
                 if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
               });
@@ -2404,7 +2404,7 @@
               var ref = btn.getAttribute('data-ref') || '';
               if (!ref) return;
               supabase.from('friends_by_code').delete().eq('user_wallet', me).eq('friend_ref_code', ref).then(function(res) {
-                if (res.error) return;
+                if (res.error) { console.error('Remove friend failed:', res.error); if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode(); return; }
                 if (typeof removeFromFriendTokenCache === 'function') removeFromFriendTokenCache(null, ref);
                 if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
               });
