@@ -2696,7 +2696,19 @@
       var fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       supabase.from('rooms').update({ status: 'finished', updated_at: nowIso }).eq('status', 'open').lt('created_at', fiveMinAgo).then(function() {});
       supabase.from('rooms').update({ status: 'finished', updated_at: nowIso }).eq('status', 'in_progress').lt('game_ends_at', nowIso).then(function() {});
-      supabase.from('rooms').select('id, status, player1_wallet, player2_wallet, player1_name, player2_name, player1_clicks, player2_clicks, game_started_at, game_ends_at, winner_wallet, stake_amount, rematch_until, created_at').order('created_at', { ascending: false }).limit(50)
+      function loadRoomsWithCols(cols) {
+        return supabase.from('rooms').select(cols).order('created_at', { ascending: false }).limit(50);
+      }
+      loadRoomsWithCols('id, status, player1_wallet, player2_wallet, player1_name, player2_name, player1_clicks, player2_clicks, game_started_at, game_ends_at, winner_wallet, stake_amount, rematch_until, created_at')
+        .then(function(r) {
+          if (r.error && r.error.message && (r.error.message.indexOf('rematch') >= 0 || r.error.message.indexOf('does not exist') >= 0)) {
+            return loadRoomsWithCols('id, status, player1_wallet, player2_wallet, player1_name, player2_name, player1_clicks, player2_clicks, game_started_at, game_ends_at, winner_wallet, stake_amount, created_at').then(function(r2) {
+              if (r2.data) r2.data.forEach(function(room) { room.rematch_until = null; });
+              return r2;
+            });
+          }
+          return r;
+        })
         .then(function(r) {
           if (status) status.textContent = '';
           if (r.error) {
