@@ -2195,25 +2195,34 @@
       setFriendTokenCache(c);
     }
     var friendsReferralsChannel = null;
+    var referralsRealtimeFailed = false;
     function subscribeReferralsRealtime() {
       var supabase = window.supabaseClient;
       var refCode = (localStorage.getItem('tokenClicker_refCode') || '').trim();
-      if (!supabase || !refCode || friendsReferralsChannel) return;
-      friendsReferralsChannel = supabase.channel('referrals-inv-' + refCode).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'referrals', filter: 'inviter_ref_code=eq.' + refCode }, function(payload) {
-        var row = payload.new;
-        if (!row) return;
-        var name = (row.invited_name || 'Someone').trim();
-        function showFriendAcceptedToast() {
-          var toast = document.getElementById('friend-accepted-toast');
-          if (!toast) return;
-          toast.textContent = name + ' accepted your invite!';
-          toast.classList.remove('hidden');
-          setTimeout(function() { toast.classList.add('hidden'); }, 4000);
-        }
-        if (typeof pushNotification === 'function') pushNotification(name + ' accepted your invite!');
-        showFriendAcceptedToast();
-        if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
-      }).subscribe();
+      if (!supabase || !refCode || friendsReferralsChannel || referralsRealtimeFailed) return;
+      try {
+        var ch = supabase.channel('referrals-inv-' + refCode).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'referrals', filter: 'inviter_ref_code=eq.' + refCode }, function(payload) {
+          var row = payload.new;
+          if (!row) return;
+          var name = (row.invited_name || 'Someone').trim();
+          function showFriendAcceptedToast() {
+            var toast = document.getElementById('friend-accepted-toast');
+            if (!toast) return;
+            toast.textContent = name + ' accepted your invite!';
+            toast.classList.remove('hidden');
+            setTimeout(function() { toast.classList.add('hidden'); }, 4000);
+          }
+          if (typeof pushNotification === 'function') pushNotification(name + ' accepted your invite!');
+          showFriendAcceptedToast();
+          if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+        });
+        friendsReferralsChannel = ch;
+        ch.subscribe(function(status) {
+          if (status === 'CHANNEL_ERROR') { friendsReferralsChannel = null; referralsRealtimeFailed = true; }
+        });
+      } catch (e) {
+        referralsRealtimeFailed = true;
+      }
     }
     function unsubscribeReferralsRealtime() {
       if (window.supabaseClient && friendsReferralsChannel) {
@@ -2472,7 +2481,11 @@
       if (feedback) feedback.classList.add('hidden');
       var refCodePattern = code.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
       supabase.from('leaderboard').select('name').ilike('ref_code', refCodePattern).limit(1).maybeSingle().then(function(r) {
-        if (r.error || !r.data || !r.data.name) {
+        if (r.error) {
+          if (feedback) { feedback.textContent = (r.error.message && r.error.message.indexOf('schema') >= 0 ? 'Database schema outdated. Run migration 010 in Supabase.' : (r.error.message || 'Could not look up code.')); feedback.classList.remove('hidden'); feedback.classList.add('text-neon-yellow'); }
+          return;
+        }
+        if (!r.data || !r.data.name) {
           if (feedback) { feedback.textContent = 'Unknown invite code. Your friend should open the app, go to Wallet → Settings, and SAVE their name so their code is synced.'; feedback.classList.remove('hidden'); feedback.classList.remove('text-neon-green'); feedback.classList.add('text-neon-yellow'); }
           return;
         }
