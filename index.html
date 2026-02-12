@@ -385,6 +385,17 @@
       <p class="text-gray-600 text-[8px] mt-2">Rules in Wallet → Settings</p>
     </div>
   </div>
+  <!-- Share confirmation: proof user shared on platform -->
+  <div id="share-confirm-modal" class="hidden" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+    <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-6 max-w-sm w-full text-center">
+      <p class="text-neon-cyan text-[10px] font-bold mb-2">SHARE CONFIRMATION</p>
+      <p id="share-confirm-msg" class="text-gray-300 text-[9px] mb-4">Did you share the game?</p>
+      <div class="flex gap-2 justify-center flex-wrap">
+        <button type="button" id="share-confirm-yes" class="py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10">Yes, I shared</button>
+        <button type="button" id="share-confirm-no" class="py-2 px-4 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">Not yet</button>
+      </div>
+    </div>
+  </div>
   <!-- PVP Onboarding: name + enough in-game tokens for wager -->
   <div id="pvp-onboarding-modal" class="hidden" style="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-pink rounded-lg p-6 max-w-sm w-full text-center">
@@ -516,41 +527,49 @@
           <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel opacity-50" id="badge-boost-10" title="First Friend">👥</div>
         </div>
       </div>
-      <div class="space-y-3">
-        <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
-          <span>+1 token per 10 clicks (2x)</span>
-          <span class="text-neon-yellow">50 tokens</span>
-          <button type="button" id="buy-tappower" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="50" data-boost="tapPower">BUY</button>
+      <div class="space-y-4">
+        <div class="boost-category">
+          <div class="text-neon-yellow text-[10px] font-bold mb-2 uppercase tracking-wider">⚡ Tap Power</div>
+          <div class="space-y-2">
+            <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
+              <div class="flex-1 min-w-0"><span>+1 token per 10 clicks (2x)</span><div class="text-neon-yellow text-[10px] font-bold mt-1">50 tokens</div></div>
+              <button type="button" id="buy-tappower" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="50" data-boost="tapPower">BUY</button>
+            </div>
+            <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
+              <div class="flex-1 min-w-0"><span>+1 token per 10 clicks (3x)</span><div class="text-neon-yellow text-[10px] font-bold mt-1">150 tokens</div></div>
+              <button type="button" id="buy-tappower3" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="150" data-boost="tapPower3">BUY</button>
+            </div>
+            <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
+              <div class="flex-1 min-w-0"><span>+1 token per 10 clicks (4x)</span><div class="text-neon-yellow text-[10px] font-bold mt-1">350 tokens</div></div>
+              <button type="button" id="buy-tappower4" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="350" data-boost="tapPower4">BUY</button>
+            </div>
+          </div>
         </div>
-        <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
-          <span>+1 token per 10 clicks (3x)</span>
-          <span class="text-neon-yellow">150 tokens</span>
-          <button type="button" id="buy-tappower3" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="150" data-boost="tapPower3">BUY</button>
+        <div class="boost-category">
+          <div class="text-neon-green text-[10px] font-bold mb-2 uppercase tracking-wider">🔋 Autoclickers</div>
+          <div class="space-y-2">
+            <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
+              <div class="flex-1 min-w-0"><span>Autoclicker (1/s)</span><div class="text-neon-yellow text-[10px] font-bold mt-1">100 tokens</div></div>
+              <button type="button" id="buy-autoclicker" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="100" data-boost="autoclicker">BUY</button>
+            </div>
+            <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
+              <div class="flex-1 min-w-0"><span>Turbo Autoclicker (2/s)</span><div class="text-neon-yellow text-[10px] font-bold mt-1">250 tokens</div></div>
+              <button type="button" id="buy-turbo-autoclicker" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="250" data-boost="turboAutoclicker">BUY</button>
+            </div>
+          </div>
         </div>
-        <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
-          <span>+1 token per 10 clicks (4x)</span>
-          <span class="text-neon-yellow">350 tokens</span>
-          <button type="button" id="buy-tappower4" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="350" data-boost="tapPower4">BUY</button>
-        </div>
-        <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
-          <span>Autoclicker (1/s)</span>
-          <span class="text-neon-yellow">100 tokens</span>
-          <button type="button" id="buy-autoclicker" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="100" data-boost="autoclicker">BUY</button>
-        </div>
-        <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
-          <span>Turbo Autoclicker (2/s)</span>
-          <span class="text-neon-yellow">250 tokens</span>
-          <button type="button" id="buy-turbo-autoclicker" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="250" data-boost="turboAutoclicker">BUY</button>
-        </div>
-        <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
-          <span>Shorter cooldown (200ms)</span>
-          <span class="text-neon-yellow">75 tokens</span>
-          <button type="button" id="buy-cooldown" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="75" data-boost="cooldown">BUY</button>
-        </div>
-        <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
-          <span>Super cooldown (150ms)</span>
-          <span class="text-neon-yellow">150 tokens</span>
-          <button type="button" id="buy-super-cooldown" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="150" data-boost="superCooldown">BUY</button>
+        <div class="boost-category">
+          <div class="text-neon-cyan text-[10px] font-bold mb-2 uppercase tracking-wider">♻️ Cooldowns</div>
+          <div class="space-y-2">
+            <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
+              <div class="flex-1 min-w-0"><span>Shorter cooldown (200ms)</span><div class="text-neon-yellow text-[10px] font-bold mt-1">75 tokens</div></div>
+              <button type="button" id="buy-cooldown" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="75" data-boost="cooldown">BUY</button>
+            </div>
+            <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
+              <div class="flex-1 min-w-0"><span>Super cooldown (150ms)</span><div class="text-neon-yellow text-[10px] font-bold mt-1">150 tokens</div></div>
+              <button type="button" id="buy-super-cooldown" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="150" data-boost="superCooldown">BUY</button>
+            </div>
+          </div>
         </div>
       </div>
       <p class="text-gray-500 mt-4 text-[10px]">Your balance: <span id="boosts-balance" class="neon-text-cyan">0</span> tokens</p>
@@ -560,9 +579,14 @@
     <section id="page-bounties" class="page p-4">
       <h2 class="text-neon-green mb-4 border-b-2 border-gray-700 pb-2">BOUNTIES</h2>
       <p class="text-gray-400 mb-4">Daily rewards, weekly challenges, click milestones. Collect the bird cards!</p>
+      <div id="graduating-bounty-bar" class="mb-3 p-3 bg-black border-2 border-neon-green/50 rounded text-[9px]">
+        <div class="text-neon-green font-bold mb-1">ACTIVE & NEXT BOUNTY</div>
+        <div id="grad-current" class="text-gray-300">Active: 500 taps — 0/500 · 15 tokens</div>
+        <div id="grad-next" class="text-gray-500">Next: 1,000 taps — 0/1,000 · 25 tokens</div>
+      </div>
       <div class="flex gap-2 mb-3">
-        <button type="button" id="bounty-tab-toclaim" class="bounty-tab border-2 border-neon-green text-neon-green px-3 py-1.5 rounded text-[10px] hover:bg-neon-green/10 bg-neon-green/10">TO CLAIM</button>
-        <button type="button" id="bounty-tab-claimed" class="bounty-tab border-2 border-gray-500 text-gray-400 px-3 py-1.5 rounded text-[10px] hover:bg-gray-700">MY CLAIMED</button>
+        <button type="button" id="bounty-tab-toclaim" class="bounty-tab border-2 border-neon-green text-neon-green px-3 py-1.5 rounded text-[10px] hover:bg-neon-green/10 bg-neon-green/10">Available</button>
+        <button type="button" id="bounty-tab-claimed" class="bounty-tab border-2 border-gray-500 text-gray-400 px-3 py-1.5 rounded text-[10px] hover:bg-gray-700">Claimed</button>
       </div>
       <div class="space-y-3 hidden" id="bounties-list">
         <!-- Daily Bounties -->
@@ -570,31 +594,48 @@
           <div class="bounty-category-title">Daily Bounties</div>
           <div class="space-y-3">
         <div id="bounty-daily" class="bounty-row bounty-card-yellow p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="daily" data-bounty-name="Daily login" data-bounty-reward="5">
-          <div class="flex-1 min-w-0"><div>Daily login</div><div class="text-neon-yellow text-[10px]">Claim: 5 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>Daily login</div><div class="text-[10px] text-gray-400">Claim once per day</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 5 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-yellow"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-daily" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="daily" data-reward="5">CLAIM</button>
           </div>
         </div>
         <div id="bounty-50today" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="50today" data-bounty-name="50 taps today" data-bounty-reward="5">
-          <div class="flex-1 min-w-0"><div>50 taps today</div><div class="text-[10px]">Progress: <span id="bounty-50-progress">0</span>/50 · Reward: 5 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>50 taps today</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-50-progress">0</span>/50</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 5 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-50" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="50today" data-reward="5">CLAIM</button>
           </div>
         </div>
         <div id="bounty-100" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="100today" data-bounty-name="100 clicks today" data-bounty-reward="10">
-          <div class="flex-1 min-w-0"><div>100 clicks today</div><div class="text-[10px]">Progress: <span id="bounty-100-progress">0</span>/100 · Reward: 10 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>100 clicks today</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-100-progress">0</span>/100</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 10 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-100" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="100today" data-reward="10">CLAIM</button>
           </div>
         </div>
         <div id="bounty-weekly" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="weekly" data-bounty-name="Weekly 500" data-bounty-reward="50">
-          <div class="flex-1 min-w-0"><div>Weekly: 500 clicks</div><div class="text-[10px]">Progress: <span id="bounty-weekly-progress">0</span>/500 · Reward: 50 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>Weekly: 500 clicks</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-weekly-progress">0</span>/500</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 50 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-weekly" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="weekly" data-reward="50">CLAIM</button>
+          </div>
+        </div>
+        <div id="bounty-share" class="bounty-row bounty-card-cyan p-3 flex flex-col gap-2" data-bounty-id="share" data-bounty-name="Share the game" data-bounty-reward="15">
+          <div class="flex flex-wrap justify-between items-center gap-2">
+            <div class="flex-1 min-w-0"><div>Share the game</div><div class="text-[10px] text-gray-400">Share via X, Telegram, Facebook, email, or SMS once per day</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 15 tokens</div></div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <div class="bounty-bird-card bird-cyan"><img src="assets/cardinal.png" alt="" /></div>
+              <button type="button" id="claim-share" class="bounty-claim border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50" data-id="share" data-reward="15">CLAIM</button>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-1.5 pt-1 border-t border-gray-700/50">
+            <button type="button" class="share-bounty-btn py-1.5 px-2 border border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-cyan/50 hover:text-neon-cyan" data-share="x" title="Share on X">𝕏</button>
+            <button type="button" class="share-bounty-btn py-1.5 px-2 border border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-cyan/50 hover:text-neon-cyan" data-share="telegram" title="Share on Telegram">Telegram</button>
+            <button type="button" class="share-bounty-btn py-1.5 px-2 border border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-cyan/50 hover:text-neon-cyan" data-share="facebook" title="Share on Facebook">Facebook</button>
+            <button type="button" class="share-bounty-btn py-1.5 px-2 border border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-cyan/50 hover:text-neon-cyan" data-share="email" title="Share via Email">Email</button>
+            <button type="button" class="share-bounty-btn py-1.5 px-2 border border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-cyan/50 hover:text-neon-cyan" data-share="sms" title="Share via SMS">SMS</button>
+            <button type="button" class="share-bounty-btn py-1.5 px-2 border border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-cyan/50 hover:text-neon-cyan" data-share="copy" title="Copy link">Copy</button>
           </div>
         </div>
           </div>
@@ -602,42 +643,37 @@
         <!-- Graduating Bounties -->
         <div class="bounty-category">
           <div class="bounty-category-title">Graduating Bounties</div>
-          <div id="graduating-bounty-bar" class="mb-3 p-3 bg-black border-2 border-neon-green/50 rounded text-[9px]">
-            <div class="text-neon-green font-bold mb-1">ACTIVE & NEXT BOUNTY</div>
-            <div id="grad-current" class="text-gray-300">Active: 500 taps — 0/500 · 15 tokens</div>
-            <div id="grad-next" class="text-gray-500">Next: 1,000 taps — 0/1,000 · 25 tokens</div>
-          </div>
           <div class="space-y-3">
         <div id="bounty-500" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="500total" data-bounty-name="500 taps" data-bounty-reward="15">
-          <div class="flex-1 min-w-0"><div>500 total taps</div><div class="text-[10px]">Progress: <span id="bounty-500-progress">0</span>/500 · Reward: 15 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>500 total taps</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-500-progress">0</span>/500</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 15 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-500" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="500total" data-reward="15">CLAIM</button>
           </div>
         </div>
         <div id="bounty-1000" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="1000total" data-bounty-name="1,000 taps" data-bounty-reward="25">
-          <div class="flex-1 min-w-0"><div>1,000 total taps</div><div class="text-[10px]">Progress: <span id="bounty-1000-progress">0</span>/1,000 · Reward: 25 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>1,000 total taps</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-1000-progress">0</span>/1,000</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 25 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-1000" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="1000total" data-reward="25">CLAIM</button>
           </div>
         </div>
         <div id="bounty-2500" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="2500total" data-bounty-name="2,500 taps" data-bounty-reward="50">
-          <div class="flex-1 min-w-0"><div>2,500 total taps</div><div class="text-[10px]">Progress: <span id="bounty-2500-progress">0</span>/2,500 · Reward: 50 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>2,500 total taps</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-2500-progress">0</span>/2,500</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 50 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-2500" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="2500total" data-reward="50">CLAIM</button>
           </div>
         </div>
         <div id="bounty-5000" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="5000total" data-bounty-name="5,000 taps" data-bounty-reward="100">
-          <div class="flex-1 min-w-0"><div>5,000 total taps</div><div class="text-[10px]">Progress: <span id="bounty-5000-progress">0</span>/5,000 · Reward: 100 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>5,000 total taps</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-5000-progress">0</span>/5,000</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 100 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-5000" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="5000total" data-reward="100">CLAIM</button>
           </div>
         </div>
         <div id="bounty-10000" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="10000total" data-bounty-name="10,000 taps" data-bounty-reward="200">
-          <div class="flex-1 min-w-0"><div>10,000 total taps</div><div class="text-[10px]">Progress: <span id="bounty-10000-progress">0</span>/10,000 · Reward: 200 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>10,000 total taps</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-10000-progress">0</span>/10,000</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 200 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-green"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-10000" class="bounty-claim border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50" data-id="10000total" data-reward="200">CLAIM</button>
@@ -649,36 +685,29 @@
         <div class="bounty-category">
           <div class="bounty-category-title">Fun Bounties</div>
           <div class="space-y-3">
-        <div id="bounty-share" class="bounty-row bounty-card-cyan p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="share" data-bounty-name="Share the game" data-bounty-reward="15">
-          <div class="flex-1 min-w-0"><div>Share the game</div><div class="text-[10px]">Copy game or invite link once · Reward: 15 tokens</div></div>
-          <div class="flex items-center gap-2 flex-shrink-0">
-            <div class="bounty-bird-card bird-cyan"><img src="assets/cardinal.png" alt="" /></div>
-            <button type="button" id="claim-share" class="bounty-claim border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50" data-id="share" data-reward="15">CLAIM</button>
-          </div>
-        </div>
         <div id="bounty-firstfriend" class="bounty-row bounty-card-pink p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="firstfriend" data-bounty-name="First friend" data-bounty-reward="10">
-          <div class="flex-1 min-w-0"><div>Add your first friend</div><div class="text-[10px]">Paste a friend's code or link · Reward: 10 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>Add your first friend</div><div class="text-[10px] text-gray-400">Paste a friend's code or link</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 10 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-pink"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-firstfriend" class="bounty-claim border-2 border-neon-pink text-neon-pink px-3 py-1 rounded text-[10px] hover:bg-neon-pink/10 disabled:opacity-50" data-id="firstfriend" data-reward="10">CLAIM</button>
           </div>
         </div>
         <div id="bounty-lucky7" class="bounty-row bounty-card-yellow p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="lucky777" data-bounty-name="Lucky 777" data-bounty-reward="17">
-          <div class="flex-1 min-w-0"><div>Lucky 777</div><div class="text-[10px]">Reach 777 total taps · Reward: 17 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>Lucky 777</div><div class="text-[10px] text-gray-400">Reach 777 total taps</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 17 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-yellow"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-lucky7" class="bounty-claim border-2 border-neon-yellow text-neon-yellow px-3 py-1 rounded text-[10px] hover:bg-neon-yellow/10 disabled:opacity-50" data-id="lucky777" data-reward="17">CLAIM</button>
           </div>
         </div>
         <div id="bounty-speed" class="bounty-row bounty-card-pink p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="speeddemon" data-bounty-name="Speed demon" data-bounty-reward="20">
-          <div class="flex-1 min-w-0"><div>Speed demon</div><div class="text-[10px]">Hit 8+ taps in one second · Reward: 20 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>Speed demon</div><div class="text-[10px] text-gray-400">Hit 8+ taps in one second</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 20 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-pink"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-speed" class="bounty-claim border-2 border-neon-pink text-neon-pink px-3 py-1 rounded text-[10px] hover:bg-neon-pink/10 disabled:opacity-50" data-id="speeddemon" data-reward="20">CLAIM</button>
           </div>
         </div>
         <div id="bounty-hoarder" class="bounty-row bounty-card-cyan p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="hoarder" data-bounty-name="Token hoarder" data-bounty-reward="25">
-          <div class="flex-1 min-w-0"><div>Token hoarder</div><div class="text-[10px]">Reach 100 tokens balance · Reward: 25 tokens</div></div>
+          <div class="flex-1 min-w-0"><div>Token hoarder</div><div class="text-[10px] text-gray-400">Reach 100 tokens balance</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 25 tokens</div></div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <div class="bounty-bird-card bird-cyan"><img src="assets/cardinal.png" alt="" /></div>
             <button type="button" id="claim-hoarder" class="bounty-claim border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50" data-id="hoarder" data-reward="25">CLAIM</button>
@@ -688,9 +717,9 @@
         </div>
       </div>
       <div id="bounties-toclaim-cards" class="hidden grid grid-cols-3 sm:grid-cols-4 gap-3"></div>
-      <p id="bounties-toclaim-empty" class="hidden text-gray-500 text-[10px] py-4">All bounties claimed! Check MY CLAIMED for your collection.</p>
+      <p id="bounties-toclaim-empty" class="hidden text-gray-500 text-[10px] py-4">All bounties claimed! Check Claimed for your collection.</p>
       <div id="bounties-claimed-cards" class="hidden grid grid-cols-3 sm:grid-cols-4 gap-3"></div>
-      <p id="bounties-claimed-empty" class="hidden text-gray-500 text-[10px] py-4">No claimed bounties yet. Claim bounties from the TO CLAIM tab!</p>
+      <p id="bounties-claimed-empty" class="hidden text-gray-500 text-[10px] py-4">No claimed bounties yet. Claim bounties from the Available tab!</p>
       <p class="text-gray-500 mt-4 text-[10px]">Balance: <span id="bounties-balance" class="neon-text-cyan">0</span> tokens</p>
     </section>
 
@@ -969,10 +998,10 @@
     let hasCooldownBoost = localStorage.getItem('tokenClicker_cooldown') === '1';
     let hasSuperCooldownBoost = localStorage.getItem('tokenClicker_superCooldown') === '1';
     let lastDailyClaim = localStorage.getItem('tokenClicker_lastDailyClaim') || '';
+    let lastShareClaim = localStorage.getItem('tokenClicker_lastShareClaim') || '';
     let claimed100Today = localStorage.getItem('tokenClicker_claimed100Today') === '1';
     let claimedWeekly = localStorage.getItem('tokenClicker_claimedWeekly') === '1';
     let claimed50Today = localStorage.getItem('tokenClicker_claimed50Today') === '1';
-    let claimedShare = localStorage.getItem('tokenClicker_claimedShare') === '1';
     let claimedFirstFriend = localStorage.getItem('tokenClicker_claimedFirstFriend') === '1';
     let claimed500total = localStorage.getItem('tokenClicker_claimed500total') === '1';
     let claimed1000total = localStorage.getItem('tokenClicker_claimed1000total') === '1';
@@ -1040,10 +1069,10 @@
       localStorage.setItem('tokenClicker_cooldown', hasCooldownBoost ? '1' : '0');
       localStorage.setItem('tokenClicker_superCooldown', hasSuperCooldownBoost ? '1' : '0');
       localStorage.setItem('tokenClicker_lastDailyClaim', lastDailyClaim);
+      localStorage.setItem('tokenClicker_lastShareClaim', lastShareClaim);
       localStorage.setItem('tokenClicker_claimed100Today', claimed100Today ? '1' : '0');
       localStorage.setItem('tokenClicker_claimedWeekly', claimedWeekly ? '1' : '0');
       localStorage.setItem('tokenClicker_claimed50Today', claimed50Today ? '1' : '0');
-      localStorage.setItem('tokenClicker_claimedShare', claimedShare ? '1' : '0');
       localStorage.setItem('tokenClicker_claimedFirstFriend', claimedFirstFriend ? '1' : '0');
       localStorage.setItem('tokenClicker_claimed500total', claimed500total ? '1' : '0');
       localStorage.setItem('tokenClicker_claimed1000total', claimed1000total ? '1' : '0');
@@ -1100,7 +1129,7 @@
         case '50today': return claimed50Today;
         case '100today': return claimed100Today;
         case 'weekly': return claimedWeekly;
-        case 'share': return claimedShare;
+        case 'share': return lastShareClaim === todayKey();
         case 'firstfriend': return claimedFirstFriend;
         case '500total': return claimed500total;
         case '1000total': return claimed1000total;
@@ -1362,11 +1391,13 @@
         claimWeekBtn.disabled = weeklyClicks < 500 || claimedWeekly;
         claimWeekBtn.textContent = claimedWeekly ? 'CLAIMED' : 'CLAIM';
       }
-      var hasShared = localStorage.getItem('tokenClicker_hasSharedGame') === '1';
+      var shareDate = localStorage.getItem('tokenClicker_shareDate') || '';
+      var hasSharedToday = shareDate === todayKey();
+      var claimedShareToday = lastShareClaim === todayKey();
       var claimShareBtn = document.getElementById('claim-share');
       if (claimShareBtn) {
-        claimShareBtn.disabled = !hasShared || claimedShare;
-        claimShareBtn.textContent = claimedShare ? 'CLAIMED' : 'CLAIM';
+        claimShareBtn.disabled = !hasSharedToday || claimedShareToday;
+        claimShareBtn.textContent = claimedShareToday ? 'CLAIMED' : 'CLAIM';
       }
       var hasFriend = !!localStorage.getItem('tokenClicker_invitedBy');
       var claimFirstFriendBtn = document.getElementById('claim-firstfriend');
@@ -1622,7 +1653,7 @@
         if (id === '50today' && clicksToday >= 50 && !claimed50Today) { claimed50Today = true; addTokens(reward); didClaim = true; }
         if (id === '100today' && clicksToday >= 100 && !claimed100Today) { claimed100Today = true; addTokens(reward); didClaim = true; }
         if (id === 'weekly' && weeklyClicks >= 500 && !claimedWeekly) { claimedWeekly = true; addTokens(reward); didClaim = true; }
-        if (id === 'share' && localStorage.getItem('tokenClicker_hasSharedGame') === '1' && !claimedShare) { claimedShare = true; addTokens(reward); didClaim = true; }
+        if (id === 'share' && localStorage.getItem('tokenClicker_shareDate') === todayKey() && lastShareClaim !== todayKey()) { lastShareClaim = todayKey(); addTokens(reward); didClaim = true; }
         if (id === 'firstfriend' && !!localStorage.getItem('tokenClicker_invitedBy') && !claimedFirstFriend) { claimedFirstFriend = true; addTokens(reward); didClaim = true; }
         if (id === '500total' && totalClicks >= 500 && !claimed500total) { claimed500total = true; addTokens(reward); didClaim = true; }
         if (id === '1000total' && totalClicks >= 1000 && !claimed1000total) { claimed1000total = true; addTokens(reward); didClaim = true; }
@@ -1653,6 +1684,52 @@
     }
     function getGameUrl() {
       return getShareBaseUrl() + '/';
+    }
+    function getShareText() { return 'Tap the Cardinal to earn tokens. Play on your phone – PVP with friends!'; }
+    function markSharedGame() {
+      try {
+        localStorage.setItem('tokenClicker_hasSharedGame', '1');
+        localStorage.setItem('tokenClicker_shareDate', todayKey());
+      } catch (e) {}
+      if (typeof updateBountiesUI === 'function') updateBountiesUI();
+    }
+    var platformNames = { x: 'X', telegram: 'Telegram', facebook: 'Facebook', email: 'Email', sms: 'SMS' };
+    function showShareConfirmModal(platform, onConfirm) {
+      var modal = document.getElementById('share-confirm-modal');
+      var msg = document.getElementById('share-confirm-msg');
+      var yesBtn = document.getElementById('share-confirm-yes');
+      var noBtn = document.getElementById('share-confirm-no');
+      if (!modal || !msg) return;
+      msg.textContent = 'Did you share the game on ' + (platformNames[platform] || platform) + '?';
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+      function closeModal() { modal.classList.add('hidden'); modal.style.display = 'none'; }
+      yesBtn.onclick = function() { closeModal(); if (onConfirm) onConfirm(); yesBtn.onclick = null; noBtn.onclick = null; };
+      noBtn.onclick = function() { closeModal(); yesBtn.onclick = null; noBtn.onclick = null; };
+    }
+    function doShareGame(channel) {
+      var url = getGameUrl();
+      var text = getShareText();
+      var encodedUrl = encodeURIComponent(url);
+      var encodedText = encodeURIComponent(text);
+      var fullText = text + ' ' + url;
+      if (channel === 'copy') {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(function() { markSharedGame(); }).catch(function() {});
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); markSharedGame(); } catch (e) {}
+          document.body.removeChild(ta);
+        }
+        return;
+      }
+      if (channel === 'x') { window.open('https://x.com/intent/tweet?text=' + encodedText + '&url=' + encodedUrl, '_blank', 'width=550,height=420'); showShareConfirmModal('x', markSharedGame); return; }
+      if (channel === 'telegram') { window.open('https://t.me/share/url?url=' + encodedUrl + '&text=' + encodedText, '_blank', 'width=550,height=420'); showShareConfirmModal('telegram', markSharedGame); return; }
+      if (channel === 'facebook') { window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodedUrl, '_blank', 'width=550,height=420'); showShareConfirmModal('facebook', markSharedGame); return; }
+      if (channel === 'email') { window.location.href = 'mailto:?subject=' + encodeURIComponent('1N Blockchain Token Clicker') + '&body=' + encodeURIComponent(fullText); showShareConfirmModal('email', markSharedGame); return; }
+      if (channel === 'sms') { window.location.href = 'sms:?body=' + encodeURIComponent(fullText); showShareConfirmModal('sms', markSharedGame); return; }
     }
 
     // Friends: copy invite link (canonical URL so it opens on mobile)
@@ -1691,9 +1768,10 @@
         var url = getGameUrl();
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(url).then(function() {
+            if (typeof markSharedGame === 'function') markSharedGame();
             if (shareGameFeedback) { shareGameFeedback.classList.remove('hidden'); setTimeout(function() { shareGameFeedback.classList.add('hidden'); }, 4000); }
-          }).catch(function() { fallbackCopy(url, shareGameFeedback); });
-        } else { fallbackCopy(url, shareGameFeedback); }
+          }).catch(function() { fallbackCopy(url, shareGameFeedback); if (typeof markSharedGame === 'function') markSharedGame(); });
+        } else { fallbackCopy(url, shareGameFeedback); if (typeof markSharedGame === 'function') markSharedGame(); }
       });
     }
     if (shareGameNativeBtn && navigator.share) {
@@ -1701,11 +1779,17 @@
       shareGameNativeBtn.addEventListener('click', function() {
         navigator.share({
           title: '1N Blockchain Token Clicker',
-          text: 'Tap the Cardinal to earn tokens. Play on your phone – PVP with friends!',
+          text: (typeof getShareText === 'function' ? getShareText() : 'Tap the Cardinal to earn tokens. Play on your phone – PVP with friends!'),
           url: getGameUrl(),
-        }).then(function() { if (shareGameFeedback) { shareGameFeedback.textContent = 'Shared!'; shareGameFeedback.classList.remove('hidden'); setTimeout(function() { shareGameFeedback.classList.add('hidden'); }, 3000); } }).catch(function() {});
+        }).then(function() { if (typeof markSharedGame === 'function') markSharedGame(); if (shareGameFeedback) { shareGameFeedback.textContent = 'Shared!'; shareGameFeedback.classList.remove('hidden'); setTimeout(function() { shareGameFeedback.classList.add('hidden'); }, 3000); } }).catch(function() {});
       });
     }
+    document.querySelectorAll('.share-bounty-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var channel = btn.getAttribute('data-share') || 'copy';
+        if (typeof doShareGame === 'function') doShareGame(channel);
+      });
+    });
 
     // TON Wallet: connector + optional TonConnect UI modal; we prefer direct connect + link for reliability
     var walletStatusEl = document.getElementById('wallet-connection-status');
