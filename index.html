@@ -3140,21 +3140,23 @@
         return;
       }
       if (feedback) feedback.classList.add('hidden');
-      supabase.from('leaderboard').select('name, wallet_address, ref_code').ilike('ref_code', code).limit(1).maybeSingle().then(function(r) {
+      var ilikeCode = (code + '').replace(/%/g, '\\%').replace(/_/g, '\\_');
+      supabase.from('leaderboard').select('name, wallet_address, ref_code').ilike('ref_code', ilikeCode).limit(1).then(function(r) {
         if (r.error) {
           if (feedback) { feedback.textContent = (r.error.message && r.error.message.indexOf('schema') >= 0 ? 'Database schema outdated. Run migration 010 in Supabase.' : (r.error.message || 'Could not look up code.')); feedback.classList.remove('hidden'); feedback.classList.add('text-neon-yellow'); }
           return;
         }
-        if (!r.data || !r.data.name) {
+        var row = r.data && r.data[0];
+        if (!row || !row.name) {
           if (feedback) { feedback.textContent = 'Unknown invite code. Your friend should open the app, go to Wallet → Settings, and SAVE their name so their code is synced.'; feedback.classList.remove('hidden'); feedback.classList.remove('text-neon-green'); feedback.classList.add('text-neon-yellow'); }
           return;
         }
-        var toWallet = (r.data.wallet_address || '').trim();
+        var toWallet = (row.wallet_address || '').trim();
         if (!toWallet || toWallet === me) {
           if (feedback) { feedback.textContent = 'Invalid or your own code.'; feedback.classList.remove('hidden'); feedback.classList.add('text-neon-yellow'); }
           return;
         }
-        var friendName = (r.data.name || '').trim() || code;
+        var friendName = (row.name || '').trim() || code;
         var fromName = (typeof getPlayerName === 'function' ? getPlayerName() : '') || 'Player';
         supabase.from('friend_requests').insert({ from_wallet: me, to_wallet: toWallet, from_name: fromName, to_name: friendName, status: 'pending' }).then(function(ins) {
           if (ins.error) {
