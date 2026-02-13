@@ -84,6 +84,8 @@
     .nft-clicker:hover:not(.cooldown) { box-shadow: 0 0 25px rgba(0,255,247,0.35), 0 0 50px rgba(255,0,170,0.2); }
     .pvp-duel-tap-pulse { animation: pvpTapPulse 0.12s ease-out; }
     @keyframes pvpTapPulse { 0% { transform: scale(1); } 40% { transform: scale(0.9); } 100% { transform: scale(1); } }
+    .pvp-go-glow { text-shadow: 0 0 12px rgba(0,255,247,0.9), 0 0 24px rgba(0,255,247,0.6); animation: pvpGoGlow 0.5s ease-out; }
+    @keyframes pvpGoGlow { 0% { transform: scale(1.2); opacity: 0.9; } 100% { transform: scale(1); opacity: 1; } }
     .nft-clicker:active { transform: scale(0.97); }
     .nft-clicker.cooldown { opacity: 0.7; pointer-events: none; }
     .nft-clicker.bird-dead { opacity: 0.5; filter: grayscale(0.8); }
@@ -218,6 +220,7 @@
     .feather-fall.feather-sway1 { animation: featherFall1 1.4s ease-in forwards; }
     .feather-fall.feather-sway2 { animation: featherFall2 1.4s ease-in forwards; }
     .feather-fall.feather-sway3 { animation: featherFall3 1.4s ease-in forwards; }
+    .reduced-motion .feather-fall { animation-duration: 0.4s !important; }
     @keyframes featherFall {
       0% { opacity: 1; transform: translateY(0) translateX(0) rotate(0deg) scale(1); }
       100% { opacity: 0.6; transform: translateY(120px) translateX(0) rotate(180deg) scale(0.9); }
@@ -319,7 +322,12 @@
   <div id="wallet-settings-modal" class="hidden" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-4 max-w-sm w-full max-h-[90vh] overflow-y-auto">
       <p class="text-neon-cyan text-[10px] font-bold mb-3">SETTINGS</p>
-      <div class="space-y-3">
+      <div class="flex flex-wrap gap-2 mb-3 text-[9px]">
+        <button type="button" class="wallet-settings-nav-btn px-2 py-1 border border-neon-cyan/60 text-neon-cyan rounded hover:bg-neon-cyan/10" data-target="wallet-settings-general">Profile &amp; game</button>
+        <button type="button" class="wallet-settings-nav-btn px-2 py-1 border border-neon-green/60 text-neon-green rounded hover:bg-neon-green/10" data-target="wallet-help-section">Wallet help</button>
+        <button type="button" class="wallet-settings-nav-btn px-2 py-1 border border-neon-yellow/60 text-neon-yellow rounded hover:bg-neon-yellow/10" data-target="wallet-levels-section">Levels &amp; rules</button>
+      </div>
+      <div id="wallet-settings-general" class="space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-[10px] text-gray-400">Player · Profile name:</span>
           <span id="wallet-settings-name" class="neon-text-cyan text-[10px]">—</span>
@@ -332,8 +340,33 @@
             <span id="wallet-setting-feather-label" class="text-[9px] text-gray-300">On</span>
           </label>
         </div>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-[10px] text-gray-400">Sound:</span>
+          <label class="inline-flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" id="wallet-setting-sound" class="rounded border-2 border-gray-500 bg-black text-neon-cyan focus:ring-neon-cyan" checked />
+            <span id="wallet-setting-sound-label" class="text-[9px] text-gray-300">On</span>
+          </label>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-[10px] text-gray-400">Haptics (vibration):</span>
+          <label class="inline-flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" id="wallet-setting-haptics" class="rounded border-2 border-gray-500 bg-black text-neon-cyan focus:ring-neon-cyan" checked />
+            <span id="wallet-setting-haptics-label" class="text-[9px] text-gray-300">On</span>
+          </label>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-[10px] text-gray-400">Reduced motion:</span>
+          <label class="inline-flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" id="wallet-setting-reduced-motion" class="rounded border-2 border-gray-500 bg-black text-neon-cyan focus:ring-neon-cyan" />
+            <span id="wallet-setting-reduced-motion-label" class="text-[9px] text-gray-300">Off</span>
+          </label>
+        </div>
       </div>
       <div class="mt-4 pt-3 border-t border-gray-700">
+        <p class="text-neon-cyan text-[10px] font-bold mb-2">WALLET STATUS</p>
+        <p id="wallet-settings-connection" class="text-[9px] text-gray-400 mb-2">—</p>
+      </div>
+      <div id="wallet-help-section" class="mt-4 pt-3 border-t border-gray-700">
         <p class="text-neon-cyan text-[10px] font-bold mb-2">WALLET HELP</p>
         <div class="p-2 rounded border-2 border-neon-green/50 bg-neon-green/5 mb-2">
           <p class="text-neon-green text-[9px] font-bold">📱 On phone</p>
@@ -343,7 +376,7 @@
         <button type="button" id="ton-check-connection-btn" class="w-full mt-2 py-2 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10 font-bold">I APPROVED – CHECK CONNECTION</button>
         <p class="text-neon-yellow text-[8px] mt-2">On desktop localhost: run the backend or use the <a href="https://biggleem.github.io/nc-clicker-game-v1" target="_blank" rel="noopener" class="underline">live site</a>.</p>
       </div>
-      <div class="mt-4 pt-3 border-t border-gray-700">
+      <div id="wallet-levels-section" class="mt-4 pt-3 border-t border-gray-700">
         <p class="text-neon-yellow text-[10px] font-bold mb-2">LEVELS & DEATH RULES</p>
         <p class="text-gray-400 text-[9px] mb-1">Levels (by total taps):</p>
         <ul class="text-gray-500 text-[8px] mb-2 space-y-0.5 list-none">
@@ -399,6 +432,15 @@
     </div>
   </div>
   <!-- PVP Onboarding: name + enough in-game tokens for wager -->
+  <div id="pvp-full-list-modal" class="hidden" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+    <div class="bg-pixel-panel border-2 border-neon-pink rounded-lg p-4 max-w-sm w-full max-h-[80vh] flex flex-col">
+      <p class="text-neon-pink text-[10px] font-bold mb-3">PVP DUEL WINS (TOP 100)</p>
+      <ol id="pvp-full-list-content" class="space-y-1 text-[10px] list-decimal list-inside text-gray-300 overflow-y-auto flex-1 min-h-[120px]">
+        <li class="text-gray-500">Loading…</li>
+      </ol>
+      <button type="button" id="pvp-full-list-modal-close" class="mt-3 py-2 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">CLOSE</button>
+    </div>
+  </div>
   <div id="pvp-onboarding-modal" class="hidden" style="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-pink rounded-lg p-6 max-w-sm w-full text-center">
       <p class="text-neon-pink text-[10px] font-bold mb-3">JOIN PVP DUEL</p>
@@ -425,7 +467,7 @@
       <div class="flex items-center gap-2 min-w-0 flex-1">
         <a href="#home" class="flex-shrink-0" aria-label="Home"><img src="assets/cardinal.png" alt="1N BLOCKCHAIN" class="h-8 md:h-9 object-contain object-left" /></a>
         <span class="text-gray-400 shrink-0">TOKENS</span>
-        <span id="top-tokens" class="neon-text-cyan font-bold shrink-0">0</span>
+        <span id="top-tokens" class="neon-text-cyan font-bold shrink-0" aria-live="polite" role="status">0</span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <a href="#multiplayer" class="p-2 rounded border-2 border-neon-pink text-neon-pink hover:shadow-neon-sm text-[10px]">PVP</a>
@@ -480,11 +522,26 @@
       </div>
       <p class="text-center text-gray-500 mt-4 home-center-text">Every 10 clicks = 1 token</p>
       <!-- Stats bar -->
-      <div class="mt-4 bg-pixel-panel border-2 border-gray-700 rounded px-3 py-2 home-center-text flex flex-wrap justify-center gap-x-4 gap-y-1">
-        <span>Tap Power: <span id="home-power" class="text-neon-yellow">1</span>x</span>
-        <span>1 tok per <span id="home-token-rate" class="text-neon-yellow">10</span> taps</span>
-        <span>AC: <span id="home-regen" class="text-neon-yellow">0</span>/s</span>
+      <div class="mt-4 flex flex-wrap justify-center gap-2 home-center-text">
+        <div class="bg-pixel-panel border-2 border-neon-yellow/40 rounded-lg px-3 py-2 flex items-center gap-2">
+          <span class="text-[9px] text-gray-400 uppercase tracking-wider">Power</span>
+          <span id="home-power" class="text-neon-yellow font-bold text-sm">1</span>
+          <span class="text-gray-500 text-[10px]">x</span>
+        </div>
+        <div class="bg-pixel-panel border-2 border-neon-cyan/40 rounded-lg px-3 py-2 flex items-center gap-2">
+          <span class="text-[9px] text-gray-400 uppercase tracking-wider">Rate</span>
+          <span class="text-[10px] text-gray-300">1 token /</span>
+          <span id="home-token-rate" class="text-neon-cyan font-bold text-sm">10</span>
+          <span class="text-gray-500 text-[10px]">taps</span>
+        </div>
+        <div class="bg-pixel-panel border-2 border-neon-green/40 rounded-lg px-3 py-2 flex items-center gap-2">
+          <span class="text-[9px] text-gray-400 uppercase tracking-wider">Auto</span>
+          <span id="home-regen" class="text-neon-green font-bold text-sm">0</span>
+          <span class="text-gray-500 text-[10px]">/s</span>
+        </div>
       </div>
+      <div id="buff-countdown" class="mt-2 text-[9px] text-neon-yellow/90 text-center min-h-[14px] hidden"></div>
+      <div id="home-next-milestone" class="mt-1 text-[9px] text-gray-500 text-center min-h-[12px]"></div>
       <!-- Badges -->
       <div class="mt-4 text-center">
         <div class="text-gray-500 home-center-text mb-2">🏆 BADGES</div>
@@ -499,6 +556,7 @@
           <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel opacity-50" id="badge-8" title="7-Day Streak">🔥</div>
           <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel opacity-50" id="badge-9" title="First PVP Win">🏆</div>
           <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel opacity-50" id="badge-10" title="First Friend">👥</div>
+          <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel opacity-50" id="badge-11" title="30-Day Streak">📅</div>
         </div>
       </div>
       <!-- Upgrade strip (match reference) -->
@@ -548,8 +606,10 @@
           <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel opacity-50" id="badge-boost-8" title="7-Day Streak">🔥</div>
           <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel opacity-50" id="badge-boost-9" title="First PVP Win">🏆</div>
           <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel opacity-50" id="badge-boost-10" title="First Friend">👥</div>
+          <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel opacity-50" id="badge-boost-11" title="30-Day Streak">📅</div>
         </div>
       </div>
+      <p class="text-gray-500 text-[9px] mb-2">All boosts last 60 seconds. Rebuy to extend.</p>
       <div class="space-y-4">
         <div class="boost-category">
           <div class="text-neon-yellow text-[10px] font-bold mb-2 uppercase tracking-wider">⚡ Tap Power</div>
@@ -763,6 +823,61 @@
         </div>
           </div>
         </div>
+        <!-- High Roller Bounties -->
+        <div class="bounty-category">
+          <div class="bounty-category-title">High Roller</div>
+          <div class="space-y-3">
+        <div id="bounty-500balance" class="bounty-row bounty-card-cyan p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="500balance" data-bounty-name="500 tokens" data-bounty-reward="20">
+          <div class="flex-1 min-w-0"><div>500 tokens balance</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-500balance-progress">0</span>/500</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 20 tokens</div></div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="bounty-bird-card bird-cyan"><img src="assets/cardinal.png" alt="" /></div>
+            <button type="button" id="claim-500balance" class="bounty-claim border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50" data-id="500balance" data-reward="20">CLAIM</button>
+          </div>
+        </div>
+        <div id="bounty-1000balance" class="bounty-row bounty-card-cyan p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="1000balance" data-bounty-name="1,000 tokens" data-bounty-reward="35">
+          <div class="flex-1 min-w-0"><div>1,000 tokens balance</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-1000balance-progress">0</span>/1,000</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 35 tokens</div></div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="bounty-bird-card bird-cyan"><img src="assets/cardinal.png" alt="" /></div>
+            <button type="button" id="claim-1000balance" class="bounty-claim border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50" data-id="1000balance" data-reward="35">CLAIM</button>
+          </div>
+        </div>
+        <div id="bounty-2500balance" class="bounty-row bounty-card-pink p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="2500balance" data-bounty-name="2,500 tokens" data-bounty-reward="75">
+          <div class="flex-1 min-w-0"><div>2,500 tokens balance</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-2500balance-progress">0</span>/2,500</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 75 tokens</div></div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="bounty-bird-card bird-pink"><img src="assets/cardinal.png" alt="" /></div>
+            <button type="button" id="claim-2500balance" class="bounty-claim border-2 border-neon-pink text-neon-pink px-3 py-1 rounded text-[10px] hover:bg-neon-pink/10 disabled:opacity-50" data-id="2500balance" data-reward="75">CLAIM</button>
+          </div>
+        </div>
+        <div id="bounty-5000balance" class="bounty-row bounty-card-pink p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="5000balance" data-bounty-name="5,000 tokens" data-bounty-reward="150">
+          <div class="flex-1 min-w-0"><div>5,000 tokens balance</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-5000balance-progress">0</span>/5,000</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 150 tokens</div></div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="bounty-bird-card bird-pink"><img src="assets/cardinal.png" alt="" /></div>
+            <button type="button" id="claim-5000balance" class="bounty-claim border-2 border-neon-pink text-neon-pink px-3 py-1 rounded text-[10px] hover:bg-neon-pink/10 disabled:opacity-50" data-id="5000balance" data-reward="150">CLAIM</button>
+          </div>
+        </div>
+        <div id="bounty-10000balance" class="bounty-row bounty-card-pink p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="10000balance" data-bounty-name="10,000 tokens" data-bounty-reward="300">
+          <div class="flex-1 min-w-0"><div>10,000 tokens balance</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-10000balance-progress">0</span>/10,000</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 300 tokens</div></div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="bounty-bird-card bird-pink"><img src="assets/cardinal.png" alt="" /></div>
+            <button type="button" id="claim-10000balance" class="bounty-claim border-2 border-neon-pink text-neon-pink px-3 py-1 rounded text-[10px] hover:bg-neon-pink/10 disabled:opacity-50" data-id="10000balance" data-reward="300">CLAIM</button>
+          </div>
+        </div>
+        <div id="bounty-25000balance" class="bounty-row bounty-card-pink p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="25000balance" data-bounty-name="25,000 tokens" data-bounty-reward="500">
+          <div class="flex-1 min-w-0"><div>25,000 tokens balance</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-25000balance-progress">0</span>/25,000</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 500 tokens</div></div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="bounty-bird-card bird-pink"><img src="assets/cardinal.png" alt="" /></div>
+            <button type="button" id="claim-25000balance" class="bounty-claim border-2 border-neon-pink text-neon-pink px-3 py-1 rounded text-[10px] hover:bg-neon-pink/10 disabled:opacity-50" data-id="25000balance" data-reward="500">CLAIM</button>
+          </div>
+        </div>
+        <div id="bounty-50000balance" class="bounty-row bounty-card-pink p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="50000balance" data-bounty-name="50,000 tokens" data-bounty-reward="1000">
+          <div class="flex-1 min-w-0"><div>50,000 tokens balance</div><div class="text-[10px] text-gray-400">Progress: <span id="bounty-50000balance-progress">0</span>/50,000</div><div class="text-neon-yellow text-[10px] font-bold mt-1">Reward: 1,000 tokens</div></div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="bounty-bird-card bird-pink"><img src="assets/cardinal.png" alt="" /></div>
+            <button type="button" id="claim-50000balance" class="bounty-claim border-2 border-neon-pink text-neon-pink px-3 py-1 rounded text-[10px] hover:bg-neon-pink/10 disabled:opacity-50" data-id="50000balance" data-reward="1000">CLAIM</button>
+          </div>
+        </div>
+          </div>
+        </div>
       </div>
       <div id="bounties-toclaim-cards" class="hidden grid grid-cols-3 sm:grid-cols-4 gap-3"></div>
       <p id="bounties-toclaim-empty" class="hidden text-gray-500 text-[10px] py-4">All bounties claimed! Check Claimed for your collection.</p>
@@ -775,31 +890,39 @@
     <section id="page-friends" class="page p-4">
       <h2 class="text-neon-pink mb-4 border-b-2 border-gray-700 pb-2">FRIENDS</h2>
       <p class="text-gray-400 mb-4">Leaderboard & invite friends. Edit your name in Wallet → Settings.</p>
-      <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded mb-4">
-        <div class="text-[10px] text-gray-500 mb-2">TOP CLICKERS (by tokens)</div>
-        <ol id="leaderboard-list" class="space-y-1 text-[10px] list-decimal list-inside text-gray-300 min-h-[24px]">
+      <!-- PVP Duel Wins at top -->
+      <div class="bg-pixel-panel border-2 border-neon-pink/30 p-3 rounded mb-4">
+        <div class="text-[10px] text-gray-500 mb-2">PVP DUEL WINS (TOP 5)</div>
+        <ol id="leaderboard-pvp-friends-list" class="space-y-1 text-[10px] list-decimal list-inside text-gray-300 min-h-[24px]">
           <li class="text-gray-500">Loading…</li>
         </ol>
+        <button type="button" id="pvp-full-list-btn" class="mt-2 py-1.5 px-3 border-2 border-neon-pink text-neon-pink rounded text-[9px] hover:bg-neon-pink/10">VIEW FULL LIST</button>
       </div>
       <div class="bg-pixel-panel border-2 border-neon-pink/30 p-3 rounded mb-4">
-        <div class="text-[10px] text-gray-500 mb-2">FRIENDS (INVITED)</div>
-        <p class="text-gray-500 text-[9px] mb-1">People who used your invite link appear here.</p>
+        <div class="text-[10px] text-gray-500 mb-2">FRIENDS</div>
+        <p class="text-gray-500 text-[9px] mb-1">Friends from your invite link, codes, and pending requests appear here.</p>
         <ol id="friends-invited-list" class="space-y-1 text-[10px] min-h-[24px]">
           <li class="text-gray-500">Loading…</li>
         </ol>
+        <div class="mt-3 border-t border-gray-800/60 pt-2 space-y-2">
+          <div class="text-[9px] text-gray-500 uppercase tracking-wider">Pending requests</div>
+          <ol id="friend-requests-list" class="space-y-2 text-[10px] min-h-[24px]">
+            <li class="text-gray-500">No pending requests.</li>
+          </ol>
+          <div class="text-[9px] text-gray-500 uppercase tracking-wider mt-1">Added by code</div>
+          <ol id="friends-added-list" class="space-y-1 text-[10px] min-h-[24px]">
+            <li class="text-gray-500">Loading…</li>
+          </ol>
+        </div>
       </div>
       <div class="bg-pixel-panel border-2 border-neon-cyan/30 p-3 rounded mb-4">
         <div class="text-[10px] text-gray-500 mb-2">ADD FRIEND BY INVITE CODE</div>
-        <p class="text-gray-500 text-[9px] mb-2">Enter a friend's invite code; their name will appear in your list below.</p>
+        <p class="text-gray-500 text-[9px] mb-2">Enter a friend's invite code. A request will be sent; they can accept or reject.</p>
         <div class="flex gap-2 flex-wrap items-center mb-2">
           <input type="text" id="friend-code-input" placeholder="e.g. REFABC12" maxlength="20" class="flex-1 min-w-[120px] bg-black border-2 border-gray-600 rounded px-3 py-2 text-neon-cyan text-[10px] uppercase" />
-          <button type="button" id="friend-code-add-btn" class="py-2 px-4 border-2 border-neon-cyan text-neon-cyan rounded text-[10px] hover:bg-neon-cyan/10 whitespace-nowrap">ADD</button>
+          <button type="button" id="friend-code-add-btn" class="py-2 px-4 border-2 border-neon-cyan text-neon-cyan rounded text-[10px] hover:bg-neon-cyan/10 whitespace-nowrap">SEND REQUEST</button>
         </div>
         <p id="friend-code-feedback" class="text-[9px] min-h-[14px] hidden"></p>
-        <div class="text-[10px] text-gray-500 mt-2 mb-1">FRIENDS (ADDED BY CODE)</div>
-        <ol id="friends-added-list" class="space-y-1 text-[10px] min-h-[24px]">
-          <li class="text-gray-500">Loading…</li>
-        </ol>
       </div>
       <button type="button" id="invite-btn" class="w-full py-2 border-2 border-neon-cyan text-neon-cyan rounded hover:bg-neon-cyan/10 min-h-[44px] text-[10px]">COPY INVITE LINK</button>
       <p id="invite-feedback" class="text-neon-green text-[10px] mt-2 hidden">Link copied! Send it to friends – when they open it on their phone, the game loads and your code is applied.</p>
@@ -827,6 +950,7 @@
             <div class="text-gray-500 text-[10px]">IN-GAME</div>
             <div id="wallet-balance" class="text-xl neon-text-cyan">0</div>
             <div class="text-gray-500 text-[9px]">tokens</div>
+            <div class="text-gray-600 text-[8px] mt-0.5">Use for Boosts & PVP</div>
           </div>
           <div>
             <div class="text-gray-500 text-[10px]">$CARD (on-chain)</div>
@@ -843,7 +967,7 @@
           <p id="wallet-connection-status" class="text-[9px] min-h-[14px] mb-2 text-gray-400"></p>
           <p class="text-gray-500 text-[8px] mb-1">Opens in a new tab so you can stay in the game. Return here after approving.</p>
           <button type="button" id="ton-connect-btn" class="w-full py-2 border-2 border-neon-cyan text-neon-cyan rounded hover:bg-neon-cyan/10 text-[10px]">CONNECT WALLET (Tonkeeper / Telegram)</button>
-          <p class="text-gray-500 text-[9px] mt-2">Need help? Open SETTINGS (top right) for instructions and I approved – check connection.</p>
+          <p class="text-gray-500 text-[9px] mt-2">Need help? <button type="button" id="wallet-need-help-btn" class="text-neon-cyan underline hover:no-underline">Open SETTINGS</button> for instructions and I approved – check connection.</p>
           <p class="text-neon-yellow text-[9px] mt-1 hidden" id="wallet-localhost-hint">On desktop localhost: run the backend so the wallet can connect. Or use the <a href="https://biggleem.github.io/nc-clicker-game-v1" target="_blank" rel="noopener" class="underline">live site</a>.</p>
         </div>
         <div id="wallet-connected-area" class="hidden">
@@ -864,6 +988,7 @@
           <button type="button" id="swap-btn" class="border-2 border-neon-green text-neon-green px-3 py-2 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50">SWAP</button>
         </div>
         <p class="text-gray-500 text-[9px] mt-1">Rate: 1 $CARD = 10 in-game tokens</p>
+        <p id="swap-preview" class="text-neon-yellow text-[9px] mt-0.5 hidden">You get ~<span id="swap-preview-value">0</span> tokens</p>
         <p id="swap-feedback" class="text-[10px] mt-2 hidden"></p>
       </div>
       <!-- Withdraw: tokens to $CARD -->
@@ -872,6 +997,7 @@
         <p id="withdraw-area-hint" class="text-[10px] text-gray-400 mb-2">Convert in-game tokens to on-chain $CARD (sent to your connected wallet).</p>
         <div class="flex gap-2 items-center flex-wrap">
           <input type="number" id="withdraw-amount" min="1" placeholder="Amount" class="bg-black border-2 border-gray-600 rounded px-2 py-2 text-neon-cyan w-24 text-[10px]" />
+          <button type="button" id="withdraw-max-btn" class="border-2 border-gray-500 text-gray-400 px-2 py-2 rounded text-[9px] hover:bg-gray-700 hover:border-gray-400">MAX</button>
           <button type="button" id="withdraw-btn" class="border-2 border-neon-green text-neon-green px-3 py-2 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50">WITHDRAW</button>
         </div>
         <p id="withdraw-feedback" class="text-[10px] mt-2 hidden"></p>
@@ -919,7 +1045,7 @@
       <!-- Create new room – always visible -->
       <div id="pvp-create-card" class="bg-pixel-panel border-2 border-neon-green/60 p-4 rounded mb-4">
         <p class="text-neon-green text-[10px] font-bold mb-2">➕ CREATE NEW ROOM</p>
-        <p class="text-gray-400 text-[9px] mb-2">Wager in-game tokens. Loser pays winner. Choose stake:</p>
+        <p class="text-gray-400 text-[9px] mb-2">Wager in-game tokens. Loser pays winner. You have <span id="pvp-create-balance" class="text-neon-cyan font-bold">0</span> tokens. Choose stake:</p>
         <div class="flex flex-wrap gap-2 mb-2">
           <button type="button" class="pvp-stake-btn py-1.5 px-2 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-green/50" data-stake="2">2</button>
           <button type="button" class="pvp-stake-btn py-1.5 px-2 border-2 border-neon-green text-neon-green rounded text-[9px] bg-neon-green/10" data-stake="5">5</button>
@@ -972,7 +1098,10 @@
         <div id="pvp-duel-waiting" class="text-center text-gray-500 text-[9px] mt-2 hidden">
           <p class="font-bold text-neon-cyan mb-1">Waiting for opponent…</p>
           <p>Share the room link with a friend. They join to start the race.</p>
-          <p id="pvp-duel-room-link" class="text-[8px] text-gray-600 mt-1 break-all"></p>
+          <div class="flex items-center justify-center gap-2 mt-2 flex-wrap">
+            <p id="pvp-duel-room-link" class="text-[8px] text-gray-600 break-all flex-1 min-w-0"></p>
+            <button type="button" id="pvp-duel-copy-link-btn" class="py-1 px-2 border-2 border-neon-cyan text-neon-cyan rounded text-[8px] hover:bg-neon-cyan/10 shrink-0">COPY</button>
+          </div>
         </div>
         <div class="mt-3 text-center">
           <button type="button" id="pvp-duel-end-game-btn" class="py-2 px-4 border-2 border-neon-pink text-neon-pink rounded text-[9px] hover:bg-neon-pink/10">END GAME</button>
@@ -984,6 +1113,7 @@
         <p id="pvp-duel-result-title" class="text-lg font-bold mb-2">—</p>
         <p id="pvp-duel-result-detail" class="text-[10px] text-gray-400 mb-2">—</p>
         <p id="pvp-duel-rematch-countdown" class="text-[9px] text-neon-cyan mb-2 hidden">Rematch — 60s</p>
+        <p id="pvp-duel-rematch-hint" class="text-[8px] text-gray-500 mb-2">If no rematch in 60s, this room will close.</p>
         <div class="flex gap-2 justify-center flex-wrap">
           <button type="button" id="pvp-duel-rematch-btn" class="py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10">REMATCH</button>
           <button type="button" id="pvp-duel-lobby-btn" class="py-2 px-4 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">BACK TO LOBBY</button>
@@ -999,6 +1129,7 @@
       <a href="#boosts" class="nav-link bottom-nav-link" data-page="boosts">BOOSTS</a>
       <a href="#bounties" class="nav-link bottom-nav-link" data-page="bounties">BOUNTIES</a>
       <a href="#friends" class="nav-link bottom-nav-link" data-page="friends">FRIENDS</a>
+      <a href="#multiplayer" class="nav-link bottom-nav-link" data-page="multiplayer">PVP</a>
       <a href="#wallet" class="nav-link bottom-nav-link" data-page="wallet">WALLET</a>
     </div>
   </nav>
@@ -1020,6 +1151,7 @@
     const COOLDOWN_BASE_MS = 280;
     const COOLDOWN_REDUCED_MS = 200;
     const COOLDOWN_SUPER_MS = 150;
+    const BUFF_DURATION_MS = 60 * 1000;
     const DEATH_IDLE_HOURS = 48;
     const REVIVE_BASE_COST = 20;
     const REVIVE_PERCENT = 0.1;
@@ -1052,12 +1184,31 @@
     let totalClicks = parseInt(localStorage.getItem('tokenClicker_totalClicks') || '0', 10);
     let tokens = parseInt(localStorage.getItem('tokenClicker_tokens') || '', 10);
     if (isNaN(tokens) || tokens < 0) tokens = Math.floor(totalClicks / CLICKS_PER_TOKEN);
-    let tapPower = parseInt(localStorage.getItem('tokenClicker_tapPower') || '1', 10);
-    let hasAutoclicker = localStorage.getItem('tokenClicker_autoclicker') === '1';
-    let hasTurboAutoclicker = localStorage.getItem('tokenClicker_turboAutoclicker') === '1';
-    let hasCooldownBoost = localStorage.getItem('tokenClicker_cooldown') === '1';
-    let hasSuperCooldownBoost = localStorage.getItem('tokenClicker_superCooldown') === '1';
-    let hasPowerCapacityBoost = localStorage.getItem('tokenClicker_powerCapacity') === '1';
+    let baseTapPower = 1;
+    let buffAutoclickerUntil = parseInt(localStorage.getItem('tokenClicker_buffAcUntil') || '0', 10);
+    let buffTurboUntil = parseInt(localStorage.getItem('tokenClicker_buffTurboUntil') || '0', 10);
+    let buffTapPowerUntil = parseInt(localStorage.getItem('tokenClicker_buffTapUntil') || '0', 10);
+    let buffTapPowerLevel = parseInt(localStorage.getItem('tokenClicker_buffTapLevel') || '1', 10);
+    let buffCooldownUntil = parseInt(localStorage.getItem('tokenClicker_buffCdUntil') || '0', 10);
+    let buffSuperCooldownUntil = parseInt(localStorage.getItem('tokenClicker_buffSuperCdUntil') || '0', 10);
+    let buffPowerCapacityUntil = parseInt(localStorage.getItem('tokenClicker_buffPowerUntil') || '0', 10);
+    let hasAutoclicker = false;
+    let hasTurboAutoclicker = false;
+    let hasCooldownBoost = false;
+    let hasSuperCooldownBoost = false;
+    let hasPowerCapacityBoost = false;
+    let tapPower = 1;
+    function updateBuffState() {
+      var now = Date.now();
+      hasAutoclicker = buffAutoclickerUntil > now;
+      hasTurboAutoclicker = hasAutoclicker && (buffTurboUntil > now);
+      hasCooldownBoost = buffCooldownUntil > now;
+      hasSuperCooldownBoost = buffSuperCooldownUntil > now;
+      hasPowerCapacityBoost = buffPowerCapacityUntil > now;
+      tapPower = (buffTapPowerUntil > now) ? buffTapPowerLevel : baseTapPower;
+      if (!hasAutoclicker && autoclickerInterval) { clearInterval(autoclickerInterval); autoclickerInterval = null; }
+      if (hasAutoclicker && !autoclickerInterval) startAutoclicker();
+    }
     let lastDailyClaim = localStorage.getItem('tokenClicker_lastDailyClaim') || '';
     let lastShareClaim = localStorage.getItem('tokenClicker_lastShareClaim') || '';
     let claimed100Today = localStorage.getItem('tokenClicker_claimed100Today') === '1';
@@ -1073,8 +1224,17 @@
     let claimedSpeedDemon = localStorage.getItem('tokenClicker_speedDemonClaimed') === '1';
     let claimedClickMaster = localStorage.getItem('tokenClicker_claimedClickMaster') === '1';
     let claimedHoarder = localStorage.getItem('tokenClicker_claimedHoarder') === '1';
+    let claimed500balance = localStorage.getItem('tokenClicker_claimed500balance') === '1';
+    let claimed1000balance = localStorage.getItem('tokenClicker_claimed1000balance') === '1';
+    let claimed2500balance = localStorage.getItem('tokenClicker_claimed2500balance') === '1';
+    let claimed5000balance = localStorage.getItem('tokenClicker_claimed5000balance') === '1';
+    let claimed10000balance = localStorage.getItem('tokenClicker_claimed10000balance') === '1';
+    let claimed25000balance = localStorage.getItem('tokenClicker_claimed25000balance') === '1';
+    let claimed50000balance = localStorage.getItem('tokenClicker_claimed50000balance') === '1';
     let currentBountyTab = localStorage.getItem('tokenClicker_bountyTab') || 'toclaim';
     let lastDate = localStorage.getItem('tokenClicker_lastDate') || '';
+    let streakDays = parseInt(localStorage.getItem('tokenClicker_streakDays') || '0', 10);
+    let lastStreakDate = localStorage.getItem('tokenClicker_lastStreakDate') || '';
     let clicksToday = parseInt(localStorage.getItem('tokenClicker_clicksToday') || '0', 10);
     let weekStartKey = localStorage.getItem('tokenClicker_weekStart') || '';
     let weeklyClicks = parseInt(localStorage.getItem('tokenClicker_weeklyClicks') || '0', 10);
@@ -1160,11 +1320,13 @@
       localStorage.setItem('tokenClicker_totalClicks', String(totalClicks));
       localStorage.setItem('tokenClicker_tokens', String(tokens));
       localStorage.setItem('tokenClicker_tapPower', String(tapPower));
-      localStorage.setItem('tokenClicker_autoclicker', hasAutoclicker ? '1' : '0');
-      localStorage.setItem('tokenClicker_turboAutoclicker', hasTurboAutoclicker ? '1' : '0');
-      localStorage.setItem('tokenClicker_cooldown', hasCooldownBoost ? '1' : '0');
-      localStorage.setItem('tokenClicker_superCooldown', hasSuperCooldownBoost ? '1' : '0');
-      localStorage.setItem('tokenClicker_powerCapacity', hasPowerCapacityBoost ? '1' : '0');
+      localStorage.setItem('tokenClicker_buffAcUntil', String(buffAutoclickerUntil));
+      localStorage.setItem('tokenClicker_buffTurboUntil', String(buffTurboUntil));
+      localStorage.setItem('tokenClicker_buffTapUntil', String(buffTapPowerUntil));
+      localStorage.setItem('tokenClicker_buffTapLevel', String(buffTapPowerLevel));
+      localStorage.setItem('tokenClicker_buffCdUntil', String(buffCooldownUntil));
+      localStorage.setItem('tokenClicker_buffSuperCdUntil', String(buffSuperCooldownUntil));
+      localStorage.setItem('tokenClicker_buffPowerUntil', String(buffPowerCapacityUntil));
       localStorage.setItem('tokenClicker_lastDailyClaim', lastDailyClaim);
       localStorage.setItem('tokenClicker_lastShareClaim', lastShareClaim);
       localStorage.setItem('tokenClicker_claimed100Today', claimed100Today ? '1' : '0');
@@ -1180,8 +1342,17 @@
       localStorage.setItem('tokenClicker_speedDemonClaimed', claimedSpeedDemon ? '1' : '0');
       localStorage.setItem('tokenClicker_claimedClickMaster', claimedClickMaster ? '1' : '0');
       localStorage.setItem('tokenClicker_claimedHoarder', claimedHoarder ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed500balance', claimed500balance ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed1000balance', claimed1000balance ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed2500balance', claimed2500balance ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed5000balance', claimed5000balance ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed10000balance', claimed10000balance ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed25000balance', claimed25000balance ? '1' : '0');
+      localStorage.setItem('tokenClicker_claimed50000balance', claimed50000balance ? '1' : '0');
       localStorage.setItem('tokenClicker_bountyTab', currentBountyTab);
       localStorage.setItem('tokenClicker_lastDate', lastDate);
+      localStorage.setItem('tokenClicker_streakDays', String(streakDays));
+      localStorage.setItem('tokenClicker_lastStreakDate', lastStreakDate);
       localStorage.setItem('tokenClicker_clicksToday', String(clicksToday));
       localStorage.setItem('tokenClicker_weekStart', weekStartKey);
       localStorage.setItem('tokenClicker_weeklyClicks', String(weeklyClicks));
@@ -1238,6 +1409,13 @@
         case 'speeddemon': return claimedSpeedDemon;
         case 'clickmaster': return claimedClickMaster;
         case 'hoarder': return claimedHoarder;
+        case '500balance': return claimed500balance;
+        case '1000balance': return claimed1000balance;
+        case '2500balance': return claimed2500balance;
+        case '5000balance': return claimed5000balance;
+        case '10000balance': return claimed10000balance;
+        case '25000balance': return claimed25000balance;
+        case '50000balance': return claimed50000balance;
         default: return false;
       }
     }
@@ -1272,6 +1450,11 @@
           list.classList.toggle('hidden', toclaimCount === 0);
           list.classList.add('bounty-toclaim-list');
         }
+        list.querySelectorAll('.bounty-category').forEach(function(cat) {
+          var rows = cat.querySelectorAll('.bounty-row');
+          var allClaimed = rows.length > 0 && Array.from(rows).every(function(r) { return getBountyClaimed(r.getAttribute('data-bounty-id')); });
+          cat.classList.toggle('hidden', allClaimed);
+        });
       }
       if (toclaimCardsEl) toclaimCardsEl.classList.add('hidden');
       if (claimedCardsEl) {
@@ -1310,6 +1493,21 @@
         weekStartKey = week;
       }
     }
+    function updateStreak() {
+      const today = todayKey();
+      if (lastStreakDate === today) return;
+      if (!lastStreakDate) {
+        streakDays = 1;
+      } else {
+        const prev = new Date(lastStreakDate + 'T12:00:00');
+        prev.setDate(prev.getDate() + 1);
+        const nextDay = prev.toISOString().slice(0, 10);
+        if (nextDay === today) streakDays += 1;
+        else streakDays = 1;
+      }
+      lastStreakDate = today;
+      save();
+    }
 
     function updateUI() {
       if (topTokens) topTokens.textContent = tokens;
@@ -1329,7 +1527,28 @@
       if (homeRegen) homeRegen.textContent = hasTurboAutoclicker ? '2' : (hasAutoclicker ? '1' : '0');
       var peakEl = document.getElementById('peak-click-rate');
       if (peakEl) peakEl.textContent = peakClicksPerSecond;
+      var buffEl = document.getElementById('buff-countdown');
+      if (buffEl) {
+        var parts = [];
+        var now = Date.now();
+        if (buffTapPowerUntil > now) parts.push('Tap ' + buffTapPowerLevel + 'x: ' + getBuffCountdown(buffTapPowerUntil) + 's');
+        if (buffAutoclickerUntil > now) parts.push('AC: ' + getBuffCountdown(buffAutoclickerUntil) + 's');
+        if (buffTurboUntil > now) parts.push('Turbo: ' + getBuffCountdown(buffTurboUntil) + 's');
+        if (buffCooldownUntil > now || buffSuperCooldownUntil > now) parts.push('Cooldown: ' + getBuffCountdown(Math.max(buffCooldownUntil, buffSuperCooldownUntil)) + 's');
+        if (buffPowerCapacityUntil > now) parts.push('Power+: ' + getBuffCountdown(buffPowerCapacityUntil) + 's');
+        buffEl.textContent = parts.length ? '⏱ ' + parts.join(' · ') : '';
+        buffEl.classList.toggle('hidden', !parts.length);
+      }
+      var nextMilestoneEl = document.getElementById('home-next-milestone');
+      if (nextMilestoneEl) {
+        var earnedFromTaps = Math.floor(totalClicks * tapPower / 10);
+        var nextTotalAt = Math.ceil((earnedFromTaps + 1) * 10 / tapPower);
+        var tapsNeeded = Math.max(1, nextTotalAt - totalClicks);
+        nextMilestoneEl.textContent = 'Next token in ' + tapsNeeded + ' tap' + (tapsNeeded === 1 ? '' : 's');
+      }
       updateBadges();
+      var pvpBal = document.getElementById('pvp-create-balance');
+      if (pvpBal && typeof getInGameTokenBalance === 'function') pvpBal.textContent = getInGameTokenBalance();
       if (typeof updatePowerBar === 'function') updatePowerBar();
       updateBoostsUI();
       updateBountiesUI();
@@ -1427,9 +1646,10 @@
         [['badge-5', 'badge-boost-5'], totalClicks >= 5000],
         [['badge-6', 'badge-boost-6'], totalClicks >= 10000],
         [['badge-7', 'badge-boost-7'], totalClicks >= 25000],
-        [['badge-8', 'badge-boost-8'], false],
+        [['badge-8', 'badge-boost-8'], streakDays >= 7],
         [['badge-9', 'badge-boost-9'], firstPvpWin],
-        [['badge-10', 'badge-boost-10'], firstFriend]
+        [['badge-10', 'badge-boost-10'], firstFriend],
+        [['badge-11', 'badge-boost-11'], streakDays >= 30]
       ];
       pairs.forEach(([ids, unlocked]) => {
         ids.forEach(id => {
@@ -1442,27 +1662,32 @@
       });
     }
 
-    function updateBoostsUI() {
+    function getBuffCountdown(until) {
+      var left = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+      return left;
+    }
+    function updateBoostButtons() {
+      var now = Date.now();
       document.querySelectorAll('.boost-btn').forEach(btn => {
         const cost = parseInt(btn.dataset.cost, 10);
         const boost = btn.dataset.boost;
-        let owned = false;
-        if (boost === 'tapPower') owned = tapPower >= 2;
-        else if (boost === 'tapPower3') owned = tapPower >= 3;
-        else if (boost === 'tapPower4') owned = tapPower >= 4;
-        else if (boost === 'autoclicker') owned = hasAutoclicker;
-        else if (boost === 'turboAutoclicker') owned = hasTurboAutoclicker;
-        else if (boost === 'cooldown') owned = hasCooldownBoost;
-        else if (boost === 'superCooldown') owned = hasSuperCooldownBoost;
-        else if (boost === 'powerCapacity') owned = hasPowerCapacityBoost;
-        let blocked = false;
-        if (boost === 'tapPower3' && tapPower < 2) blocked = true;
-        if (boost === 'tapPower4' && tapPower < 3) blocked = true;
-        if (boost === 'turboAutoclicker' && !hasAutoclicker) blocked = true;
-        if (boost === 'superCooldown' && !hasCooldownBoost) blocked = true;
-        btn.disabled = owned || blocked || tokens < cost;
-        btn.textContent = owned ? 'OWNED' : blocked ? 'UPGRADE' : 'BUY';
+        var active = false;
+        var until = 0;
+        if (boost === 'tapPower') { active = buffTapPowerUntil > now; until = buffTapPowerUntil; }
+        else if (boost === 'tapPower3') { active = buffTapPowerUntil > now && buffTapPowerLevel >= 3; until = buffTapPowerUntil; }
+        else if (boost === 'tapPower4') { active = buffTapPowerUntil > now && buffTapPowerLevel >= 4; until = buffTapPowerUntil; }
+        else if (boost === 'autoclicker') { active = buffAutoclickerUntil > now; until = buffAutoclickerUntil; }
+        else if (boost === 'turboAutoclicker') { active = buffTurboUntil > now; until = buffTurboUntil; }
+        else if (boost === 'cooldown') { active = buffCooldownUntil > now; until = buffCooldownUntil; }
+        else if (boost === 'superCooldown') { active = buffSuperCooldownUntil > now; until = buffSuperCooldownUntil; }
+        else if (boost === 'powerCapacity') { active = buffPowerCapacityUntil > now; until = buffPowerCapacityUntil; }
+        var blocked = (boost === 'tapPower3' && buffTapPowerLevel < 2) || (boost === 'tapPower4' && buffTapPowerLevel < 3) || (boost === 'turboAutoclicker' && buffAutoclickerUntil <= now);
+        btn.disabled = blocked || tokens < cost;
+        btn.textContent = active ? getBuffCountdown(until) + 's' : (blocked ? 'ACTIVATE' : '60s');
       });
+    }
+    function updateBoostsUI() {
+      updateBoostButtons();
     }
 
     function updateBountiesUI() {
@@ -1541,6 +1766,16 @@
         claimHoarderBtn.disabled = tokens < 100 || claimedHoarder;
         claimHoarderBtn.textContent = claimedHoarder ? 'CLAIMED' : 'CLAIM';
       }
+      [500, 1000, 2500, 5000, 10000, 25000, 50000].forEach(function(goal) {
+        var suf = goal + 'balance';
+        var p = document.getElementById('bounty-' + suf + '-progress');
+        if (p) p.textContent = Math.min(tokens, goal);
+        var btn = document.getElementById('claim-' + suf);
+        if (!btn) return;
+        var claimed = goal === 500 ? claimed500balance : goal === 1000 ? claimed1000balance : goal === 2500 ? claimed2500balance : goal === 5000 ? claimed5000balance : goal === 10000 ? claimed10000balance : goal === 25000 ? claimed25000balance : claimed50000balance;
+        btn.disabled = tokens < goal || claimed;
+        btn.textContent = claimed ? 'CLAIMED' : 'CLAIM';
+      });
       switchBountyTab(currentBountyTab);
       save();
     }
@@ -1560,13 +1795,11 @@
       const list = document.getElementById('leaderboard-list');
       if (list) {
         var name = function(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
-        list.innerHTML = leaderboard.slice(0, 10).map(function(e) {
+        var newHtml = leaderboard.slice(0, 10).map(function(e) {
           return '<li>' + name(e.name) + ' — ' + e.tokens + ' tokens</li>';
         }).join('');
+        if (list.innerHTML !== newHtml) list.innerHTML = newHtml;
       }
-      if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
-      if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
-      if (typeof updateProfileDisplayName === 'function') updateProfileDisplayName();
       let refCode = localStorage.getItem('tokenClicker_refCode');
       if (!refCode) {
         refCode = 'REF' + Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -1579,27 +1812,33 @@
     function loadLeaderboardPvp() {
       var supabase = window.supabaseClient;
       var list = document.getElementById('leaderboard-pvp-list');
-      if (!list) return;
+      var friendsList = document.getElementById('leaderboard-pvp-friends-list');
+      var targets = [list, friendsList].filter(Boolean);
+      if (targets.length === 0) return;
+      function setAll(html) { targets.forEach(function(t) { t.innerHTML = html; }); }
       if (!supabase) {
-        list.innerHTML = '<li class="text-gray-500">Leaderboard unavailable. Add Supabase in supabase-config.js.</li>';
+        setAll('<li class="text-gray-500">Leaderboard unavailable.</li>');
         return;
       }
-      list.innerHTML = '<li class="text-gray-500">Loading…</li>';
+      var hadContent = targets.some(function(t) { return t.innerHTML && t.innerHTML.indexOf('Loading') < 0 && t.innerHTML.indexOf('No duel wins') < 0 && t.innerHTML.indexOf('unavailable') < 0; });
+      if (!hadContent) setAll('<li class="text-gray-500">Loading…</li>');
       supabase.from('leaderboard').select('name, pvp_wins').order('pvp_wins', { ascending: false }).limit(5).then(function(r) {
         if (r.error || !r.data || r.data.length === 0) {
-          list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>';
+          setAll('<li class="text-gray-500">No duel wins yet.</li>');
           return;
         }
-        list.innerHTML = r.data.map(function(e, i) {
+        var html = r.data.map(function(e) {
           var wins = e.pvp_wins != null ? e.pvp_wins : 0;
           return '<li>' + (e.name || 'Player') + ' — ' + wins + ' win' + (wins !== 1 ? 's' : '') + '</li>';
         }).join('');
+        setAll(html);
       });
     }
     function loadPvpFullList() {
       var supabase = window.supabaseClient;
       var list = document.getElementById('pvp-full-list-content');
-      if (!supabase || !list) return;
+      if (!list) return;
+      if (!supabase) { list.innerHTML = '<li class="text-gray-500">Leaderboard unavailable.</li>'; return; }
       list.innerHTML = '<li class="text-gray-500">Loading…</li>';
       supabase.from('leaderboard').select('name, pvp_wins').order('pvp_wins', { ascending: false }).limit(100).then(function(r) {
         if (r.error || !r.data || r.data.length === 0) {
@@ -1631,6 +1870,7 @@
     function onValidClick() {
       if (isDead) return -1;
       if (power < POWER_COST_PER_CLICK) return -1;
+      updateStreak();
       power = Math.max(0, power - POWER_COST_PER_CLICK);
       lastClickTime = Date.now();
       lastActivityAt = lastClickTime;
@@ -1684,9 +1924,31 @@
         el.appendChild(img);
         document.body.appendChild(el);
         (function(featherEl) {
-          setTimeout(function() { if (featherEl.parentNode) featherEl.remove(); }, 1500);
+          var dur = localStorage.getItem('tokenClicker_reducedMotion') === '1' ? 500 : 1500;
+          setTimeout(function() { if (featherEl.parentNode) featherEl.remove(); }, dur);
         })(el);
       }
+    }
+    function playTapSound() {
+      if (localStorage.getItem('tokenClicker_sound') === '0') return;
+      try {
+        var ctx = window.tapSoundCtx || (window.tapSoundCtx = new (window.AudioContext || window.webkitAudioContext)());
+        if (ctx.state === 'suspended') ctx.resume();
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 800;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.05);
+      } catch (e) {}
+    }
+    function triggerHaptics() {
+      if (localStorage.getItem('tokenClicker_haptics') === '0') return;
+      if (navigator.vibrate) navigator.vibrate(10);
     }
     function spawnClickEffects(earned, clickEvent) {
       var showFeathers = localStorage.getItem('tokenClicker_featherEffects') !== '0';
@@ -1694,6 +1956,8 @@
       var cy = clickEvent && typeof clickEvent.clientY === 'number' ? clickEvent.clientY : (nftClicker && nftClicker.getBoundingClientRect().top + nftClicker.getBoundingClientRect().height / 2);
 
       if (showFeathers) spawnFeathersAt(cx, cy);
+      playTapSound();
+      triggerHaptics();
 
       var valueEl = document.createElement('div');
       valueEl.className = 'tap-value-float';
@@ -1719,21 +1983,26 @@
       reviveBird();
     });
 
-    // Boosts: buy
+    // Boosts: buy 60s buffs (consumable)
     document.querySelectorAll('.boost-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const cost = parseInt(btn.dataset.cost, 10);
         const boost = btn.dataset.boost;
         if (tokens < cost) return;
-        if (boost === 'tapPower' && tapPower < 2) { tokens -= cost; tapPower = 2; }
-        if (boost === 'tapPower3' && tapPower >= 2 && tapPower < 3) { tokens -= cost; tapPower = 3; }
-        if (boost === 'tapPower4' && tapPower >= 3 && tapPower < 4) { tokens -= cost; tapPower = 4; }
-        if (boost === 'autoclicker' && !hasAutoclicker) { tokens -= cost; hasAutoclicker = true; startAutoclicker(); }
-        if (boost === 'turboAutoclicker' && hasAutoclicker && !hasTurboAutoclicker) { tokens -= cost; hasTurboAutoclicker = true; restartAutoclicker(); }
-        if (boost === 'cooldown' && !hasCooldownBoost) { tokens -= cost; hasCooldownBoost = true; }
-        if (boost === 'superCooldown' && hasCooldownBoost && !hasSuperCooldownBoost) { tokens -= cost; hasSuperCooldownBoost = true; }
-        if (boost === 'powerCapacity' && !hasPowerCapacityBoost) { tokens -= cost; hasPowerCapacityBoost = true; }
+        updateBuffState();
+        var now = Date.now();
+        var end = now + BUFF_DURATION_MS;
+        if (boost === 'tapPower') { tokens -= cost; buffTapPowerUntil = Math.max(buffTapPowerUntil, end); buffTapPowerLevel = Math.max(buffTapPowerLevel, 2); }
+        if (boost === 'tapPower3') { tokens -= cost; buffTapPowerUntil = Math.max(buffTapPowerUntil, end); buffTapPowerLevel = Math.max(buffTapPowerLevel, 3); }
+        if (boost === 'tapPower4') { tokens -= cost; buffTapPowerUntil = Math.max(buffTapPowerUntil, end); buffTapPowerLevel = Math.max(buffTapPowerLevel, 4); }
+        if (boost === 'autoclicker') { tokens -= cost; buffAutoclickerUntil = Math.max(buffAutoclickerUntil, end); startAutoclicker(); }
+        if (boost === 'turboAutoclicker' && buffAutoclickerUntil > now) { tokens -= cost; buffTurboUntil = Math.max(buffTurboUntil, end); restartAutoclicker(); }
+        if (boost === 'cooldown') { tokens -= cost; buffCooldownUntil = Math.max(buffCooldownUntil, end); }
+        if (boost === 'superCooldown') { tokens -= cost; buffSuperCooldownUntil = Math.max(buffSuperCooldownUntil, end); }
+        if (boost === 'powerCapacity') { tokens -= cost; buffPowerCapacityUntil = Math.max(buffPowerCapacityUntil, end); }
+        updateBuffState();
         updateUI();
+        updateBoostButtons();
         save();
       });
     });
@@ -1759,9 +2028,9 @@
     }
     function restartAutoclicker() {
       if (autoclickerInterval) { clearInterval(autoclickerInterval); autoclickerInterval = null; }
+      updateBuffState();
       if (hasAutoclicker) startAutoclicker();
     }
-    if (hasAutoclicker) startAutoclicker();
 
     // Bounties: claim
     document.querySelectorAll('.bounty-claim').forEach(btn => {
@@ -1785,9 +2054,21 @@
         if (id === 'speeddemon' && localStorage.getItem('tokenClicker_speedDemon') === '1' && !claimedSpeedDemon) { claimedSpeedDemon = true; addTokens(reward); didClaim = true; }
         if (id === 'clickmaster' && (localStorage.getItem('tokenClicker_clickMaster') === '1' || peakClicksPerSecond >= 5) && !claimedClickMaster) { claimedClickMaster = true; addTokens(reward); didClaim = true; }
         if (id === 'hoarder' && tokens >= 100 && !claimedHoarder) { claimedHoarder = true; addTokens(reward); didClaim = true; }
+        if (id === '500balance' && tokens >= 500 && !claimed500balance) { claimed500balance = true; addTokens(reward); didClaim = true; }
+        if (id === '1000balance' && tokens >= 1000 && !claimed1000balance) { claimed1000balance = true; addTokens(reward); didClaim = true; }
+        if (id === '2500balance' && tokens >= 2500 && !claimed2500balance) { claimed2500balance = true; addTokens(reward); didClaim = true; }
+        if (id === '5000balance' && tokens >= 5000 && !claimed5000balance) { claimed5000balance = true; addTokens(reward); didClaim = true; }
+        if (id === '10000balance' && tokens >= 10000 && !claimed10000balance) { claimed10000balance = true; addTokens(reward); didClaim = true; }
+        if (id === '25000balance' && tokens >= 25000 && !claimed25000balance) { claimed25000balance = true; addTokens(reward); didClaim = true; }
+        if (id === '50000balance' && tokens >= 50000 && !claimed50000balance) { claimed50000balance = true; addTokens(reward); didClaim = true; }
         if (didClaim) {
+          updateStreak();
           save();
           try { pushNotification('Bounty claimed: +' + reward + ' tokens'); } catch (e) {}
+          if (!localStorage.getItem('tokenClicker_firstBountyHintShown')) {
+            try { pushNotification('Check the 🔔 for activity'); } catch (e) {}
+            localStorage.setItem('tokenClicker_firstBountyHintShown', '1');
+          }
         }
         updateBountiesUI();
       });
@@ -2208,6 +2489,13 @@
       var withdrawHint = document.getElementById('withdraw-area-hint');
       if (withdrawHint) withdrawHint.textContent = 'Set backendUrl in ton-config.js to enable withdraw.';
     }
+    var withdrawMaxBtn = document.getElementById('withdraw-max-btn');
+    if (withdrawMaxBtn && withdrawAmount) {
+      withdrawMaxBtn.addEventListener('click', function() {
+        var bal = typeof getInGameTokenBalance === 'function' ? getInGameTokenBalance() : (typeof tokens !== 'undefined' ? tokens : 0);
+        withdrawAmount.value = Math.max(0, Math.floor(bal));
+      });
+    }
     // Swap: $CARD → in-game tokens (backend verifies balance, frontend credits tokens)
     var swapAmountEl = document.getElementById('swap-amount');
     var swapBtn = document.getElementById('swap-btn');
@@ -2238,6 +2526,8 @@
             save();
             updateUI();
             if (swapAmountEl) swapAmountEl.value = '';
+            var swapPrev = document.getElementById('swap-preview');
+            if (swapPrev) swapPrev.classList.add('hidden');
             if (swapFeedback) { swapFeedback.textContent = 'Swapped! +' + data.tokensToCredit + ' tokens.'; swapFeedback.classList.add('text-neon-green'); }
             if (window.TonWallet && window.TonWallet.setCardBalance && data.cardAmount != null) {
               var cur = window.TonWallet.cardBalance;
@@ -2245,7 +2535,15 @@
             }
             fetchCardBalanceFromBackend();
           } else {
-            if (swapFeedback) { swapFeedback.textContent = data.error || 'Swap failed.'; swapFeedback.classList.add('text-neon-pink'); }
+            var errMsg = data.error || 'Swap failed.';
+            if (swapFeedback) {
+              if (/not enough|insufficient/i.test(errMsg) && window.TonWallet && window.TonWallet.cardBalance != null) {
+                errMsg += ' Your $CARD balance: ' + Math.max(0, Number(window.TonWallet.cardBalance));
+              }
+              swapFeedback.textContent = errMsg;
+              swapFeedback.classList.add('text-neon-pink');
+              swapFeedback.classList.remove('hidden');
+            }
           }
         } catch (e) {
           if (swapFeedback) { swapFeedback.textContent = e.message || 'Network error.'; swapFeedback.classList.add('text-neon-pink'); }
@@ -2258,6 +2556,34 @@
         var desc = swapArea.querySelector('.text-gray-400');
         if (desc) desc.textContent = 'Set backendUrl in ton-config.js to enable swap.';
       }
+    }
+    if (swapAmountEl) {
+      swapAmountEl.addEventListener('input', function() {
+        var prev = document.getElementById('swap-preview');
+        var val = document.getElementById('swap-preview-value');
+        var amt = parseInt(swapAmountEl.value, 10);
+        if (prev && val) {
+          if (amt > 0) {
+            val.textContent = String(amt * 10);
+            prev.classList.remove('hidden');
+          } else {
+            prev.classList.add('hidden');
+          }
+        }
+      });
+      swapAmountEl.addEventListener('change', function() {
+        var prev = document.getElementById('swap-preview');
+        var val = document.getElementById('swap-preview-value');
+        var amt = parseInt(swapAmountEl.value, 10);
+        if (prev && val) {
+          if (amt > 0) {
+            val.textContent = String(amt * 10);
+            prev.classList.remove('hidden');
+          } else {
+            prev.classList.add('hidden');
+          }
+        }
+      });
     }
 
     // --- PVP: token stakes, countdown ---
@@ -2365,6 +2691,7 @@
         if (r && (r in cache.byRefCode)) { mergeFriendTokenCache(null, { [r]: t }); changed = true; }
         if (changed && document.getElementById('page-friends') && document.getElementById('page-friends').classList.contains('active')) {
           if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+          if (typeof loadFriendRequests === 'function') loadFriendRequests();
           if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
         }
       }).subscribe();
@@ -2381,6 +2708,7 @@
       friendsPollInterval = setInterval(function() {
         if (document.getElementById('page-friends') && document.getElementById('page-friends').classList.contains('active')) {
           if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+          if (typeof loadFriendRequests === 'function') loadFriendRequests();
           if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
         }
       }, 15000);
@@ -2393,7 +2721,7 @@
       var list = document.getElementById('friends-invited-list');
       if (!list) return;
       if (!supabase) {
-        list.innerHTML = '<li class="text-gray-500">Friends unavailable. Add Supabase in supabase-config.js.</li>';
+        list.innerHTML = '<li class="text-gray-500">Friends unavailable.</li>';
         return;
       }
       var refCode = localStorage.getItem('tokenClicker_refCode') || '';
@@ -2504,13 +2832,103 @@
           }
         });
     }
+    function loadFriendRequests() {
+      var supabase = window.supabaseClient;
+      var list = document.getElementById('friend-requests-list');
+      if (!list) return;
+      var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
+      if (!supabase || !me) {
+        // No backend or player ID – just clear the list quietly.
+        list.innerHTML = '';
+        return;
+      }
+      supabase.from('friend_requests').select('id, from_wallet, from_name, created_at').eq('to_wallet', me).eq('status', 'pending').order('created_at', { ascending: false }).limit(20)
+        .then(function(r) {
+          if (r.error || !r.data || r.data.length === 0) {
+            list.innerHTML = '<li class="text-gray-500">No pending requests.</li>';
+            return;
+          }
+          var pushedIds = JSON.parse(localStorage.getItem('tokenClicker_pushedRequestIds') || '[]');
+          r.data.forEach(function(req) {
+            if (pushedIds.indexOf(req.id) < 0) {
+              try { pushNotification('Friend request from ' + (req.from_name || 'Someone')); } catch (e) {}
+              pushedIds.push(req.id);
+              if (pushedIds.length > 100) pushedIds = pushedIds.slice(-50);
+            }
+          });
+          try { localStorage.setItem('tokenClicker_pushedRequestIds', JSON.stringify(pushedIds)); } catch (e) {}
+          list.innerHTML = r.data.map(function(req) {
+            var name = (req.from_name || 'Someone').replace(/"/g, '&quot;');
+            return '<li class="flex flex-wrap items-center gap-2 py-1.5 border-b border-gray-700/50 last:border-0">' +
+              '<span class="flex-1 min-w-0">' + (req.from_name || 'Someone') + '</span>' +
+              '<span class="flex gap-1 shrink-0">' +
+              '<button type="button" class="friend-request-accept py-1 px-2 border-2 border-neon-green text-neon-green rounded text-[9px] hover:bg-neon-green/10" data-id="' + req.id + '" data-from-wallet="' + (req.from_wallet || '').replace(/"/g, '&quot;') + '" data-from-name="' + name + '">ACCEPT</button>' +
+              '<button type="button" class="friend-request-reject py-1 px-2 border-2 border-gray-500 text-gray-400 rounded text-[9px] hover:bg-gray-700" data-id="' + req.id + '">REJECT</button>' +
+              '</span></li>';
+          }).join('');
+          list.querySelectorAll('.friend-request-accept').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              var id = btn.getAttribute('data-id');
+              var fromWallet = btn.getAttribute('data-from-wallet');
+              var fromName = btn.getAttribute('data-from-name') || 'Friend';
+              if (!id || !fromWallet) return;
+              acceptFriendRequest(id, fromWallet, fromName);
+            });
+          });
+          list.querySelectorAll('.friend-request-reject').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              var id = btn.getAttribute('data-id');
+              if (!id) return;
+              rejectFriendRequest(id);
+            });
+          });
+        })
+        .catch(function() {
+          list.innerHTML = '<li class="text-gray-500">No pending requests.</li>';
+        });
+    }
+    function acceptFriendRequest(reqId, fromWallet, fromName) {
+      var supabase = window.supabaseClient;
+      var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
+      if (!supabase || !me) return;
+      supabase.from('friend_requests').select('from_wallet, to_wallet, from_name, to_name').eq('id', reqId).eq('to_wallet', me).eq('status', 'pending').single().then(function(r) {
+        if (r.error || !r.data) return;
+        var req = r.data;
+        supabase.from('leaderboard').select('ref_code, wallet_address').in('wallet_address', [req.from_wallet, req.to_wallet]).then(function(lr) {
+          var refByWallet = {};
+          if (lr.data) lr.data.forEach(function(row) { refByWallet[row.wallet_address] = row.ref_code || ''; });
+          var fromRef = (refByWallet[req.from_wallet] || '').trim().toUpperCase();
+          var toRef = (refByWallet[req.to_wallet] || '').trim().toUpperCase();
+          if (!fromRef || !toRef) return;
+          supabase.from('friends_by_code').insert([
+            { user_wallet: req.from_wallet, friend_ref_code: toRef, friend_name: req.to_name || 'Friend' },
+            { user_wallet: req.to_wallet, friend_ref_code: fromRef, friend_name: req.from_name || 'Friend' }
+          ]).then(function(ins) {
+            supabase.from('friend_requests').update({ status: 'accepted', updated_at: new Date().toISOString() }).eq('id', reqId).then(function() {});
+            if (!ins.error) {
+              try { pushNotification('You are now friends with ' + (req.from_name || 'Someone')); } catch (e) {}
+            }
+            if (typeof loadFriendRequests === 'function') loadFriendRequests();
+            if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
+          });
+        });
+      });
+    }
+    function rejectFriendRequest(reqId) {
+      var supabase = window.supabaseClient;
+      var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
+      if (!supabase || !me) return;
+      supabase.from('friend_requests').update({ status: 'rejected', updated_at: new Date().toISOString() }).eq('id', reqId).eq('to_wallet', me).then(function() {
+        if (typeof loadFriendRequests === 'function') loadFriendRequests();
+      });
+    }
     function loadFriendsAddedByCode() {
       var supabase = window.supabaseClient;
       var list = document.getElementById('friends-added-list');
       if (!list) return;
       var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
       if (!supabase) {
-        list.innerHTML = '<li class="text-gray-500">Friends unavailable. Add Supabase in supabase-config.js.</li>';
+        list.innerHTML = '<li class="text-gray-500">Friends unavailable.</li>';
         return;
       }
       if (!me) {
@@ -2599,7 +3017,7 @@
       }
       if (feedback) feedback.classList.add('hidden');
       var refCodePattern = code.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
-      supabase.from('leaderboard').select('name').ilike('ref_code', refCodePattern).limit(1).maybeSingle().then(function(r) {
+      supabase.from('leaderboard').select('name, wallet_address, ref_code').ilike('ref_code', refCodePattern).limit(1).maybeSingle().then(function(r) {
         if (r.error) {
           if (feedback) { feedback.textContent = (r.error.message && r.error.message.indexOf('schema') >= 0 ? 'Database schema outdated. Run migration 010 in Supabase.' : (r.error.message || 'Could not look up code.')); feedback.classList.remove('hidden'); feedback.classList.add('text-neon-yellow'); }
           return;
@@ -2608,16 +3026,22 @@
           if (feedback) { feedback.textContent = 'Unknown invite code. Your friend should open the app, go to Wallet → Settings, and SAVE their name so their code is synced.'; feedback.classList.remove('hidden'); feedback.classList.remove('text-neon-green'); feedback.classList.add('text-neon-yellow'); }
           return;
         }
+        var toWallet = (r.data.wallet_address || '').trim();
+        if (!toWallet || toWallet === me) {
+          if (feedback) { feedback.textContent = 'Invalid or your own code.'; feedback.classList.remove('hidden'); feedback.classList.add('text-neon-yellow'); }
+          return;
+        }
         var friendName = (r.data.name || '').trim() || code;
-        supabase.from('friends_by_code').insert({ user_wallet: me, friend_ref_code: code, friend_name: friendName }).then(function(ins) {
+        var fromName = (typeof getPlayerName === 'function' ? getPlayerName() : '') || 'Player';
+        supabase.from('friend_requests').insert({ from_wallet: me, to_wallet: toWallet, from_name: fromName, to_name: friendName, status: 'pending' }).then(function(ins) {
           if (ins.error) {
-            if (feedback) { feedback.textContent = (ins.error.code === '23505' ? 'Already in your list.' : (ins.error.message || 'Could not add.')); feedback.classList.remove('hidden'); feedback.classList.add('text-neon-yellow'); }
-            if (ins.error.code !== '23505' && typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
+            if (feedback) { feedback.textContent = (ins.error.code === '23505' ? 'Request already sent.' : (ins.error.message || 'Could not send request.')); feedback.classList.remove('hidden'); feedback.classList.add('text-neon-yellow'); }
+            if (ins.error.code !== '23505' && typeof loadFriendRequests === 'function') loadFriendRequests();
             return;
           }
           if (input) input.value = '';
-          if (feedback) { feedback.textContent = 'Added ' + friendName + ' to your list.'; feedback.classList.remove('hidden'); feedback.classList.remove('text-neon-yellow'); feedback.classList.add('text-neon-green'); }
-          if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
+          if (feedback) { feedback.textContent = 'Request sent to ' + friendName + '.'; feedback.classList.remove('hidden'); feedback.classList.remove('text-neon-yellow'); feedback.classList.add('text-neon-green'); }
+          if (typeof loadFriendRequests === 'function') loadFriendRequests();
         });
       });
     }
@@ -2689,10 +3113,46 @@
     });
     function openWalletSettingsModal() {
       if (typeof updateProfileDisplayName === 'function') updateProfileDisplayName();
+      var connEl = document.getElementById('wallet-settings-connection');
+      if (connEl) {
+        var addr = window.TonWallet && typeof window.TonWallet.getAddress === 'function' ? window.TonWallet.getAddress() : null;
+        if (addr) {
+          var short = addr.length > 12 ? addr.slice(0, 6) + '…' + addr.slice(-4) : addr;
+          connEl.textContent = 'Connected: ' + short;
+          connEl.classList.remove('text-neon-pink');
+          connEl.classList.add('text-neon-green');
+        } else {
+          connEl.textContent = 'Not connected';
+          connEl.classList.remove('text-neon-green');
+          connEl.classList.add('text-gray-400');
+        }
+      }
       var modal = document.getElementById('wallet-settings-modal');
       if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
     }
+    function scrollWalletSettingsTo(targetId) {
+      var container = document.querySelector('#wallet-settings-modal .bg-pixel-panel');
+      var target = document.getElementById(targetId);
+      if (!container || !target) return;
+      var top = target.offsetTop - container.offsetTop;
+      try {
+        container.scrollTo({ top: top, behavior: 'smooth' });
+      } catch (e) {
+        container.scrollTop = top;
+      }
+    }
+    function openWalletHelpInSettings() {
+      openWalletSettingsModal();
+      setTimeout(function() { scrollWalletSettingsTo('wallet-help-section'); }, 50);
+    }
+    document.querySelectorAll('.wallet-settings-nav-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var target = btn.getAttribute('data-target');
+        if (target) scrollWalletSettingsTo(target);
+      });
+    });
     document.getElementById('header-settings-btn') && document.getElementById('header-settings-btn').addEventListener('click', openWalletSettingsModal);
+    document.getElementById('wallet-need-help-btn') && document.getElementById('wallet-need-help-btn').addEventListener('click', openWalletHelpInSettings);
     document.getElementById('wallet-settings-modal-close') && document.getElementById('wallet-settings-modal-close').addEventListener('click', function() {
       var modal = document.getElementById('wallet-settings-modal');
       if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
@@ -2734,6 +3194,38 @@
         if (featherLabel) featherLabel.textContent = featherCb.checked ? 'On' : 'Off';
       });
     }
+    var soundCb = document.getElementById('wallet-setting-sound');
+    var soundLabel = document.getElementById('wallet-setting-sound-label');
+    if (soundCb) {
+      soundCb.checked = localStorage.getItem('tokenClicker_sound') !== '0';
+      if (soundLabel) soundLabel.textContent = soundCb.checked ? 'On' : 'Off';
+      soundCb.addEventListener('change', function() {
+        localStorage.setItem('tokenClicker_sound', soundCb.checked ? '1' : '0');
+        if (soundLabel) soundLabel.textContent = soundCb.checked ? 'On' : 'Off';
+      });
+    }
+    var hapticsCb = document.getElementById('wallet-setting-haptics');
+    var hapticsLabel = document.getElementById('wallet-setting-haptics-label');
+    if (hapticsCb) {
+      hapticsCb.checked = localStorage.getItem('tokenClicker_haptics') !== '0';
+      if (hapticsLabel) hapticsLabel.textContent = hapticsCb.checked ? 'On' : 'Off';
+      hapticsCb.addEventListener('change', function() {
+        localStorage.setItem('tokenClicker_haptics', hapticsCb.checked ? '1' : '0');
+        if (hapticsLabel) hapticsLabel.textContent = hapticsCb.checked ? 'On' : 'Off';
+      });
+    }
+    var reducedMotionCb = document.getElementById('wallet-setting-reduced-motion');
+    var reducedMotionLabel = document.getElementById('wallet-setting-reduced-motion-label');
+    if (reducedMotionCb) {
+      reducedMotionCb.checked = localStorage.getItem('tokenClicker_reducedMotion') === '1';
+      if (reducedMotionLabel) reducedMotionLabel.textContent = reducedMotionCb.checked ? 'On' : 'Off';
+      reducedMotionCb.addEventListener('change', function() {
+        localStorage.setItem('tokenClicker_reducedMotion', reducedMotionCb.checked ? '1' : '0');
+        if (reducedMotionLabel) reducedMotionLabel.textContent = reducedMotionCb.checked ? 'On' : 'Off';
+        document.documentElement.classList.toggle('reduced-motion', reducedMotionCb.checked);
+      });
+    }
+    document.documentElement.classList.toggle('reduced-motion', localStorage.getItem('tokenClicker_reducedMotion') === '1');
     // PVP full list modal removed; TOP 5 only on Friends page.
 
     // --- Notifications ---
@@ -2778,6 +3270,17 @@
     });
     document.getElementById('notifications-close') && document.getElementById('notifications-close').addEventListener('click', function () {
       var modal = document.getElementById('notifications-modal');
+      if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+    });
+    document.getElementById('pvp-full-list-btn') && document.getElementById('pvp-full-list-btn').addEventListener('click', function () {
+      var modal = document.getElementById('pvp-full-list-modal');
+      if (!modal) return;
+      if (typeof loadPvpFullList === 'function') loadPvpFullList();
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    });
+    document.getElementById('pvp-full-list-modal-close') && document.getElementById('pvp-full-list-modal-close').addEventListener('click', function () {
+      var modal = document.getElementById('pvp-full-list-modal');
       if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
     });
     document.getElementById('notifications-request-btn') && document.getElementById('notifications-request-btn').addEventListener('click', function () {
@@ -3114,10 +3617,12 @@
       resultEl.classList.remove('hidden');
       pvpLastWasVsBot = true;
       if (winner === 'me') {
+        if (typeof pushNotification === 'function') pushNotification('You beat the computer! Play vs a friend for real.');
         document.getElementById('pvp-duel-result-title').textContent = 'YOU WIN!';
         document.getElementById('pvp-duel-result-title').className = 'text-lg font-bold mb-2 neon-text-green';
         document.getElementById('pvp-duel-result-detail').textContent = 'You beat the computer! Practice wins don\'t count on the leaderboard. Play vs a friend for real.';
       } else if (winner === 'bot') {
+        if (typeof pushNotification === 'function') pushNotification('You lost vs computer. Try again or duel a friend!');
         document.getElementById('pvp-duel-result-title').textContent = 'COMPUTER WINS';
         document.getElementById('pvp-duel-result-title').className = 'text-lg font-bold mb-2 neon-text-pink';
         document.getElementById('pvp-duel-result-detail').textContent = 'The computer had more taps. Try again or invite a friend to duel!';
@@ -3182,18 +3687,18 @@
           var countdownLeft = Math.ceil((countdownEndMs - now) / 1000);
           var el = document.getElementById('pvp-duel-timer');
           if (el) {
-            if (countdownLeft >= 4) el.textContent = '3';
-            else if (countdownLeft === 3) el.textContent = '2';
-            else if (countdownLeft === 2) el.textContent = '1';
-            else if (countdownLeft === 1) el.textContent = 'GO!';
-            else el.textContent = 'GO!';
+            if (countdownLeft >= 4) { el.textContent = '3'; el.classList.remove('pvp-go-glow'); }
+            else if (countdownLeft === 3) { el.textContent = '2'; el.classList.remove('pvp-go-glow'); }
+            else if (countdownLeft === 2) { el.textContent = '1'; el.classList.remove('pvp-go-glow'); }
+            else if (countdownLeft === 1) { el.textContent = 'GO!'; el.classList.add('pvp-go-glow'); }
+            else { el.textContent = 'GO!'; el.classList.add('pvp-go-glow'); }
           }
           return;
         }
         if (clickBtn && clickBtn.disabled) clickBtn.disabled = false;
         var left = Math.max(0, Math.ceil((endsAtMs - now) / 1000));
         var el = document.getElementById('pvp-duel-timer');
-        if (el) el.textContent = '0:' + (left < 10 ? '0' : '') + left;
+        if (el) { el.classList.remove('pvp-go-glow'); el.textContent = '0:' + (left < 10 ? '0' : '') + left; }
         if (left <= 0) {
           clearInterval(pvpDuelTimerId);
           pvpDuelTimerId = null;
@@ -3266,10 +3771,12 @@
         if (typeof addTokens === 'function') addTokens(stake);
         try { localStorage.setItem('tokenClicker_firstPvpWin', '1'); } catch (e) {}
         if (typeof updateBadges === 'function') updateBadges();
+        if (typeof pushNotification === 'function') pushNotification('You won the duel! +' + stake + ' tokens.');
         document.getElementById('pvp-duel-result-title').textContent = 'YOU WIN!';
         document.getElementById('pvp-duel-result-title').className = 'text-lg font-bold mb-2 neon-text-green';
         document.getElementById('pvp-duel-result-detail').textContent = 'You won ' + stake + ' tokens. You\'re on the leaderboard.';
       } else if (winnerWallet) {
+        if (typeof pushNotification === 'function') pushNotification('You lost the duel. ' + winName + ' won ' + stake + ' tokens.');
         if (typeof tokens !== 'undefined') {
           tokens = Math.max(0, (tokens || 0) - stake);
           if (typeof save === 'function') save();
@@ -3333,10 +3840,18 @@
         clickBtn.offsetHeight;
         clickBtn.classList.add('pvp-duel-tap-pulse');
         setTimeout(function() { if (clickBtn) clickBtn.classList.remove('pvp-duel-tap-pulse'); }, 120);
+        var rect = clickBtn.getBoundingClientRect();
+        var cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
         if (localStorage.getItem('tokenClicker_featherEffects') !== '0') {
-          var rect = clickBtn.getBoundingClientRect();
-          spawnFeathersAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
+          spawnFeathersAt(cx, cy);
         }
+        var floatEl = document.createElement('div');
+        floatEl.className = 'tap-value-float';
+        floatEl.textContent = '+1';
+        floatEl.style.left = cx + 'px';
+        floatEl.style.top = cy + 'px';
+        document.body.appendChild(floatEl);
+        setTimeout(function() { if (floatEl.parentNode) floatEl.remove(); }, 800);
       }
       if (pvpVsBotMode) {
         var now = Date.now();
@@ -3359,6 +3874,19 @@
     });
     document.getElementById('pvp-duel-end-game-btn') && document.getElementById('pvp-duel-end-game-btn').addEventListener('click', function() {
       endDuelEarly();
+    });
+    document.getElementById('pvp-duel-copy-link-btn') && document.getElementById('pvp-duel-copy-link-btn').addEventListener('click', function() {
+      var linkEl = document.getElementById('pvp-duel-room-link');
+      var url = linkEl ? linkEl.textContent.trim() : '';
+      if (!url) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function() {
+          var btn = document.getElementById('pvp-duel-copy-link-btn');
+          if (btn) { btn.textContent = 'COPIED!'; setTimeout(function() { btn.textContent = 'COPY'; }, 1500); }
+        }).catch(function() {});
+      } else {
+        try { var ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); } catch (e) {}
+      }
     });
     document.getElementById('pvp-duel-rematch-btn') && document.getElementById('pvp-duel-rematch-btn').addEventListener('click', function() {
       if (pvpLastWasVsBot) {
@@ -3464,6 +3992,7 @@
 
     document.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
     setInterval(updateClicksPerSecond, 200);
+    setInterval(function() { updateBuffState(); if (typeof updateUI === 'function') updateUI(); }, 1000);
     setInterval(function() {
       if (isDead) return;
       var now = Date.now();
@@ -3565,7 +4094,9 @@
       if (pageId === 'home' && typeof updateUI === 'function') updateUI();
       if (pageId === 'friends') {
         startFriendsTokenPolling();
+        if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
         if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+        if (typeof loadFriendRequests === 'function') loadFriendRequests();
         if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
       } else {
         stopFriendsTokenPolling();
@@ -3576,6 +4107,7 @@
       });
       if (pageId === 'friends') {
         if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+        if (typeof loadFriendRequests === 'function') loadFriendRequests();
         if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
       }
       if (pageId === 'wallet') {
@@ -3583,6 +4115,8 @@
         if (typeof fetchTonPrice === 'function') fetchTonPrice();
       }
       if (pageId === 'multiplayer') {
+        var balEl = document.getElementById('pvp-create-balance');
+        if (balEl && typeof getInGameTokenBalance === 'function') balEl.textContent = getInGameTokenBalance();
         if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
         if (typeof window.loadPvpRooms === 'function') window.loadPvpRooms();
         try {
@@ -3665,10 +4199,15 @@
     window.addEventListener('load', () => {
       createStars();
       checkDeath();
+      updateBuffState();
       updateBountyProgress();
       save();
       var params = new URLSearchParams(window.location.search);
       var refParam = params.get('ref') || (window.location.hash ? new URLSearchParams(window.location.hash.slice(1)).get('ref') : null);
+      if (!refParam && window.location.hash) {
+        var m = window.location.hash.match(/[?&]ref=([^&]+)/);
+        if (m) refParam = m[1];
+      }
       if (refParam) localStorage.setItem('tokenClicker_invitedBy', refParam);
       if (params.get('room')) {
         window._pvpInvitedRoomId = params.get('room');
@@ -3678,6 +4217,7 @@
       showPage(getPageFromHash());
       updateUI();
       if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+      if (typeof loadFriendRequests === 'function') loadFriendRequests();
       if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
       if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
       var invitedBy = localStorage.getItem('tokenClicker_invitedBy');

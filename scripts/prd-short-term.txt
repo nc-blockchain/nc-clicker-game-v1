@@ -1,0 +1,51 @@
+# Short-Term PRD: Unfinished Items from Game Cleanup, prd.txt, Bugs & Playability
+
+## Overview
+Complete all short-term items from PRD-GAME-CLEANUP-AND-FEATURES, prd.txt, PRD-BUGS-AND-PLAYABILITY. Includes bug fixes, notifications, badges, settings, friend requests, PVP rematch, and bounties layout.
+
+## 1. Bug Fixes & Cleanup
+- Verify bounty claim persists (save on all claim paths)
+- Notifications: push bounty claims and PVP results to notification center
+- Room list: show only open, in_progress, recent finished (30 min); auto-close stale open rooms (5 min); mark in_progress past game_ends_at as finished
+- Remove dead code; ensure PVP/Friends mutations call reload
+
+## 2. Economy & Copy
+- PVP copy: tokens only, no $CARD; show Wager X tokens and You have Y tokens
+- Bottom nav: left-aligned
+
+## 3. Badges - 7-Day & 30-Day Streak
+- Streak logic: track consecutive days; persist; reset if day skipped
+- 7-day badge unlock; 30-day badge if applicable
+- Unlocked badges full opacity; locked 50%
+
+## 4. Settings
+- Sound On/Off; Haptics On/Off (mobile); Reduced motion
+- All in Wallet Settings; localStorage
+
+## 5. Friend Request Flow
+- friend_requests table: from_wallet, to_wallet, status, created_at
+- Add by code sends request; receiver sees notification
+- Accept/Reject in Friends or Notifications
+- On Accept: both in friends list
+
+## 6. PVP Rematch
+- 60s window after duel; countdown visible
+- Both rematch: reuse room, reset, same stake, no extra cost
+- No rematch in 60s: room closed, hide from lobby
+- Copy: If no rematch in 60s, room will close
+
+## 7. PVP Tap Feedback
+- Tap feedback (scale/pulse or +1) during duel
+- Optional: feathers in duel when setting On
+
+## 8. Bounties Layout
+- TO CLAIM: gray panels like Boosts
+- MY CLAIMED: colored bird cards in grid
+- Remove profile block from Friends page
+
+## 9. Notifications
+- PVP win: You won the duel
+- PVP lose: You lost the duel (optional)
+
+## 10. Testing
+- Full regression: splash, home, boosts, bounties, friends, wallet, notifications, PVP flow, navigation
