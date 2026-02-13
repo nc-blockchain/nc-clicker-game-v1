@@ -3013,22 +3013,44 @@
     function acceptFriendRequest(reqId, fromWallet, fromName) {
       var supabase = window.supabaseClient;
       var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
-      if (!supabase || !me) return;
+      if (!supabase || !me) {
+        try { pushNotification('Set your name in Wallet → Settings first.'); } catch (e) {}
+        return;
+      }
       supabase.from('friend_requests').select('from_wallet, to_wallet, from_name, to_name').eq('id', reqId).eq('to_wallet', me).eq('status', 'pending').single().then(function(r) {
-        if (r.error || !r.data) return;
+        if (r.error || !r.data) {
+          try { pushNotification('Request expired or already handled.'); } catch (e) {}
+          if (typeof loadFriendRequests === 'function') loadFriendRequests();
+          return;
+        }
         var req = r.data;
         supabase.from('leaderboard').select('ref_code, wallet_address').in('wallet_address', [req.from_wallet, req.to_wallet]).then(function(lr) {
           var refByWallet = {};
-          if (lr.data) lr.data.forEach(function(row) { refByWallet[row.wallet_address] = row.ref_code || ''; });
-          var fromRef = (refByWallet[req.from_wallet] || '').trim().toUpperCase();
-          var toRef = (refByWallet[req.to_wallet] || '').trim().toUpperCase();
-          if (!fromRef || !toRef) return;
+          if (lr.data) lr.data.forEach(function(row) { refByWallet[row.wallet_address] = (row.ref_code || '').trim(); });
+          var fromRef = (refByWallet[req.from_wallet] || '').toUpperCase();
+          var toRef = (refByWallet[req.to_wallet] || '').toUpperCase();
+          if (!toRef) toRef = (localStorage.getItem('tokenClicker_refCode') || '').trim().toUpperCase();
+          if (!fromRef) {
+            try { pushNotification("Could not accept: " + (req.from_name || "Sender") + "'s invite code not synced. Ask them to save their name in Wallet → Settings."); } catch (e) {}
+            return;
+          }
+          if (!toRef) {
+            try { pushNotification('Could not accept: save your name in Wallet → Settings so your invite code is synced.'); } catch (e) {}
+            return;
+          }
           supabase.from('friends_by_code').insert([
             { user_wallet: req.from_wallet, friend_ref_code: toRef, friend_name: req.to_name || 'Friend' },
             { user_wallet: req.to_wallet, friend_ref_code: fromRef, friend_name: req.from_name || 'Friend' }
           ]).then(function(ins) {
-            supabase.from('friend_requests').update({ status: 'accepted', updated_at: new Date().toISOString() }).eq('id', reqId).then(function() {});
-            if (!ins.error) {
+            if (ins.error) {
+              var msg = ins.error.message || 'Could not add friend.';
+              if (ins.error.code === '23505') {
+                msg = 'Already friends with ' + (req.from_name || 'them') + '.';
+                supabase.from('friend_requests').update({ status: 'accepted', updated_at: new Date().toISOString() }).eq('id', reqId).then(function() {});
+              }
+              try { pushNotification(msg); } catch (e) {}
+            } else {
+              supabase.from('friend_requests').update({ status: 'accepted', updated_at: new Date().toISOString() }).eq('id', reqId).then(function() {});
               try { pushNotification('You are now friends with ' + (req.from_name || 'Someone')); } catch (e) {}
             }
             if (typeof loadFriendRequests === 'function') loadFriendRequests();
