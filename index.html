@@ -947,6 +947,7 @@
       <div class="flex items-center justify-between gap-2 mb-4 border-b-2 border-gray-700 pb-2">
         <h2 class="text-neon-yellow">WALLET</h2>
       </div>
+      <p class="text-gray-400 text-[10px] mb-4">Connect your wallet to buy more tokens and buffs with $CARD.</p>
       <!-- Balances -->
       <div class="bg-pixel-panel border-2 border-gray-700 p-4 rounded mb-4">
         <div class="grid grid-cols-2 gap-4 text-center">
@@ -986,7 +987,7 @@
           <span class="text-gray-500 text-[10px]">SWAP $CARD → TOKENS</span>
           <span id="ton-price-display" class="text-[9px] text-gray-400">TON: —</span>
         </div>
-        <p class="text-[10px] text-gray-400 mb-2">Exchange on-chain $CARD for in-game tokens to play.</p>
+        <p class="text-[10px] text-gray-400 mb-2">Exchange on-chain $CARD for in-game tokens to buy buffs and play.</p>
         <div class="flex gap-2 items-center flex-wrap">
           <input type="number" id="swap-amount" min="1" step="1" placeholder="$CARD amount" class="bg-black border-2 border-gray-600 rounded px-2 py-2 text-neon-cyan w-28 text-[10px]" />
           <button type="button" id="swap-btn" class="border-2 border-neon-green text-neon-green px-3 py-2 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50">SWAP</button>
@@ -3140,7 +3141,7 @@
     function persistNameToLeaderboard() {
       var name = getPlayerName();
       var wallet = getPvpPlayerId();
-      if (!name || !wallet || wallet.indexOf('guest_') === 0) return;
+      if (!name || !wallet) return;
       var supabase = window.supabaseClient;
       if (!supabase) return;
       supabase.from('leaderboard').select('id').eq('wallet_address', wallet).maybeSingle().then(function(r) {
