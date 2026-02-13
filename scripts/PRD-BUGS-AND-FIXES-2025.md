@@ -104,7 +104,7 @@ Run these in order in Supabase SQL Editor:
 Use this for regression testing:
 
 - [ ] **Home:** Tap bird; tokens, TAP/SEC, total taps update; feathers (if on)
-- [ ] **Boosts:** Balance shown; BUY enables when enough tokens; purchase persists after refresh
+- [ ] **Boosts:** Balance shown; 60s buff activates when enough tokens; countdown on button & Home; rebuy extends
 - [ ] **Bounties:** Claim bounty → balance updates; Available/Claimed tabs; refresh persists
 - [ ] **Friends:** Leaderboard loads; invite link copies; add by code (with valid code); Remove friend works
 - [ ] **Wallet:** Balance, SETTINGS, name change persists
