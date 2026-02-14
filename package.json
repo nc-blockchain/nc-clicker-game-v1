@@ -7,7 +7,8 @@
     "build:wallet": "node build-wallet.js",
     "build": "npm run build:wallet",
     "serve": "npx http-server . -p 3001 -c-1",
-    "start": "npx http-server . -p 3001 -c-1"
+    "start": "npx http-server . -p 3001 -c-1",
+    "open": "node serve-and-open.cjs"
   },
   "dependencies": {
     "@tonconnect/sdk": "^2.2.0"
