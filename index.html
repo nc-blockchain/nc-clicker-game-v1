@@ -123,6 +123,7 @@
     #bounties-list.bounty-toclaim-list .bounty-row { border-color: #374151; background: #1a1a1a; }
     #bounties-list.bounty-toclaim-list .bounty-bird-card { display: none; }
     .bounty-category { margin-bottom: 1.25rem; }
+    .bounty-category-panel.hidden { display: none !important; }
     .bounty-category-title { font-size: 11px; font-weight: bold; color: #9ca3af; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
     /* Loading / intro screen */
     .splash-screen {
@@ -460,7 +461,7 @@
         <ol id="friend-requests-list" class="space-y-2 text-[10px] min-h-[24px]"></ol>
       </div>
       <div class="mb-3">
-        <button type="button" id="friends-play-vs-computer-btn" class="w-full py-2 px-4 border-2 border-neon-yellow text-neon-yellow rounded text-[10px] hover:bg-neon-yellow/10">PLAY VS COMPUTER</button>
+        <button type="button" id="friends-play-vs-computer-btn" class="w-full py-2 px-4 border-2 border-neon-yellow text-neon-yellow rounded text-[10px] hover:bg-neon-yellow/10">ENTER TRAINING</button>
       </div>
       <div class="pt-2 border-t border-gray-800/60">
         <div class="text-[9px] text-gray-500 mb-1">Add friend by invite code</div>
@@ -498,6 +499,25 @@
         <button type="button" id="pvp-create-room-btn" class="flex-1 py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10 min-h-[44px] disabled:opacity-50 disabled:pointer-events-none" aria-label="Create room with chosen wager">CREATE ROOM</button>
         <button type="button" id="pvp-create-room-modal-cancel" class="py-2 px-4 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">CANCEL</button>
       </div>
+    </div>
+  </div>
+  <!-- Customize quick buffs: reorder and add buffs to main clicker strip -->
+  <div id="customize-buffs-modal" class="hidden" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
+    <div class="bg-pixel-panel border-2 border-neon-cyan/50 rounded-lg p-4 max-w-sm w-full my-4">
+      <div class="flex items-center justify-between gap-2 mb-3 border-b border-gray-700 pb-2">
+        <p class="text-neon-cyan text-[10px] font-bold">Customize quick buffs</p>
+        <button type="button" id="customize-buffs-modal-close" class="p-1.5 border-2 border-gray-500 text-gray-400 rounded text-[9px] hover:bg-gray-700" aria-label="Close">✕</button>
+      </div>
+      <p class="text-gray-500 text-[9px] mb-2">Reorder or add buffs to the main page. Max 3 slots.</p>
+      <div class="text-[9px] text-gray-400 uppercase tracking-wider mb-1">In your strip (drag order)</div>
+      <ul id="customize-buffs-list" class="space-y-1 mb-3 min-h-[60px]"></ul>
+      <div class="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Add a buff</div>
+      <select id="customize-buffs-add-select" class="w-full bg-black border-2 border-gray-600 rounded px-2 py-1.5 text-[10px] text-white mb-2">
+        <option value="">— Choose —</option>
+      </select>
+      <p id="customize-buffs-msg" class="text-[9px] mb-2 min-h-[14px]" aria-live="polite"></p>
+      <button type="button" id="customize-buffs-add-btn" class="w-full py-2 border-2 border-neon-green text-neon-green rounded text-[9px] hover:bg-neon-green/10 mb-3 disabled:opacity-50 disabled:pointer-events-none">ADD TO STRIP</button>
+      <button type="button" id="customize-buffs-done" class="w-full py-2 border-2 border-neon-cyan text-neon-cyan rounded text-[10px] hover:bg-neon-cyan/10">DONE</button>
     </div>
   </div>
   <div id="pvp-onboarding-modal" class="hidden" style="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
@@ -600,8 +620,12 @@
           </div>
         </div>
       </div>
-      <div id="buff-countdown" class="mt-2 text-[9px] text-neon-yellow/90 text-center min-h-[14px] hidden"></div>
       <div id="home-next-milestone" class="mt-1 text-[9px] text-gray-500 text-center min-h-[12px]"></div>
+      <!-- Active buff: stays on main clicker page until buff(s) are over -->
+      <div id="active-buff-panel" class="mt-3 p-3 rounded-lg border-2 border-neon-yellow/50 bg-neon-yellow/5 hidden">
+        <p class="text-neon-yellow text-[10px] font-bold mb-1.5 text-center">🔥 ACTIVE BUFF</p>
+        <p id="buff-countdown" class="text-[9px] text-neon-yellow/90 text-center min-h-[14px]"></p>
+      </div>
       <!-- Badges -->
       <div class="mt-4 text-center">
         <div class="text-gray-500 home-center-text mb-2">🏆 BADGES</div>
@@ -619,27 +643,13 @@
           <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel opacity-50" id="badge-11" title="30-Day Streak">📅</div>
         </div>
       </div>
-      <!-- Upgrade strip: purchase when affordable, grayed out with no button when not -->
-      <div class="mt-4 grid grid-cols-3 gap-2">
-        <div id="home-strip-power" class="bg-pixel-panel border-2 border-gray-700 p-3 rounded text-center transition-colors home-strip-card">
-          <div class="text-neon-yellow text-base mb-1">⚡</div>
-          <div class="home-center-text">Power</div>
-          <div class="text-gray-500 home-center-text">Cost: 50</div>
-          <button type="button" class="home-strip-btn boost-btn mt-2 border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="50" data-boost="tapPower">USE</button>
-        </div>
-        <div id="home-strip-autoclick" class="bg-pixel-panel border-2 border-gray-700 p-3 rounded text-center transition-colors home-strip-card">
-          <div class="text-neon-green text-base mb-1">🔋</div>
-          <div class="home-center-text">Autoclick</div>
-          <div class="text-gray-500 home-center-text">Cost: 100</div>
-          <button type="button" class="home-strip-btn boost-btn mt-2 border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="100" data-boost="autoclicker">USE</button>
-        </div>
-        <div id="home-strip-regen" class="bg-pixel-panel border-2 border-gray-700 p-3 rounded text-center transition-colors home-strip-card">
-          <div class="text-neon-cyan text-base mb-1">♻️</div>
-          <div class="home-center-text">Regen</div>
-          <div class="text-gray-500 home-center-text">Cost: 75</div>
-          <button type="button" class="home-strip-btn boost-btn mt-2 border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="75" data-boost="cooldown">USE</button>
-        </div>
-      </div>
+      <!-- Quick buffs: order and selection saved in localStorage. Customize to reorder or add. -->
+      <div id="home-strip-cards" class="mt-4 grid grid-cols-3 gap-2"></div>
+      <p class="mt-2 text-center">
+        <button type="button" id="home-customize-buffs-btn" class="text-[9px] text-neon-cyan hover:underline">Customize</button>
+        <span class="text-gray-500"> · </span>
+        <a href="#boosts" class="text-[9px] text-neon-cyan hover:underline">All buffs →</a>
+      </p>
     </section>
 
     <!-- Boosts -->
@@ -655,6 +665,14 @@
       </div>
       <h2 class="text-neon-cyan mb-4 border-b-2 border-gray-700 pb-2">BOOSTS</h2>
       <p class="text-gray-400 mb-4">Spend tokens on click buffs, autoclickers, and cooldown reductions.</p>
+      <!-- Tabs -->
+      <div class="flex flex-wrap gap-1 mb-3 border-b-2 border-gray-700 pb-2">
+        <button type="button" class="boost-tab-btn py-1.5 px-2.5 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] font-bold bg-neon-cyan/10" data-boost-tab="tappower">⚡ TAP</button>
+        <button type="button" class="boost-tab-btn py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-green/50 hover:text-neon-green" data-boost-tab="autoclicker">🔋 AUTO</button>
+        <button type="button" class="boost-tab-btn py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-cyan/50 hover:text-neon-cyan" data-boost-tab="cooldown">❄️ COOL</button>
+        <button type="button" class="boost-tab-btn py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-pink/50 hover:text-neon-pink" data-boost-tab="power">⚡ POWER</button>
+        <button type="button" class="boost-tab-btn py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-yellow/50 hover:text-neon-yellow" data-boost-tab="active">🔥 ACTIVE</button>
+      </div>
       <!-- Badges above first boost -->
       <div class="mb-4 p-3 bg-black border-2 border-gray-700 rounded">
         <div class="text-gray-500 text-[9px] mb-2">🏆 BADGES</div>
@@ -672,8 +690,9 @@
           <div class="badge-circle w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel opacity-50" id="badge-boost-11" title="30-Day Streak">📅</div>
         </div>
       </div>
-      <p class="text-gray-500 text-[9px] mb-2">All boosts last 60 seconds. Rebuy to extend.</p>
+      <p class="text-gray-500 text-[9px] mb-2">All boosts last 60s. Rebuy to extend. Max 2 active buffs.</p>
       <div class="space-y-4">
+        <div id="boost-panel-tappower" class="boost-panel" data-boost-panel="tappower">
         <div class="boost-category">
           <div class="text-neon-yellow text-[10px] font-bold mb-2 uppercase tracking-wider">⚡ Tap Power</div>
           <div class="space-y-2">
@@ -691,6 +710,8 @@
             </div>
           </div>
         </div>
+        </div>
+        <div id="boost-panel-autoclicker" class="boost-panel hidden" data-boost-panel="autoclicker">
         <div class="boost-category">
           <div class="text-neon-green text-[10px] font-bold mb-2 uppercase tracking-wider">🔋 Autoclickers</div>
           <div class="space-y-2">
@@ -704,6 +725,8 @@
             </div>
           </div>
         </div>
+        </div>
+        <div id="boost-panel-cooldown" class="boost-panel hidden" data-boost-panel="cooldown">
         <div class="boost-category">
           <div class="text-neon-cyan text-[10px] font-bold mb-2 uppercase tracking-wider">♻️ Cooldowns</div>
           <div class="space-y-2">
@@ -717,6 +740,8 @@
             </div>
           </div>
         </div>
+        </div>
+        <div id="boost-panel-power" class="boost-panel hidden" data-boost-panel="power">
         <div class="boost-category">
           <div class="text-neon-pink text-[10px] font-bold mb-2 uppercase tracking-wider">⚡ Power Bar</div>
           <div class="space-y-2">
@@ -725,6 +750,35 @@
               <button type="button" id="buy-power-capacity" class="boost-btn border-2 border-neon-pink text-neon-pink px-3 py-1 rounded text-[10px] hover:bg-neon-pink/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="100" data-boost="powerCapacity">BUY</button>
             </div>
           </div>
+        </div>
+        </div>
+        <div id="boost-panel-active" class="boost-panel hidden" data-boost-panel="active">
+        <div class="boost-category">
+          <div class="text-neon-yellow text-[10px] font-bold mb-2 uppercase tracking-wider">🔥 Active buffs (max 2)</div>
+          <p class="text-gray-500 text-[9px] mb-2">Cooldown starts when buff ends. Combo &amp; Crit are passive.</p>
+          <div class="space-y-2">
+            <div class="bg-pixel-panel border-2 border-neon-yellow/50 p-3 rounded flex flex-wrap justify-between items-center gap-2">
+              <div class="flex-1 min-w-0"><span>⚡ Frenzy (tap x3, auto x2) 10s</span><div class="text-neon-yellow text-[10px] font-bold mt-1">80 tokens</div></div>
+              <button type="button" class="boost-btn border-2 border-neon-yellow text-neon-yellow px-3 py-1 rounded text-[10px] hover:bg-neon-yellow/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="80" data-boost="frenzy">USE</button>
+            </div>
+            <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
+              <div class="flex-1 min-w-0"><span>💥 Overcharge (overcap power, 20%/s drain) 15s</span><div class="text-neon-yellow text-[10px] font-bold mt-1">60 tokens</div></div>
+              <button type="button" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="60" data-boost="overcharge">USE</button>
+            </div>
+            <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
+              <div class="flex-1 min-w-0"><span>🧿 Token Magnet +35% drops 2m</span><div class="text-neon-yellow text-[10px] font-bold mt-1">100 tokens</div></div>
+              <button type="button" class="boost-btn border-2 border-neon-green text-neon-green px-3 py-1 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="100" data-boost="tokenMagnet">USE</button>
+            </div>
+            <div class="bg-pixel-panel border-2 border-gray-700 p-3 rounded flex flex-wrap justify-between items-center gap-2">
+              <div class="flex-1 min-w-0"><span>🛡 Shield (no combo loss) 60s</span><div class="text-neon-yellow text-[10px] font-bold mt-1">90 tokens</div></div>
+              <button type="button" class="boost-btn border-2 border-neon-cyan text-neon-cyan px-3 py-1 rounded text-[10px] hover:bg-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="90" data-boost="shield">USE</button>
+            </div>
+            <div class="bg-pixel-panel border-2 border-neon-pink/50 p-3 rounded flex flex-wrap justify-between items-center gap-2">
+              <div class="flex-1 min-w-0"><span>🧨 Burn (tap x5, power drains 3x) 12s</span><div class="text-neon-yellow text-[10px] font-bold mt-1">70 tokens</div></div>
+              <button type="button" class="boost-btn border-2 border-neon-pink text-neon-pink px-3 py-1 rounded text-[10px] hover:bg-neon-pink/10 disabled:opacity-50 disabled:cursor-not-allowed" data-cost="70" data-boost="burn">USE</button>
+            </div>
+          </div>
+        </div>
         </div>
       </div>
       <p class="text-gray-500 mt-4 text-[10px]">Your balance: <span id="boosts-balance" class="neon-text-cyan">0</span> tokens</p>
@@ -748,13 +802,19 @@
         <div id="grad-current" class="text-gray-300">Active: 500 taps — 0/500 · 15 tokens</div>
         <div id="grad-next" class="text-gray-500">Next: 1,000 taps — 0/1,000 · 25 tokens</div>
       </div>
-      <div class="flex gap-2 mb-3">
+      <div class="flex gap-2 mb-2">
         <button type="button" id="bounty-tab-toclaim" class="bounty-tab border-2 border-neon-green text-neon-green px-3 py-1.5 rounded text-[10px] hover:bg-neon-green/10 bg-neon-green/10">Available</button>
         <button type="button" id="bounty-tab-claimed" class="bounty-tab border-2 border-gray-500 text-gray-400 px-3 py-1.5 rounded text-[10px] hover:bg-gray-700">Claimed</button>
       </div>
+      <div id="bounty-category-tabs" class="flex flex-wrap gap-2 mb-3">
+        <button type="button" class="bounty-category-tab py-1.5 px-2.5 border-2 border-neon-green text-neon-green rounded text-[9px] font-bold bg-neon-green/10" data-bounty-category="daily">📅 Daily</button>
+        <button type="button" class="bounty-category-tab py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-cyan/50 hover:text-neon-cyan" data-bounty-category="graduating">📈 Graduating</button>
+        <button type="button" class="bounty-category-tab py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-yellow/50 hover:text-neon-yellow" data-bounty-category="fun">🎯 Fun</button>
+        <button type="button" class="bounty-category-tab py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-pink/50 hover:text-neon-pink" data-bounty-category="highroller">💰 High Roller</button>
+      </div>
       <div class="space-y-3 hidden" id="bounties-list">
         <!-- Daily Bounties -->
-        <div class="bounty-category">
+        <div class="bounty-category bounty-category-panel" data-bounty-category="daily">
           <div class="bounty-category-title">Daily Bounties</div>
           <div class="space-y-3">
         <div id="bounty-daily" class="bounty-row bounty-card-yellow p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="daily" data-bounty-name="Daily login" data-bounty-reward="5">
@@ -805,7 +865,7 @@
           </div>
         </div>
         <!-- Graduating Bounties -->
-        <div class="bounty-category">
+        <div class="bounty-category bounty-category-panel hidden" data-bounty-category="graduating">
           <div class="bounty-category-title">Graduating Bounties</div>
           <div class="space-y-3">
         <div id="bounty-500" class="bounty-row bounty-card-green p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="500total" data-bounty-name="500 taps" data-bounty-reward="15">
@@ -846,7 +906,7 @@
           </div>
         </div>
         <!-- Fun Bounties -->
-        <div class="bounty-category">
+        <div class="bounty-category bounty-category-panel hidden" data-bounty-category="fun">
           <div class="bounty-category-title">Fun Bounties</div>
           <div class="space-y-3">
         <div id="bounty-firstfriend" class="bounty-row bounty-card-pink p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="firstfriend" data-bounty-name="First friend" data-bounty-reward="10">
@@ -887,7 +947,7 @@
           </div>
         </div>
         <!-- High Roller Bounties -->
-        <div class="bounty-category">
+        <div class="bounty-category bounty-category-panel hidden" data-bounty-category="highroller">
           <div class="bounty-category-title">High Roller</div>
           <div class="space-y-3">
         <div id="bounty-500balance" class="bounty-row bounty-card-cyan p-3 flex flex-wrap justify-between items-center gap-2" data-bounty-id="500balance" data-bounty-name="500 tokens" data-bounty-reward="20">
@@ -1040,15 +1100,26 @@
         <button type="button" id="header-friends-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10 shrink-0">ADD FRIENDS</button>
       </div>
       <p class="text-gray-400 mb-4">Share the game. When friends open the link on their phone, they can play and challenge you.</p>
-      <!-- Leaderboard -->
+      <!-- PVP leaderboard: wins and tokens won from duels -->
       <div class="bg-pixel-panel border-2 border-neon-pink/30 p-3 rounded mb-4">
-        <div class="text-[10px] text-gray-500 mb-2">PVP DUEL WINS (TOP 5)</div>
+        <div class="text-[10px] text-gray-500 mb-1">PVP DUEL WINS (TOP 5)</div>
+        <p class="text-[9px] text-gray-500 mb-2">Wins and total tokens won from wagers.</p>
         <ol id="leaderboard-pvp-list" class="space-y-1 text-[10px] list-decimal list-inside text-gray-300 min-h-[24px]">
           <li class="text-gray-500">Loading…</li>
         </ol>
         <button type="button" id="pvp-full-list-btn" class="mt-2 py-1.5 px-3 border-2 border-neon-pink text-neon-pink rounded text-[9px] hover:bg-neon-pink/10">VIEW FULL LIST</button>
       </div>
-      <!-- Open rooms: under leaderboard, tap to join immediately -->
+      <!-- Create room + copy link (primary actions) -->
+      <div class="bg-pixel-panel border-2 border-gray-700 p-4 rounded-lg mb-4">
+        <p class="text-[9px] text-gray-500 mb-2">Set a wager and create a room. Share the link so a friend can join and agree to the wager.</p>
+        <div class="flex gap-2 flex-wrap">
+          <button type="button" id="pvp-open-create-room-btn" class="flex-1 min-w-[120px] py-3 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] font-bold hover:bg-neon-green/10 min-h-[48px]">CREATE ROOM</button>
+          <button type="button" id="share-game-btn" class="flex-1 min-w-[120px] py-3 px-4 border-2 border-neon-pink text-neon-pink rounded text-[10px] font-bold hover:bg-neon-pink/10 active:scale-[0.98] min-h-[48px]">COPY GAME LINK</button>
+        </div>
+        <button type="button" id="share-game-native-btn" class="hidden" aria-hidden="true">SHARE (APP)</button>
+        <p id="share-game-feedback" class="text-neon-green text-[9px] mt-2 hidden">Link copied!</p>
+      </div>
+      <!-- Open rooms: tap to join -->
       <div class="mb-4">
         <div class="flex items-center justify-between gap-2 mb-2">
           <p class="text-[10px] text-gray-500">OPEN ROOMS — tap to join</p>
@@ -1067,21 +1138,12 @@
         <button type="button" id="pvp-invited-join-btn" class="w-full py-3 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] font-bold hover:bg-neon-green/10 min-h-[48px]">JOIN & PLAY</button>
         <p id="pvp-invited-room-id" class="text-gray-500 text-[8px] mt-2 truncate"></p>
       </div>
-      <!-- Share + Create: one block, 2 buttons -->
-      <div class="bg-pixel-panel border-2 border-gray-700 p-4 rounded-lg mb-4">
-        <div class="flex gap-2 flex-wrap">
-          <button type="button" id="pvp-open-create-room-btn" class="flex-1 min-w-[120px] py-3 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] font-bold hover:bg-neon-green/10 min-h-[48px]">CREATE ROOM</button>
-          <button type="button" id="share-game-btn" class="flex-1 min-w-[120px] py-3 px-4 border-2 border-neon-pink text-neon-pink rounded text-[10px] font-bold hover:bg-neon-pink/10 active:scale-[0.98] min-h-[48px]">COPY GAME LINK</button>
-        </div>
-        <button type="button" id="share-game-native-btn" class="hidden" aria-hidden="true">SHARE (APP)</button>
-        <p id="share-game-feedback" class="text-neon-green text-[9px] mt-2 hidden">Link copied!</p>
-      </div>
       <div id="pvp-lobby-wrap">
       <!-- Play vs Computer: no friends / no stake needed -->
       <div class="bg-pixel-panel border-2 border-neon-yellow/60 p-4 rounded mb-4">
-        <p class="text-neon-yellow text-[10px] font-bold mb-2">🖥️ PLAY VS COMPUTER</p>
+        <p class="text-neon-yellow text-[10px] font-bold mb-2">🖥️ TRAINING ROOM</p>
         <p class="text-gray-400 text-[9px] mb-3">No friends online? Tap against the computer. No wallet or stake required. Practice only.</p>
-        <button type="button" id="pvp-vs-computer-btn" class="py-2 px-4 border-2 border-neon-yellow text-neon-yellow rounded text-[10px] hover:bg-neon-yellow/10 min-h-[44px]">PLAY VS COMPUTER</button>
+        <button type="button" id="pvp-vs-computer-btn" class="py-2 px-4 border-2 border-neon-yellow text-neon-yellow rounded text-[10px] hover:bg-neon-yellow/10 min-h-[44px]">ENTER TRAINING</button>
       </div>
       </div>
 
@@ -1159,6 +1221,22 @@
     const COOLDOWN_REDUCED_MS = 200;
     const COOLDOWN_SUPER_MS = 150;
     const BUFF_DURATION_MS = 60 * 1000;
+    // New buff system (timed active + passive)
+    const BUFF_FRENZY_DURATION_MS = 10 * 1000;
+    const BUFF_FRENZY_COOLDOWN_MS = 45 * 1000;
+    const BUFF_OVERCHARGE_DURATION_MS = 15 * 1000;
+    const BUFF_OVERCHARGE_COOLDOWN_MS = 30 * 1000;
+    const BUFF_TOKEN_MAGNET_DURATION_MS = 2 * 60 * 1000;
+    const BUFF_TOKEN_MAGNET_COOLDOWN_MS = 2 * 60 * 1000;
+    const BUFF_SHIELD_DURATION_MS = 60 * 1000;
+    const BUFF_SHIELD_COOLDOWN_MS = 2 * 60 * 1000;
+    const BUFF_BURN_DURATION_MS = 12 * 1000;
+    const BUFF_BURN_COOLDOWN_MS = 60 * 1000;
+    const COMBO_IDLE_RESET_MS = 1500;
+    const COMBO_SOFT_CAP_MS = 20 * 1000;
+    const CRIT_PROC_DURATION_MS = 3 * 1000;
+    const CRIT_ICD_MS = 4 * 1000;
+    const MAX_ACTIVE_BUFFS = 2;
     const DEATH_IDLE_HOURS = 48;
     const REVIVE_PERCENT = 0.1;
     const REVIVE_MIN = 10;
@@ -1225,6 +1303,22 @@
     let hasSuperCooldownBoost = false;
     let hasPowerCapacityBoost = false;
     let tapPower = 1;
+    // New buff state
+    let buffFrenzyUntil = parseInt(localStorage.getItem('tokenClicker_buffFrenzyUntil') || '0', 10);
+    let buffFrenzyCooldownUntil = parseInt(localStorage.getItem('tokenClicker_buffFrenzyCdUntil') || '0', 10);
+    let buffOverchargeUntil = parseInt(localStorage.getItem('tokenClicker_buffOverchargeUntil') || '0', 10);
+    let buffOverchargeCooldownUntil = parseInt(localStorage.getItem('tokenClicker_buffOverchargeCdUntil') || '0', 10);
+    let buffTokenMagnetUntil = parseInt(localStorage.getItem('tokenClicker_buffTokenMagnetUntil') || '0', 10);
+    let buffTokenMagnetCooldownUntil = parseInt(localStorage.getItem('tokenClicker_buffTokenMagnetCdUntil') || '0', 10);
+    let buffShieldUntil = parseInt(localStorage.getItem('tokenClicker_buffShieldUntil') || '0', 10);
+    let buffShieldCooldownUntil = parseInt(localStorage.getItem('tokenClicker_buffShieldCdUntil') || '0', 10);
+    let buffBurnUntil = parseInt(localStorage.getItem('tokenClicker_buffBurnUntil') || '0', 10);
+    let buffBurnCooldownUntil = parseInt(localStorage.getItem('tokenClicker_buffBurnCdUntil') || '0', 10);
+    let comboStartedAt = 0;
+    let comboLastClickAt = 0;
+    let critProcUntil = 0;
+    let critLastProcAt = 0;
+    let baseCritChance = 0.1;
     function updateBuffState() {
       var now = Date.now();
       hasAutoclicker = buffAutoclickerUntil > now;
@@ -1235,6 +1329,46 @@
       tapPower = (buffTapPowerUntil > now) ? buffTapPowerLevel : baseTapPower;
       if (!hasAutoclicker && autoclickerInterval) { clearInterval(autoclickerInterval); autoclickerInterval = null; }
       if (hasAutoclicker && !autoclickerInterval) startAutoclicker();
+    }
+    function hasFrenzy() { return buffFrenzyUntil > Date.now(); }
+    function hasOvercharge() { return buffOverchargeUntil > Date.now(); }
+    function hasTokenMagnet() { return buffTokenMagnetUntil > Date.now(); }
+    function hasShield() { return buffShieldUntil > Date.now(); }
+    function hasBurn() { return buffBurnUntil > Date.now(); }
+    function countActiveNewBuffs() {
+      var n = 0;
+      if (hasFrenzy()) n++;
+      if (hasOvercharge()) n++;
+      if (hasTokenMagnet()) n++;
+      if (hasShield()) n++;
+      if (hasBurn()) n++;
+      return n;
+    }
+    function getComboMultiplier() {
+      var now = Date.now();
+      if (comboLastClickAt && now - comboLastClickAt > COMBO_IDLE_RESET_MS) return 1;
+      if (!comboStartedAt) return 1;
+      var elapsed = Math.min(COMBO_SOFT_CAP_MS, now - comboStartedAt);
+      if (elapsed <= 0) return 1;
+      return 1 + (elapsed / COMBO_SOFT_CAP_MS) * 0.5;
+    }
+    function getEffectiveTapPower() {
+      var base = tapPower;
+      if (hasFrenzy()) base *= 3;
+      if (hasBurn()) base *= 5;
+      return Math.max(1, Math.floor(base));
+    }
+    function isCritActive() { return critProcUntil > Date.now(); }
+    function rollCrit() {
+      var now = Date.now();
+      if (now - critLastProcAt < CRIT_ICD_MS) return false;
+      var chance = baseCritChance * (isCritActive() ? 2 : 1);
+      if (Math.random() < chance) {
+        critLastProcAt = now;
+        critProcUntil = now + CRIT_PROC_DURATION_MS;
+        return true;
+      }
+      return false;
     }
     let lastDailyClaim = localStorage.getItem('tokenClicker_lastDailyClaim') || '';
     let lastShareClaim = localStorage.getItem('tokenClicker_lastShareClaim') || '';
@@ -1259,6 +1393,7 @@
     let claimed25000balance = localStorage.getItem('tokenClicker_claimed25000balance') === '1';
     let claimed50000balance = localStorage.getItem('tokenClicker_claimed50000balance') === '1';
     let currentBountyTab = localStorage.getItem('tokenClicker_bountyTab') || 'toclaim';
+    let currentBountyCategory = localStorage.getItem('tokenClicker_bountyCategoryTab') || 'daily';
     let lastDate = localStorage.getItem('tokenClicker_lastDate') || '';
     let streakDays = parseInt(localStorage.getItem('tokenClicker_streakDays') || '0', 10);
     let lastStreakDate = localStorage.getItem('tokenClicker_lastStreakDate') || '';
@@ -1356,6 +1491,18 @@
       localStorage.setItem('tokenClicker_buffCdUntil', String(buffCooldownUntil));
       localStorage.setItem('tokenClicker_buffSuperCdUntil', String(buffSuperCooldownUntil));
       localStorage.setItem('tokenClicker_buffPowerUntil', String(buffPowerCapacityUntil));
+      try {
+        localStorage.setItem('tokenClicker_buffFrenzyUntil', String(buffFrenzyUntil));
+        localStorage.setItem('tokenClicker_buffFrenzyCdUntil', String(buffFrenzyCooldownUntil));
+        localStorage.setItem('tokenClicker_buffOverchargeUntil', String(buffOverchargeUntil));
+        localStorage.setItem('tokenClicker_buffOverchargeCdUntil', String(buffOverchargeCooldownUntil));
+        localStorage.setItem('tokenClicker_buffTokenMagnetUntil', String(buffTokenMagnetUntil));
+        localStorage.setItem('tokenClicker_buffTokenMagnetCdUntil', String(buffTokenMagnetCooldownUntil));
+        localStorage.setItem('tokenClicker_buffShieldUntil', String(buffShieldUntil));
+        localStorage.setItem('tokenClicker_buffShieldCdUntil', String(buffShieldCooldownUntil));
+        localStorage.setItem('tokenClicker_buffBurnUntil', String(buffBurnUntil));
+        localStorage.setItem('tokenClicker_buffBurnCdUntil', String(buffBurnCooldownUntil));
+      } catch (e) {}
       localStorage.setItem('tokenClicker_lastDailyClaim', lastDailyClaim);
       localStorage.setItem('tokenClicker_lastShareClaim', lastShareClaim);
       localStorage.setItem('tokenClicker_claimed100Today', claimed100Today ? '1' : '0');
@@ -1379,6 +1526,7 @@
       localStorage.setItem('tokenClicker_claimed25000balance', claimed25000balance ? '1' : '0');
       localStorage.setItem('tokenClicker_claimed50000balance', claimed50000balance ? '1' : '0');
       localStorage.setItem('tokenClicker_bountyTab', currentBountyTab);
+      try { localStorage.setItem('tokenClicker_bountyCategoryTab', currentBountyCategory); } catch (e) {}
       localStorage.setItem('tokenClicker_lastDate', lastDate);
       localStorage.setItem('tokenClicker_streakDays', String(streakDays));
       localStorage.setItem('tokenClicker_lastStreakDate', lastStreakDate);
@@ -1465,6 +1613,18 @@
         default: return false;
       }
     }
+    function showBountyCategory(cat) {
+      currentBountyCategory = cat || currentBountyCategory;
+      try { localStorage.setItem('tokenClicker_bountyCategoryTab', currentBountyCategory); } catch (e) {}
+      document.querySelectorAll('.bounty-category-panel').forEach(function(panel) {
+        panel.classList.toggle('hidden', panel.getAttribute('data-bounty-category') !== currentBountyCategory);
+      });
+      document.querySelectorAll('.bounty-category-tab').forEach(function(btn) {
+        var t = btn.getAttribute('data-bounty-category');
+        var active = t === currentBountyCategory;
+        btn.className = 'bounty-category-tab py-1.5 px-2.5 border-2 rounded text-[9px] ' + (active ? 'border-neon-green text-neon-green font-bold bg-neon-green/10' : 'border-gray-600 text-gray-400 hover:border-neon-cyan/50 hover:text-neon-cyan');
+      });
+    }
     function switchBountyTab(tab) {
       currentBountyTab = tab;
       var isClaimed = tab === 'claimed';
@@ -1523,6 +1683,7 @@
       var claimedTabBtn = document.getElementById('bounty-tab-claimed');
       if (toclaimTabBtn) toclaimTabBtn.className = 'bounty-tab border-2 px-3 py-1.5 rounded text-[10px] ' + (isClaimed ? 'border-gray-500 text-gray-400 hover:bg-gray-700' : 'border-neon-green text-neon-green hover:bg-neon-green/10 bg-neon-green/10');
       if (claimedTabBtn) claimedTabBtn.className = 'bounty-tab border-2 px-3 py-1.5 rounded text-[10px] ' + (isClaimed ? 'border-neon-green text-neon-green hover:bg-neon-green/10 bg-neon-green/10' : 'border-gray-500 text-gray-400 hover:bg-gray-700');
+      if (!isClaimed && list) showBountyCategory(currentBountyCategory);
     }
     function updateBountyProgress() {
       const today = todayKey();
@@ -1574,16 +1735,22 @@
       var peakEl = document.getElementById('peak-click-rate');
       if (peakEl) peakEl.textContent = peakClicksPerSecond;
       var buffEl = document.getElementById('buff-countdown');
+      var activeBuffPanel = document.getElementById('active-buff-panel');
       if (buffEl) {
         var parts = [];
         var now = Date.now();
         if (buffTapPowerUntil > now) parts.push('Tap ' + buffTapPowerLevel + 'x: ' + getBuffCountdown(buffTapPowerUntil) + 's');
-        if (buffAutoclickerUntil > now) parts.push('AutoClicker: ' + getBuffCountdown(buffAutoclickerUntil) + 's');
+        if (buffAutoclickerUntil > now) parts.push('Auto: ' + getBuffCountdown(buffAutoclickerUntil) + 's');
         if (buffTurboUntil > now) parts.push('Turbo: ' + getBuffCountdown(buffTurboUntil) + 's');
-        if (buffCooldownUntil > now || buffSuperCooldownUntil > now) parts.push('Cooldown: ' + getBuffCountdown(Math.max(buffCooldownUntil, buffSuperCooldownUntil)) + 's');
+        if (buffCooldownUntil > now || buffSuperCooldownUntil > now) parts.push('CD: ' + getBuffCountdown(Math.max(buffCooldownUntil, buffSuperCooldownUntil)) + 's');
         if (buffPowerCapacityUntil > now) parts.push('Power+: ' + getBuffCountdown(buffPowerCapacityUntil) + 's');
-        buffEl.textContent = parts.length ? '⏱ ' + parts.join(' · ') : '';
-        buffEl.classList.toggle('hidden', !parts.length);
+        if (buffFrenzyUntil > now) parts.push('Frenzy: ' + getBuffCountdown(buffFrenzyUntil) + 's');
+        if (buffOverchargeUntil > now) parts.push('Overcharge: ' + getBuffCountdown(buffOverchargeUntil) + 's');
+        if (buffTokenMagnetUntil > now) parts.push('Magnet: ' + getBuffCountdown(buffTokenMagnetUntil) + 's');
+        if (buffShieldUntil > now) parts.push('Shield: ' + getBuffCountdown(buffShieldUntil) + 's');
+        if (buffBurnUntil > now) parts.push('Burn: ' + getBuffCountdown(buffBurnUntil) + 's');
+        buffEl.textContent = parts.length ? parts.join(' · ') : '';
+        if (activeBuffPanel) activeBuffPanel.classList.toggle('hidden', !parts.length);
       }
       var nextMilestoneEl = document.getElementById('home-next-milestone');
       if (nextMilestoneEl) {
@@ -1597,6 +1764,7 @@
       if (pvpBal && typeof getInGameTokenBalance === 'function') pvpBal.textContent = getInGameTokenBalance();
       if (typeof updatePowerBar === 'function') updatePowerBar();
       updateBoostsUI();
+      if (typeof renderHomeStripCards === 'function') renderHomeStripCards();
       updateHomeStrip();
       updateBountiesUI();
       updateGraduatingBountyBar();
@@ -1731,53 +1899,128 @@
     }
     function updateBoostButtons() {
       var now = Date.now();
+      var activeCount = countActiveNewBuffs();
       document.querySelectorAll('.boost-btn').forEach(btn => {
         const cost = parseInt(btn.dataset.cost, 10);
         const boost = btn.dataset.boost;
         var active = false;
         var until = 0;
+        var blocked = false;
         if (boost === 'tapPower') { active = buffTapPowerUntil > now; until = buffTapPowerUntil; }
-        else if (boost === 'tapPower3') { active = buffTapPowerUntil > now && buffTapPowerLevel >= 3; until = buffTapPowerUntil; }
-        else if (boost === 'tapPower4') { active = buffTapPowerUntil > now && buffTapPowerLevel >= 4; until = buffTapPowerUntil; }
+        else if (boost === 'tapPower3') { active = buffTapPowerUntil > now && buffTapPowerLevel >= 3; until = buffTapPowerUntil; blocked = buffTapPowerLevel < 2; }
+        else if (boost === 'tapPower4') { active = buffTapPowerUntil > now && buffTapPowerLevel >= 4; until = buffTapPowerUntil; blocked = buffTapPowerLevel < 3; }
         else if (boost === 'autoclicker') { active = buffAutoclickerUntil > now; until = buffAutoclickerUntil; }
-        else if (boost === 'turboAutoclicker') { active = buffTurboUntil > now; until = buffTurboUntil; }
+        else if (boost === 'turboAutoclicker') { active = buffTurboUntil > now; until = buffTurboUntil; blocked = buffAutoclickerUntil <= now; }
         else if (boost === 'cooldown') { active = buffCooldownUntil > now; until = buffCooldownUntil; }
         else if (boost === 'superCooldown') { active = buffSuperCooldownUntil > now; until = buffSuperCooldownUntil; }
         else if (boost === 'powerCapacity') { active = buffPowerCapacityUntil > now; until = buffPowerCapacityUntil; }
-        var blocked = (boost === 'tapPower3' && buffTapPowerLevel < 2) || (boost === 'tapPower4' && buffTapPowerLevel < 3) || (boost === 'turboAutoclicker' && buffAutoclickerUntil <= now);
-        btn.disabled = blocked || tokens < cost;
-        btn.textContent = active ? getBuffCountdown(until) + 's' : (blocked ? 'ACTIVATE' : '60s');
+        else if (boost === 'frenzy') { active = buffFrenzyUntil > now; until = buffFrenzyUntil; blocked = activeCount >= MAX_ACTIVE_BUFFS && !active || now < buffFrenzyCooldownUntil; }
+        else if (boost === 'overcharge') { active = buffOverchargeUntil > now; until = buffOverchargeUntil; blocked = activeCount >= MAX_ACTIVE_BUFFS && !active || now < buffOverchargeCooldownUntil; }
+        else if (boost === 'tokenMagnet') { active = buffTokenMagnetUntil > now; until = buffTokenMagnetUntil; blocked = activeCount >= MAX_ACTIVE_BUFFS && !active || now < buffTokenMagnetCooldownUntil; }
+        else if (boost === 'shield') { active = buffShieldUntil > now; until = buffShieldUntil; blocked = activeCount >= MAX_ACTIVE_BUFFS && !active || now < buffShieldCooldownUntil; }
+        else if (boost === 'burn') { active = buffBurnUntil > now; until = buffBurnUntil; blocked = activeCount >= MAX_ACTIVE_BUFFS && !active || now < buffBurnCooldownUntil; }
+        var onCd = (boost === 'frenzy' && now < buffFrenzyCooldownUntil) || (boost === 'overcharge' && now < buffOverchargeCooldownUntil) || (boost === 'tokenMagnet' && now < buffTokenMagnetCooldownUntil) || (boost === 'shield' && now < buffShieldCooldownUntil) || (boost === 'burn' && now < buffBurnCooldownUntil);
+        btn.disabled = blocked || tokens < cost || (onCd && !active);
+        btn.textContent = active ? getBuffCountdown(until) + 's' : (onCd ? 'CD' : (blocked ? '—' : 'USE'));
       });
     }
     function updateBoostsUI() {
       updateBoostButtons();
     }
+    var HOME_STRIP_BUFF_CATALOG = [
+      { id: 'tapPower', label: 'Tap Power', cost: 50, icon: '⚡', accent: 'cyan' },
+      { id: 'tapPower3', label: 'Tap 3x', cost: 150, icon: '⚡', accent: 'cyan' },
+      { id: 'tapPower4', label: 'Tap 4x', cost: 350, icon: '⚡', accent: 'cyan' },
+      { id: 'autoclicker', label: 'Auto', cost: 100, icon: '🔋', accent: 'cyan' },
+      { id: 'turboAutoclicker', label: 'Turbo', cost: 250, icon: '🔋', accent: 'cyan' },
+      { id: 'cooldown', label: 'Regen', cost: 75, icon: '♻️', accent: 'cyan' },
+      { id: 'superCooldown', label: 'Super CD', cost: 150, icon: '♻️', accent: 'cyan' },
+      { id: 'powerCapacity', label: 'Power+', cost: 100, icon: '⚡', accent: 'pink' },
+      { id: 'frenzy', label: 'Frenzy', cost: 80, icon: '🔥', accent: 'yellow' },
+      { id: 'overcharge', label: 'Overcharge', cost: 60, icon: '💥', accent: 'cyan' },
+      { id: 'tokenMagnet', label: 'Magnet', cost: 100, icon: '🧿', accent: 'green' },
+      { id: 'shield', label: 'Shield', cost: 90, icon: '🛡', accent: 'cyan' },
+      { id: 'burn', label: 'Burn', cost: 70, icon: '🧨', accent: 'pink' }
+    ];
+    var HOME_STRIP_MAX = 3;
+    function getHomeStripBuffs() {
+      try {
+        var raw = localStorage.getItem('tokenClicker_homeBuffs');
+        if (raw) {
+          var arr = JSON.parse(raw);
+          if (Array.isArray(arr) && arr.length > 0) return arr.slice(0, HOME_STRIP_MAX);
+        }
+      } catch (e) {}
+      return ['tapPower', 'frenzy', 'autoclicker'];
+    }
+    function saveHomeStripBuffs(arr) {
+      try { localStorage.setItem('tokenClicker_homeBuffs', JSON.stringify(arr.slice(0, HOME_STRIP_MAX))); } catch (e) {}
+    }
+    function getBuffInfo(boostId) {
+      for (var i = 0; i < HOME_STRIP_BUFF_CATALOG.length; i++) {
+        if (HOME_STRIP_BUFF_CATALOG[i].id === boostId) return HOME_STRIP_BUFF_CATALOG[i];
+      }
+      return null;
+    }
+    function getBuffState(boost) {
+      var now = Date.now();
+      var active = false, until = 0, blocked = false;
+      if (boost === 'tapPower') { active = buffTapPowerUntil > now; until = buffTapPowerUntil; }
+      else if (boost === 'tapPower3') { active = buffTapPowerUntil > now && buffTapPowerLevel >= 3; until = buffTapPowerUntil; blocked = buffTapPowerLevel < 2; }
+      else if (boost === 'tapPower4') { active = buffTapPowerUntil > now && buffTapPowerLevel >= 4; until = buffTapPowerUntil; blocked = buffTapPowerLevel < 3; }
+      else if (boost === 'autoclicker') { active = buffAutoclickerUntil > now; until = buffAutoclickerUntil; }
+      else if (boost === 'turboAutoclicker') { active = buffTurboUntil > now; until = buffTurboUntil; blocked = buffAutoclickerUntil <= now; }
+      else if (boost === 'cooldown') { active = buffCooldownUntil > now; until = buffCooldownUntil; }
+      else if (boost === 'superCooldown') { active = buffSuperCooldownUntil > now; until = buffSuperCooldownUntil; }
+      else if (boost === 'powerCapacity') { active = buffPowerCapacityUntil > now; until = buffPowerCapacityUntil; }
+      else if (boost === 'frenzy') { active = buffFrenzyUntil > now; until = buffFrenzyUntil; blocked = (typeof countActiveNewBuffs === 'function' && countActiveNewBuffs() >= 2 && !active) || now < buffFrenzyCooldownUntil; }
+      else if (boost === 'overcharge') { active = buffOverchargeUntil > now; until = buffOverchargeUntil; blocked = (typeof countActiveNewBuffs === 'function' && countActiveNewBuffs() >= 2 && !active) || now < buffOverchargeCooldownUntil; }
+      else if (boost === 'tokenMagnet') { active = buffTokenMagnetUntil > now; until = buffTokenMagnetUntil; blocked = (typeof countActiveNewBuffs === 'function' && countActiveNewBuffs() >= 2 && !active) || now < buffTokenMagnetCooldownUntil; }
+      else if (boost === 'shield') { active = buffShieldUntil > now; until = buffShieldUntil; blocked = (typeof countActiveNewBuffs === 'function' && countActiveNewBuffs() >= 2 && !active) || now < buffShieldCooldownUntil; }
+      else if (boost === 'burn') { active = buffBurnUntil > now; until = buffBurnUntil; blocked = (typeof countActiveNewBuffs === 'function' && countActiveNewBuffs() >= 2 && !active) || now < buffBurnCooldownUntil; }
+      return { active: active, until: until, blocked: blocked };
+    }
+    function renderHomeStripCards() {
+      var container = document.getElementById('home-strip-cards');
+      if (!container) return;
+      var ids = getHomeStripBuffs();
+      var html = '';
+      for (var i = 0; i < ids.length; i++) {
+        var info = getBuffInfo(ids[i]);
+        if (!info) continue;
+        var borderCl = info.accent === 'yellow' ? 'border-neon-yellow/40' : info.accent === 'pink' ? 'border-neon-pink/40' : 'border-gray-700';
+        var btnCl = info.accent === 'yellow' ? 'border-neon-yellow text-neon-yellow hover:bg-neon-yellow/10' : info.accent === 'pink' ? 'border-neon-pink text-neon-pink hover:bg-neon-pink/10' : 'border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10';
+        html += '<div class="home-strip-card bg-pixel-panel border-2 ' + borderCl + ' p-3 rounded text-center transition-colors" data-boost="' + info.id + '" data-cost="' + info.cost + '">';
+        html += '<div class="text-base mb-1">' + info.icon + '</div>';
+        html += '<div class="home-center-text text-[10px]">' + info.label + '</div>';
+        html += '<div class="text-gray-500 home-center-text text-[9px]">' + info.cost + '</div>';
+        html += '<button type="button" class="home-strip-btn boost-btn mt-2 border-2 ' + btnCl + ' px-2 py-1 rounded text-[9px] disabled:opacity-50 disabled:cursor-not-allowed" data-cost="' + info.cost + '" data-boost="' + info.id + '">USE</button>';
+        html += '</div>';
+      }
+      container.innerHTML = html;
+    }
     function updateHomeStrip() {
       var now = Date.now();
-      var powerCard = document.getElementById('home-strip-power');
-      var autoclickCard = document.getElementById('home-strip-autoclick');
-      var regenCard = document.getElementById('home-strip-regen');
+      var cards = document.querySelectorAll('#home-strip-cards .home-strip-card');
       function setCard(card, cost, boost) {
         if (!card) return;
         var btn = card.querySelector('.home-strip-btn');
-        var canAfford = tokens >= cost;
+        var st = getBuffState(boost);
+        var canAfford = tokens >= cost && !st.blocked;
         card.classList.toggle('opacity-50', !canAfford);
         card.classList.toggle('pointer-events-none', !canAfford);
         if (btn) {
           btn.style.display = canAfford ? '' : 'none';
           if (canAfford) {
-            var active = false, until = 0;
-            if (boost === 'tapPower') { active = buffTapPowerUntil > now; until = buffTapPowerUntil; }
-            else if (boost === 'autoclicker') { active = buffAutoclickerUntil > now; until = buffAutoclickerUntil; }
-            else if (boost === 'cooldown') { active = (buffCooldownUntil > now || buffSuperCooldownUntil > now); until = Math.max(buffCooldownUntil, buffSuperCooldownUntil); }
-            btn.textContent = active ? getBuffCountdown(until) + 's' : 'USE';
-            btn.disabled = tokens < cost;
+            btn.textContent = st.active ? getBuffCountdown(st.until) + 's' : 'USE';
+            btn.disabled = tokens < cost || st.blocked;
           }
         }
       }
-      setCard(powerCard, 50, 'tapPower');
-      setCard(autoclickCard, 100, 'autoclicker');
-      setCard(regenCard, 75, 'cooldown');
+      for (var i = 0; i < cards.length; i++) {
+        var c = cards[i];
+        setCard(c, parseInt(c.getAttribute('data-cost'), 10), c.getAttribute('data-boost'));
+      }
     }
 
     function updateBountiesUI() {
@@ -1912,22 +2155,33 @@
       }
       var hadContent = targets.some(function(t) { return t.innerHTML && t.innerHTML.indexOf('Loading') < 0 && t.innerHTML.indexOf('No duel wins') < 0 && t.innerHTML.indexOf('unavailable') < 0; });
       if (!hadContent) setAll('<li class="text-gray-500">Loading…</li>');
-      supabase.from('leaderboard').select('name, pvp_wins').not('pvp_wins', 'is', null).then(function(r) {
-        if (r.error || !r.data || r.data.length === 0) {
-          setAll('<li class="text-gray-500">No duel wins yet.</li>');
+      supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').not('pvp_wins', 'is', null).then(function(r) {
+        if (r.error) {
+          supabase.from('leaderboard').select('name, pvp_wins').not('pvp_wins', 'is', null).then(function(r2) {
+            if (r2.error || !r2.data || r2.data.length === 0) { setAll('<li class="text-gray-500">No duel wins yet.</li>'); return; }
+            var byName = {};
+            r2.data.forEach(function(e) { var name = (e.name || 'Player').trim() || 'Player'; var w = e.pvp_wins != null ? Number(e.pvp_wins) : 0; if (!byName[name]) byName[name] = 0; byName[name] += w; });
+            var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name] }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 5);
+            setAll(sorted.map(function(e) { return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + '</li>'; }).join(''));
+          });
           return;
         }
+        if (!r.data || r.data.length === 0) { setAll('<li class="text-gray-500">No duel wins yet.</li>'); return; }
         var byName = {};
         r.data.forEach(function(e) {
           var name = (e.name || 'Player').trim() || 'Player';
           var w = e.pvp_wins != null ? Number(e.pvp_wins) : 0;
-          if (!byName[name]) byName[name] = 0;
-          byName[name] += w;
+          var tok = e.pvp_tokens_won != null ? Number(e.pvp_tokens_won) : 0;
+          if (!byName[name]) byName[name] = { wins: 0, tokensWon: 0 };
+          byName[name].wins += w;
+          byName[name].tokensWon += tok;
         });
-        var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name] }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 5);
+        var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name].wins, tokensWon: byName[name].tokensWon }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 5);
         var html = sorted.map(function(e) {
           var wins = e.wins;
-          return '<li>' + e.name + ' — ' + wins + ' win' + (wins !== 1 ? 's' : '') + '</li>';
+          var tok = e.tokensWon;
+          var tokenStr = tok > 0 ? ' (' + tok + ' token' + (tok !== 1 ? 's' : '') + ' won)' : '';
+          return '<li>' + e.name + ' — ' + wins + ' win' + (wins !== 1 ? 's' : '') + tokenStr + '</li>';
         }).join('');
         setAll(html);
       });
@@ -1938,22 +2192,32 @@
       if (!list) return;
       if (!supabase) { list.innerHTML = '<li class="text-gray-500">Leaderboard unavailable.</li>'; return; }
       list.innerHTML = '<li class="text-gray-500">Loading…</li>';
-      supabase.from('leaderboard').select('name, pvp_wins').not('pvp_wins', 'is', null).then(function(r) {
-        if (r.error || !r.data || r.data.length === 0) {
-          list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>';
+      supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').not('pvp_wins', 'is', null).then(function(r) {
+        if (r.error) {
+          supabase.from('leaderboard').select('name, pvp_wins').not('pvp_wins', 'is', null).then(function(r2) {
+            if (r2.error || !r2.data || r2.data.length === 0) { list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>'; return; }
+            var byName = {};
+            r2.data.forEach(function(e) { var name = (e.name || 'Player').trim() || 'Player'; var w = e.pvp_wins != null ? Number(e.pvp_wins) : 0; if (!byName[name]) byName[name] = 0; byName[name] += w; });
+            var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name] }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 100);
+            list.innerHTML = sorted.map(function(e) { return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + '</li>'; }).join('');
+          });
           return;
         }
+        if (!r.data || r.data.length === 0) { list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>'; return; }
         var byName = {};
         r.data.forEach(function(e) {
           var name = (e.name || 'Player').trim() || 'Player';
           var w = e.pvp_wins != null ? Number(e.pvp_wins) : 0;
-          if (!byName[name]) byName[name] = 0;
-          byName[name] += w;
+          var tok = e.pvp_tokens_won != null ? Number(e.pvp_tokens_won) : 0;
+          if (!byName[name]) byName[name] = { wins: 0, tokensWon: 0 };
+          byName[name].wins += w;
+          byName[name].tokensWon += tok;
         });
-        var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name] }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 100);
+        var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name].wins, tokensWon: byName[name].tokensWon }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 100);
         list.innerHTML = sorted.map(function(e) {
-          var wins = e.wins;
-          return '<li>' + e.name + ' — ' + wins + ' win' + (wins !== 1 ? 's' : '') + '</li>';
+          var tok = e.tokensWon;
+          var tokenStr = tok > 0 ? ' (' + tok + ' token' + (tok !== 1 ? 's' : '') + ' won)' : '';
+          return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + tokenStr + '</li>';
         }).join('');
       });
     }
@@ -1975,17 +2239,26 @@
 
     function onValidClick() {
       if (isDead) return -1;
-      if (power < POWER_COST_PER_CLICK) return -1;
+      var cost = POWER_COST_PER_CLICK * (hasBurn() ? 3 : 1);
+      if (power < cost) return -1;
       updateStreak();
-      power = Math.max(0, power - POWER_COST_PER_CLICK);
+      power = Math.max(0, power - cost);
       lastClickTime = Date.now();
       lastActivityAt = lastClickTime;
+      if (comboLastClickAt && lastClickTime - comboLastClickAt > COMBO_IDLE_RESET_MS) comboStartedAt = 0;
+      comboLastClickAt = lastClickTime;
+      if (comboStartedAt === 0) comboStartedAt = lastClickTime;
       updatePowerBar();
 
+      var eff = getEffectiveTapPower();
       totalClicks++;
-      const prevEffective = (totalClicks - 1) * tapPower;
-      const newEffective = totalClicks * tapPower;
-      const earned = Math.floor(newEffective / CLICKS_PER_TOKEN) - Math.floor(prevEffective / CLICKS_PER_TOKEN);
+      const prevEffective = (totalClicks - 1) * eff;
+      const newEffective = totalClicks * eff;
+      var earned = Math.floor(newEffective / CLICKS_PER_TOKEN) - Math.floor(prevEffective / CLICKS_PER_TOKEN);
+      var combo = getComboMultiplier();
+      earned = Math.max(0, Math.floor(earned * combo));
+      if (rollCrit()) earned *= 2;
+      if (hasTokenMagnet()) earned = Math.max(0, Math.floor(earned * 1.35));
       tokens += earned;
 
       const now = lastClickTime;
@@ -2088,12 +2361,154 @@
     document.getElementById('death-revive-btn') && document.getElementById('death-revive-btn').addEventListener('click', function() { reviveBird(); });
     document.getElementById('death-hatch-btn') && document.getElementById('death-hatch-btn').addEventListener('click', function() { reviveByHatch(); });
 
-    // Boosts: buy 60s buffs (consumable)
-    document.querySelectorAll('.boost-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const cost = parseInt(btn.dataset.cost, 10);
-        const boost = btn.dataset.boost;
-        if (tokens < cost) return;
+    // Boosts: tab switching
+    function showBoostTab(tabId) {
+      tabId = tabId || 'tappower';
+      document.querySelectorAll('.boost-tab-btn').forEach(function(btn) {
+        var t = btn.getAttribute('data-boost-tab');
+        if (t === tabId) {
+          btn.classList.remove('border-gray-600', 'text-gray-400');
+          btn.classList.add('border-neon-cyan', 'text-neon-cyan', 'bg-neon-cyan/10');
+          btn.classList.remove('border-neon-green', 'text-neon-green', 'border-neon-pink', 'text-neon-pink', 'border-neon-yellow', 'text-neon-yellow');
+        } else {
+          btn.classList.add('border-gray-600', 'text-gray-400');
+          btn.classList.remove('border-neon-cyan', 'text-neon-cyan', 'bg-neon-cyan/10', 'border-neon-green', 'text-neon-green', 'border-neon-pink', 'text-neon-pink', 'border-neon-yellow', 'text-neon-yellow');
+        }
+      });
+      document.querySelectorAll('.boost-panel').forEach(function(panel) {
+        var p = panel.getAttribute('data-boost-panel');
+        if (p === tabId) { panel.classList.remove('hidden'); } else { panel.classList.add('hidden'); }
+      });
+      try { localStorage.setItem('tokenClicker_boostTab', tabId); } catch (e) {}
+    }
+    document.querySelectorAll('.boost-tab-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { showBoostTab(btn.getAttribute('data-boost-tab')); });
+    });
+    var savedBoostTab = localStorage.getItem('tokenClicker_boostTab') || 'tappower';
+    if (document.querySelector('.boost-tab-btn[data-boost-tab="' + savedBoostTab + '"]')) showBoostTab(savedBoostTab);
+
+    // Customize quick buffs modal
+    var customizeBuffsEditing = [];
+    function openCustomizeBuffsModal() {
+      customizeBuffsEditing = getHomeStripBuffs().slice();
+      var list = document.getElementById('customize-buffs-list');
+      var addSelect = document.getElementById('customize-buffs-add-select');
+      var msgEl = document.getElementById('customize-buffs-msg');
+      if (list) list.innerHTML = '';
+      if (msgEl) msgEl.textContent = '';
+      if (!list || !addSelect) return;
+      function renderList() {
+        list.innerHTML = customizeBuffsEditing.map(function(id, idx) {
+          var info = getBuffInfo(id);
+          if (!info) return '';
+          return '<li class="flex items-center gap-2 py-1.5 border-b border-gray-700/50 last:border-0">' +
+            '<span class="flex-1 text-[10px]">' + info.icon + ' ' + info.label + ' (' + info.cost + ')</span>' +
+            '<button type="button" class="customize-buff-up py-1 px-1.5 border border-gray-500 text-gray-400 rounded text-[8px] hover:bg-gray-700" data-idx="' + idx + '" aria-label="Move up">↑</button>' +
+            '<button type="button" class="customize-buff-down py-1 px-1.5 border border-gray-500 text-gray-400 rounded text-[8px] hover:bg-gray-700" data-idx="' + idx + '" aria-label="Move down">↓</button>' +
+            '<button type="button" class="customize-buff-remove py-1 px-1.5 border border-neon-pink text-neon-pink rounded text-[8px] hover:bg-neon-pink/10" data-idx="' + idx + '" aria-label="Remove ' + (info.label || id) + '">✕</button>' +
+            '</li>';
+        }).join('');
+      }
+      var opts = HOME_STRIP_BUFF_CATALOG.filter(function(b) { return customizeBuffsEditing.indexOf(b.id) < 0; }).map(function(b) { return '<option value="' + b.id + '">' + b.icon + ' ' + b.label + ' (' + b.cost + ')</option>'; });
+      addSelect.innerHTML = '<option value="">— Choose —</option>' + opts.join('');
+      function updateAddState() {
+        var msgEl = document.getElementById('customize-buffs-msg');
+        var addBtn = document.getElementById('customize-buffs-add-btn');
+        if (addBtn) addBtn.disabled = customizeBuffsEditing.length >= HOME_STRIP_MAX;
+        if (msgEl) {
+          if (customizeBuffsEditing.length >= HOME_STRIP_MAX) msgEl.textContent = 'Strip is full (max 3). Remove a buff first to add another.';
+          else msgEl.textContent = '';
+        }
+      }
+      renderList();
+      updateAddState();
+      list.onclick = function(ev) {
+        var btn = ev.target && ev.target.closest && ev.target.closest('button');
+        if (!btn || !btn.getAttribute) return;
+        var idx = btn.getAttribute('data-idx');
+        if (idx == null) return;
+        idx = parseInt(idx, 10);
+        if (btn.classList.contains('customize-buff-up') && idx > 0) {
+          customizeBuffsEditing[idx] = customizeBuffsEditing.splice(idx - 1, 1, customizeBuffsEditing[idx])[0];
+          renderList();
+          updateAddState();
+        } else if (btn.classList.contains('customize-buff-down') && idx < customizeBuffsEditing.length - 1) {
+          customizeBuffsEditing[idx] = customizeBuffsEditing.splice(idx + 1, 1, customizeBuffsEditing[idx])[0];
+          renderList();
+          updateAddState();
+        } else if (btn.classList.contains('customize-buff-remove')) {
+          customizeBuffsEditing.splice(idx, 1);
+          renderList();
+          var opts2 = HOME_STRIP_BUFF_CATALOG.filter(function(b) { return customizeBuffsEditing.indexOf(b.id) < 0; }).map(function(b) { return '<option value="' + b.id + '">' + b.icon + ' ' + b.label + ' (' + b.cost + ')</option>'; });
+          addSelect.innerHTML = '<option value="">— Choose —</option>' + opts2.join('');
+          updateAddState();
+        }
+      };
+      document.getElementById('customize-buffs-modal').classList.remove('hidden');
+      document.getElementById('customize-buffs-modal').style.display = 'flex';
+    }
+    function closeCustomizeBuffsModal() {
+      document.getElementById('customize-buffs-modal').classList.add('hidden');
+      document.getElementById('customize-buffs-modal').style.display = 'none';
+    }
+    document.getElementById('home-customize-buffs-btn') && document.getElementById('home-customize-buffs-btn').addEventListener('click', openCustomizeBuffsModal);
+    document.getElementById('customize-buffs-modal-close') && document.getElementById('customize-buffs-modal-close').addEventListener('click', closeCustomizeBuffsModal);
+    document.getElementById('customize-buffs-modal') && document.getElementById('customize-buffs-modal').addEventListener('click', function(e) { if (e.target && e.target.id === 'customize-buffs-modal') closeCustomizeBuffsModal(); });
+    document.getElementById('customize-buffs-done') && document.getElementById('customize-buffs-done').addEventListener('click', function() {
+      saveHomeStripBuffs(customizeBuffsEditing);
+      renderHomeStripCards();
+      updateHomeStrip();
+      closeCustomizeBuffsModal();
+    });
+    document.getElementById('customize-buffs-add-btn') && document.getElementById('customize-buffs-add-btn').addEventListener('click', function(ev) {
+      if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+      var msgEl = document.getElementById('customize-buffs-msg');
+      var addBtn = document.getElementById('customize-buffs-add-btn');
+      var sel = document.getElementById('customize-buffs-add-select');
+      if (!sel) return;
+      var id = sel.value || (sel.options[sel.selectedIndex] && sel.options[sel.selectedIndex].value) || '';
+      id = (id && id.trim) ? id.trim() : id;
+      if (msgEl) msgEl.textContent = '';
+      if (!id) {
+        if (msgEl) msgEl.textContent = 'Choose a buff from the list above.';
+        return;
+      }
+      if (customizeBuffsEditing.length >= HOME_STRIP_MAX) {
+        if (msgEl) msgEl.textContent = 'Strip is full (max 3). Remove a buff first.';
+        return;
+      }
+      if (customizeBuffsEditing.indexOf(id) >= 0) {
+        if (msgEl) msgEl.textContent = 'That buff is already in your strip.';
+        return;
+      }
+      customizeBuffsEditing.push(id);
+      var list = document.getElementById('customize-buffs-list');
+      var addSelect = document.getElementById('customize-buffs-add-select');
+      if (!list) return;
+      list.innerHTML = customizeBuffsEditing.map(function(bid, idx) {
+        var info = getBuffInfo(bid);
+        if (!info) return '<li class="flex items-center gap-2 py-1.5 border-b border-gray-700/50"><span class="text-[10px] text-gray-500">' + bid + '</span><button type="button" class="customize-buff-remove" data-idx="' + idx + '">✕</button></li>';
+        return '<li class="flex items-center gap-2 py-1.5 border-b border-gray-700/50 last:border-0">' +
+          '<span class="flex-1 text-[10px]">' + info.icon + ' ' + info.label + ' (' + info.cost + ')</span>' +
+          '<button type="button" class="customize-buff-up py-1 px-1.5 border border-gray-500 text-gray-400 rounded text-[8px] hover:bg-gray-700" data-idx="' + idx + '" aria-label="Move up">↑</button>' +
+          '<button type="button" class="customize-buff-down py-1 px-1.5 border border-gray-500 text-gray-400 rounded text-[8px] hover:bg-gray-700" data-idx="' + idx + '" aria-label="Move down">↓</button>' +
+          '<button type="button" class="customize-buff-remove py-1 px-1.5 border border-neon-pink text-neon-pink rounded text-[8px] hover:bg-neon-pink/10" data-idx="' + idx + '" aria-label="Remove ' + (info.label || bid) + '">✕</button>' +
+          '</li>';
+      }).join('');
+      var opts = HOME_STRIP_BUFF_CATALOG.filter(function(b) { return customizeBuffsEditing.indexOf(b.id) < 0; }).map(function(b) { return '<option value="' + b.id + '">' + b.icon + ' ' + b.label + ' (' + b.cost + ')</option>'; });
+      addSelect.innerHTML = '<option value="">— Choose —</option>' + opts.join('');
+      if (addBtn) addBtn.disabled = customizeBuffsEditing.length >= HOME_STRIP_MAX;
+      if (msgEl) msgEl.textContent = 'Added. Click DONE to save.';
+    });
+
+    // Boosts: buy/use buffs (delegated so dynamic home-strip buttons work)
+    document.addEventListener('click', function(e) {
+      var btn = e.target && e.target.closest && e.target.closest('.boost-btn');
+      if (!btn || !btn.dataset) return;
+      const cost = parseInt(btn.dataset.cost, 10);
+      const boost = btn.dataset.boost;
+      if (!boost || isNaN(cost)) return;
+      if (tokens < cost) return;
         updateBuffState();
         var now = Date.now();
         var end = now + BUFF_DURATION_MS;
@@ -2105,21 +2520,42 @@
         if (boost === 'cooldown') { tokens -= cost; buffCooldownUntil = Math.max(buffCooldownUntil, end); }
         if (boost === 'superCooldown') { tokens -= cost; buffSuperCooldownUntil = Math.max(buffSuperCooldownUntil, end); }
         if (boost === 'powerCapacity') { tokens -= cost; buffPowerCapacityUntil = Math.max(buffPowerCapacityUntil, end); }
-        updateBuffState();
-        updateUI();
-        updateBoostButtons();
-        save();
-      });
+        var nowMs = Date.now();
+        if (boost === 'frenzy' && countActiveNewBuffs() < MAX_ACTIVE_BUFFS && !hasFrenzy() && nowMs >= buffFrenzyCooldownUntil) {
+          tokens -= cost; buffFrenzyUntil = nowMs + BUFF_FRENZY_DURATION_MS;
+          if (autoclickerInterval) restartAutoclicker();
+        }
+        if (boost === 'overcharge' && countActiveNewBuffs() < MAX_ACTIVE_BUFFS && !hasOvercharge() && nowMs >= buffOverchargeCooldownUntil) {
+          tokens -= cost; buffOverchargeUntil = nowMs + BUFF_OVERCHARGE_DURATION_MS; buffOverchargeCooldownUntil = nowMs + BUFF_OVERCHARGE_DURATION_MS + BUFF_OVERCHARGE_COOLDOWN_MS;
+        }
+        if (boost === 'tokenMagnet' && countActiveNewBuffs() < MAX_ACTIVE_BUFFS && !hasTokenMagnet() && nowMs >= buffTokenMagnetCooldownUntil) {
+          tokens -= cost; buffTokenMagnetUntil = nowMs + BUFF_TOKEN_MAGNET_DURATION_MS; buffTokenMagnetCooldownUntil = nowMs + BUFF_TOKEN_MAGNET_DURATION_MS + BUFF_TOKEN_MAGNET_COOLDOWN_MS;
+        }
+        if (boost === 'shield' && countActiveNewBuffs() < MAX_ACTIVE_BUFFS && !hasShield() && nowMs >= buffShieldCooldownUntil) {
+          tokens -= cost; buffShieldUntil = nowMs + BUFF_SHIELD_DURATION_MS; buffShieldCooldownUntil = nowMs + BUFF_SHIELD_DURATION_MS + BUFF_SHIELD_COOLDOWN_MS;
+        }
+        if (boost === 'burn' && countActiveNewBuffs() < MAX_ACTIVE_BUFFS && !hasBurn() && nowMs >= buffBurnCooldownUntil) {
+          tokens -= cost; buffBurnUntil = nowMs + BUFF_BURN_DURATION_MS; buffBurnCooldownUntil = nowMs + BUFF_BURN_DURATION_MS + BUFF_BURN_COOLDOWN_MS;
+        }
+      updateBuffState();
+      updateUI();
+      updateBoostButtons();
+      save();
     });
 
-    function getAutoclickerIntervalMs() { return (hasAutoclicker && hasTurboAutoclicker) ? 500 : 1000; }
+    function getAutoclickerIntervalMs() {
+      var base = (hasAutoclicker && hasTurboAutoclicker) ? 500 : 1000;
+      if (hasFrenzy()) base = Math.floor(base / 2);
+      return base;
+    }
     function startAutoclicker() {
       if (autoclickerInterval) return;
       const ms = getAutoclickerIntervalMs();
       autoclickerInterval = setInterval(() => {
         totalClicks++;
-        const prevEffective = (totalClicks - 1) * tapPower;
-        const newEffective = totalClicks * tapPower;
+        var eff = typeof getEffectiveTapPower === 'function' ? getEffectiveTapPower() : tapPower;
+        const prevEffective = (totalClicks - 1) * eff;
+        const newEffective = totalClicks * eff;
         tokens += Math.floor(newEffective / CLICKS_PER_TOKEN) - Math.floor(prevEffective / CLICKS_PER_TOKEN);
         const today = todayKey();
         const week = weekKey();
@@ -2180,6 +2616,10 @@
     });
     document.getElementById('bounty-tab-toclaim') && document.getElementById('bounty-tab-toclaim').addEventListener('click', function() { switchBountyTab('toclaim'); });
     document.getElementById('bounty-tab-claimed') && document.getElementById('bounty-tab-claimed').addEventListener('click', function() { switchBountyTab('claimed'); });
+    document.querySelectorAll('.bounty-category-tab').forEach(function(btn) {
+      btn.addEventListener('click', function() { showBountyCategory(btn.getAttribute('data-bounty-category')); });
+    });
+    if (currentBountyTab === 'toclaim') showBountyCategory(currentBountyCategory);
 
     // Share URL: use canonical game URL so shared links open on mobile (production site)
     function getShareBaseUrl() {
@@ -3994,7 +4434,7 @@
           room.winner_wallet = winner;
           room.rematch_until = rematchUntil;
           showDuelResult(room);
-          if (winner) upsertLeaderboardWin(winner, room.player1_wallet === winner ? room.player1_name : room.player2_name);
+          if (winner) { var st = room.stake_amount != null ? parseInt(room.stake_amount, 10) : 0; upsertLeaderboardWin(winner, room.player1_wallet === winner ? room.player1_name : room.player2_name, isNaN(st) ? 0 : st); }
         });
       });
     }
@@ -4017,7 +4457,8 @@
       var winnerWallet = room.winner_wallet;
       if (winnerWallet && typeof upsertLeaderboardWin === 'function') {
         var winName = room.player1_wallet === winnerWallet ? room.player1_name : room.player2_name;
-        upsertLeaderboardWin(winnerWallet, winName);
+        var stakeNum = room.stake_amount != null ? parseInt(room.stake_amount, 10) : 0;
+        upsertLeaderboardWin(winnerWallet, winName, isNaN(stakeNum) ? 0 : stakeNum);
       }
       var winName = room.player1_wallet === winnerWallet ? room.player1_name : (room.player2_name || 'Winner');
       var stake = room.stake_amount != null ? parseInt(room.stake_amount, 10) : 5;
@@ -4075,23 +4516,26 @@
         rematchCountEl.classList.add('hidden');
       }
     }
-    function upsertLeaderboardWin(wallet, name) {
+    function upsertLeaderboardWin(wallet, name, tokensWon) {
       var supabase = window.supabaseClient;
       if (!supabase || !wallet || String(wallet).trim() === '') return;
       var w = String(wallet).trim();
       var n = (name && String(name).trim()) || 'Player';
-      supabase.from('leaderboard').select('id, pvp_wins, name').eq('wallet_address', w).maybeSingle().then(function(r) {
+      var addTokens = (tokensWon != null && !isNaN(tokensWon)) ? Math.max(0, parseInt(tokensWon, 10)) : 0;
+      supabase.from('leaderboard').select('id, pvp_wins, pvp_tokens_won, name').eq('wallet_address', w).maybeSingle().then(function(r) {
         if (r.error) { console.warn('Leaderboard select for win failed:', r.error); return; }
         var row = r.data;
         var wins = (row && (row.pvp_wins != null ? Number(row.pvp_wins) : 0)) || 0;
         var newWins = Math.max(0, wins) + 1;
+        var prevTokens = (row && row.pvp_tokens_won != null) ? Math.max(0, Number(row.pvp_tokens_won)) : 0;
+        var newTokens = prevTokens + addTokens;
         if (row) {
-          supabase.from('leaderboard').update({ pvp_wins: newWins, name: n || row.name, updated_at: new Date().toISOString() }).eq('id', row.id).then(function(u) {
+          supabase.from('leaderboard').update({ pvp_wins: newWins, pvp_tokens_won: newTokens, name: n || row.name, updated_at: new Date().toISOString() }).eq('id', row.id).then(function(u) {
             if (u.error) console.warn('Leaderboard win update failed:', u.error);
             if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
           });
         } else {
-          supabase.from('leaderboard').insert({ name: n, wallet_address: w, tokens: 0, pvp_wins: 1, ref_code: localStorage.getItem('tokenClicker_refCode') || null }).then(function(u) {
+          supabase.from('leaderboard').insert({ name: n, wallet_address: w, tokens: 0, pvp_wins: 1, pvp_tokens_won: addTokens, ref_code: localStorage.getItem('tokenClicker_refCode') || null }).then(function(u) {
             if (u.error) console.warn('Leaderboard win insert failed:', u.error);
             if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
           });
@@ -4288,11 +4732,28 @@
       var elapsed = Math.min(500, now - lastPowerUpdateAt);
       lastPowerUpdateAt = now;
       var max = getPowerMax();
+      var overcapMax = hasOvercharge() ? max + 100 : max;
       if (power < max) {
         power = Math.min(max, power + powerRegenPerMs() * elapsed);
-        updatePowerBar();
+      } else if (power > max && hasOvercharge()) {
+        var over = power - max;
+        power = Math.max(max, power - over * 0.2 * (elapsed / 1000));
       }
+      if (power > overcapMax) power = overcapMax;
+      updatePowerBar();
     }, 50);
+    (function() {
+      var lastFrenzy = false;
+      setInterval(function() {
+        var now = Date.now();
+        var frenzyOn = buffFrenzyUntil > now;
+        if (lastFrenzy && !frenzyOn && buffFrenzyUntil > 0) {
+          buffFrenzyCooldownUntil = now + BUFF_FRENZY_COOLDOWN_MS;
+          if (typeof restartAutoclicker === 'function') restartAutoclicker();
+        }
+        lastFrenzy = frenzyOn;
+      }, 500);
+    })();
 
     // Routing
     function getPageFromHash() {
