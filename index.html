@@ -4103,11 +4103,21 @@
           return;
         }
         var req = r.data;
-        supabase.from('leaderboard').select('ref_code, wallet_address').in('wallet_address', [req.from_wallet, req.to_wallet]).then(function(lr) {
-          var refByWallet = {};
-          if (lr.data) lr.data.forEach(function(row) { refByWallet[row.wallet_address] = (row.ref_code || '').trim(); });
-          var fromRef = (refByWallet[req.from_wallet] || '').toUpperCase();
-          var toRef = (refByWallet[req.to_wallet] || '').toUpperCase();
+        var ids = [req.from_wallet, req.to_wallet].filter(Boolean);
+        Promise.all([
+          supabase.from('leaderboard').select('ref_code, wallet_address, player_id').in('wallet_address', ids),
+          supabase.from('leaderboard').select('ref_code, wallet_address, player_id').in('player_id', ids)
+        ]).then(function(results) {
+          var refById = {};
+          results.forEach(function(res) {
+            if (res && res.data) res.data.forEach(function(row) {
+              var ref = (row.ref_code || '').trim();
+              if (row.wallet_address) refById[row.wallet_address] = ref;
+              if (row.player_id) refById[row.player_id] = ref;
+            });
+          });
+          var fromRef = (refById[req.from_wallet] || '').toUpperCase();
+          var toRef = (refById[req.to_wallet] || '').toUpperCase();
           if (!toRef) toRef = (localStorage.getItem('tokenClicker_refCode') || '').trim().toUpperCase();
           if (!fromRef) {
             try { pushNotification("Could not accept: " + (req.from_name || "Sender") + "'s invite code not synced. Ask them to save their name in Wallet → Settings."); } catch (e) {}
