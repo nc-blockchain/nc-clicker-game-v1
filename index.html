@@ -477,7 +477,8 @@
       <p class="text-gray-500 text-[9px] mb-2">Your code: <span id="referral-code" class="neon-text-cyan">------</span></p>
       <div class="mb-2 flex flex-col items-center">
         <div class="text-[9px] text-gray-500 uppercase tracking-wider mb-1">Scan to join with my code</div>
-        <div id="friends-invite-qrcode" class="inline-block p-2 bg-white rounded border-2 border-gray-600 shrink-0" aria-hidden="true"></div>
+        <div id="friends-invite-qrcode" class="inline-block p-2 bg-white rounded border-2 border-gray-600 shrink-0 mb-2" aria-hidden="true"></div>
+        <button type="button" id="friends-scan-qr-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10 shrink-0" title="Scan a friend's invite QR">📷 Scan QR</button>
       </div>
       <button type="button" id="invite-btn" class="w-full py-2 px-4 border-2 border-neon-cyan text-neon-cyan rounded hover:bg-neon-cyan/10 text-[10px] mb-2">COPY INVITE LINK</button>
       <p id="invite-feedback" class="text-neon-green text-[9px] mb-2 hidden">Link copied! Send to friends—when they open it, your code is applied.</p>
@@ -499,7 +500,6 @@
         <div class="flex gap-2 flex-wrap items-center">
           <input type="text" id="friend-code-input" placeholder="E.G. REFABC12" maxlength="20" class="flex-1 min-w-[100px] bg-black border-2 border-gray-600 rounded px-2 py-1.5 text-neon-cyan text-[10px] uppercase" />
           <button type="button" id="friend-code-add-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">ADD FRIEND</button>
-          <button type="button" id="friends-scan-qr-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10" title="Scan a friend's invite QR">📷 Scan QR</button>
         </div>
         <p id="friend-code-feedback" class="text-[9px] min-h-[14px] hidden"></p>
       </div>
@@ -2371,8 +2371,8 @@
             if (r2.error || !r2.data || r2.data.length === 0) { setAll('<li class="text-gray-500">No duel wins yet.</li>'); return; }
             var byName = {};
             r2.data.forEach(function(e) { var name = (e.name || 'Player').trim() || 'Player'; var w = e.pvp_wins != null ? Number(e.pvp_wins) : 0; if (!byName[name]) byName[name] = 0; byName[name] += w; });
-            var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name] }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 5);
-            setAll(sorted.map(function(e) { return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + '</li>'; }).join(''));
+            var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name], tokensWon: 0 }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 5);
+            setAll(sorted.map(function(e) { return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + ', 0 tokens won</li>'; }).join(''));
           });
           return;
         }
@@ -2390,8 +2390,7 @@
         var html = sorted.map(function(e) {
           var wins = e.wins;
           var tok = e.tokensWon;
-          var tokenStr = tok > 0 ? ' (' + tok + ' token' + (tok !== 1 ? 's' : '') + ' won)' : '';
-          return '<li>' + e.name + ' — ' + wins + ' win' + (wins !== 1 ? 's' : '') + tokenStr + '</li>';
+          return '<li>' + e.name + ' — ' + wins + ' win' + (wins !== 1 ? 's' : '') + ', ' + tok + ' token' + (tok !== 1 ? 's' : '') + ' won</li>';
         }).join('');
         setAll(html);
       });
@@ -2408,8 +2407,8 @@
             if (r2.error || !r2.data || r2.data.length === 0) { list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>'; return; }
             var byName = {};
             r2.data.forEach(function(e) { var name = (e.name || 'Player').trim() || 'Player'; var w = e.pvp_wins != null ? Number(e.pvp_wins) : 0; if (!byName[name]) byName[name] = 0; byName[name] += w; });
-            var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name] }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 100);
-            list.innerHTML = sorted.map(function(e) { return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + '</li>'; }).join('');
+            var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name], tokensWon: 0 }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 100);
+            list.innerHTML = sorted.map(function(e) { return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + ', 0 tokens won</li>'; }).join('');
           });
           return;
         }
@@ -2426,8 +2425,7 @@
         var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name].wins, tokensWon: byName[name].tokensWon }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 100);
         list.innerHTML = sorted.map(function(e) {
           var tok = e.tokensWon;
-          var tokenStr = tok > 0 ? ' (' + tok + ' token' + (tok !== 1 ? 's' : '') + ' won)' : '';
-          return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + tokenStr + '</li>';
+          return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + ', ' + tok + ' token' + (tok !== 1 ? 's' : '') + ' won</li>';
         }).join('');
       });
     }
