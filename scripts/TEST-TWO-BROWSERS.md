@@ -25,12 +25,16 @@ App: **http://localhost:3001**
 - In **Recipient**, enter Browser A’s code (e.g. `REFG90UVP`).
 - Enter **Amount** (e.g. `5`) → **SEND**.
 
-## 4. Check recipient (Browser A)
+## 4. Check both balances
 
-- In Browser A you should see:
-  - **Balance** in the header (and on Wallet) increased by the sent amount.
-  - A **notification**: “You received 5 tokens from [SenderName].”
-- Open the **🔔 Notifications** panel to confirm the message is in the list.
+**Sender (Browser B)**  
+- Header **TOKENS** and Wallet/Send balance should **decrease** by the sent amount immediately after SEND.  
+- If you open **➜ Send** again, balance is re-synced from the server and should still show the new (lower) balance.
+
+**Recipient (Browser A)**  
+- **Balance** in the header and on Wallet should **increase** by the sent amount (via Realtime notification + sync, or after opening Wallet → Send).  
+- You should see a **notification**: “You received 5 tokens from [SenderName].”  
+- Open **🔔 Notifications** to confirm the message is in the list.
 
 ## 5. If the notification doesn’t appear
 

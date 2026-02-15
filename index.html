@@ -2663,6 +2663,7 @@
       }
       try { localStorage.setItem('tokenClicker_walletTab', tabId); } catch (e) {}
       if (tabId === 'send') {
+        if (typeof syncTokensFromLeaderboard === 'function') syncTokensFromLeaderboard(function() {});
         var code = localStorage.getItem('tokenClicker_refCode');
         if (!code) { code = 'REF' + Math.random().toString(36).slice(2, 8).toUpperCase(); try { localStorage.setItem('tokenClicker_refCode', code); } catch (e) {} }
         var codeEl = document.getElementById('send-my-wallet-code');
@@ -3588,8 +3589,28 @@
           updateUI();
           var ourNewBalance = Math.max(0, tokens);
           var toNewBalance = toCurrent + amount;
-          await supabase.from('leaderboard').update({ tokens: ourNewBalance, updated_at: new Date().toISOString() }).eq('id', fromRow.data.id);
-          await supabase.from('leaderboard').update({ tokens: toNewBalance, updated_at: new Date().toISOString() }).eq('id', toRow.data.id);
+          var updateSender = await supabase.from('leaderboard').update({ tokens: ourNewBalance, updated_at: new Date().toISOString() }).eq('id', fromRow.data.id);
+          if (updateSender.error) {
+            tokens += amount;
+            save();
+            updateUI();
+            sendFeedback.textContent = 'Failed to update your balance. ' + (updateSender.error.message || 'Try again.');
+            sendFeedback.classList.add('text-neon-pink');
+            sendTokensBtn.disabled = false;
+            return;
+          }
+          var updateRecipient = await supabase.from('leaderboard').update({ tokens: toNewBalance, updated_at: new Date().toISOString() }).eq('id', toRow.data.id);
+          if (updateRecipient.error) {
+            await supabase.from('leaderboard').update({ tokens: ourNewBalance + amount, updated_at: new Date().toISOString() }).eq('id', fromRow.data.id);
+            tokens += amount;
+            save();
+            updateUI();
+            sendFeedback.textContent = 'Failed to credit recipient. ' + (updateRecipient.error.message || 'Try again.');
+            sendFeedback.classList.add('text-neon-pink');
+            sendTokensBtn.disabled = false;
+            return;
+          }
+          if (typeof syncTokensFromLeaderboard === 'function') syncTokensFromLeaderboard(function() {});
           var senderName = (typeof getPlayerName === 'function' ? getPlayerName() : null) || 'Someone';
           var pid = (toRow.data.player_id || '').toString().trim();
           var wid = (toRow.data.wallet_address || '').toString().trim();
