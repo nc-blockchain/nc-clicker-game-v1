@@ -6,9 +6,11 @@
   <!-- Fix GitHub Pages: base URL so scripts/assets load from repo root (e.g. /nc-clicker-game-v1/) -->
   <script>
     (function(){
+      var origin = location.origin;
+      if (!origin || origin === 'null' || location.protocol === 'file:') return;
       var path = location.pathname.replace(/\/?$/, '');
       var basePath = (path === '' ? '/' : path + '/');
-      document.write('<base href="' + location.origin + basePath + '" />');
+      document.write('<base href="' + origin + basePath + '" />');
     })();
   </script>
   <title>1N Blockchain Token Clicker – Tap to earn $CARD</title>
@@ -550,6 +552,26 @@
           <label class="block text-[9px] text-gray-400 uppercase tracking-wider mb-1">Boosts</label>
           <button type="button" id="room-settings-customize-boosts-btn" class="w-full py-2 px-4 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">CUSTOMIZE BOOSTS</button>
         </div>
+      </div>
+    </div>
+  </div>
+  <!-- Scan QR modal: camera stream to fill Send recipient -->
+  <div id="send-scan-qr-modal" class="hidden" style="position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;">
+    <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-4 max-w-sm w-full">
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <p class="text-neon-cyan text-[10px] font-bold">Scan recipient QR code</p>
+        <button type="button" id="send-scan-qr-close" class="p-1.5 border-2 border-gray-500 text-gray-400 rounded text-[9px] hover:bg-gray-700" aria-label="Close">&#215;</button>
+      </div>
+      <p class="text-[9px] text-gray-400 mb-2">Point your camera at a player's "Scan to send me tokens" QR. Allow camera access when prompted.</p>
+      <div class="relative rounded overflow-hidden border-2 border-gray-600 bg-black mb-2" style="min-height:200px;">
+        <video id="send-scan-qr-video" class="w-full h-auto object-cover" playsinline muted autoplay></video>
+        <canvas id="send-scan-qr-canvas" class="hidden" width="320" height="240"></canvas>
+        <p id="send-scan-qr-status" class="absolute inset-0 flex items-center justify-center text-[10px] text-gray-500 bg-black/70 p-2">Starting camera…</p>
+      </div>
+      <p id="send-scan-qr-result" class="text-[9px] text-neon-green mb-2 hidden"></p>
+      <div class="flex gap-2">
+        <button type="button" id="send-scan-qr-approve-btn" class="flex-1 py-2 border-2 border-neon-green text-neon-green rounded text-[9px] hover:bg-neon-green/10 hidden">Use as recipient</button>
+        <button type="button" id="send-scan-qr-cancel" class="flex-1 py-2 border-2 border-gray-500 text-gray-400 rounded text-[9px] hover:bg-gray-700">Cancel</button>
       </div>
     </div>
   </div>
@@ -1118,12 +1140,40 @@
             <p class="text-[9px] text-gray-400 mb-1">Share this code so others can send you tokens. They enter it in the recipient field below.</p>
             <div class="flex items-center gap-2 flex-wrap">
               <code id="send-my-wallet-code" class="flex-1 min-w-0 text-neon-cyan text-[11px] font-mono break-all">—</code>
-              <button type="button" id="send-copy-my-code-btn" class="shrink-0 py-1.5 px-2 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">COPY</button>
+            </div>
+            <div class="mt-2 pt-2 border-t border-gray-700">
+              <div class="text-[9px] text-gray-500 uppercase tracking-wider mb-1 text-center">Scan to send me tokens</div>
+              <div class="flex items-center justify-center gap-3 flex-wrap">
+                <div id="send-qrcode-container" class="inline-block p-2 bg-white rounded border-2 border-gray-600 shrink-0" aria-hidden="true"></div>
+                <div class="flex flex-col justify-center items-center min-w-0">
+                  <span class="text-[9px] text-gray-500 uppercase tracking-wider">Your balance</span>
+                  <span id="send-qr-balance" class="text-neon-cyan text-2xl font-bold font-mono">0</span>
+                  <span class="text-[9px] text-gray-500">tokens</span>
+                </div>
+              </div>
+            </div>
+            <div class="mt-2 flex justify-end">
+              <button type="button" id="send-scan-qr-btn" class="shrink-0 py-2 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10" title="Scan QR code to fill recipient">📷 Scan QR</button>
             </div>
           </div>
           <div class="space-y-2 mb-2">
             <label class="text-[9px] text-gray-500 uppercase tracking-wider block">Recipient: wallet address or internal wallet code</label>
-            <input type="text" id="send-to-address" placeholder="UQBH... or REFABC123" class="w-full bg-black border-2 border-gray-600 rounded px-2 py-2 text-neon-cyan text-[10px] font-mono" spellcheck="false" />
+            <div class="flex gap-2 items-center">
+              <input type="text" id="send-to-address" placeholder="UQBH... or REFABC123" class="flex-1 min-w-0 bg-black border-2 border-gray-600 rounded px-2 py-2 text-neon-cyan text-[10px] font-mono" spellcheck="false" />
+              <button type="button" id="send-copy-my-code-btn" class="shrink-0 py-2 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">COPY</button>
+            </div>
+            <div class="text-[9px] text-gray-500">
+              Your code: <code id="send-my-wallet-code-under" class="text-neon-cyan font-mono">—</code>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <span class="text-[9px] text-gray-500 uppercase tracking-wider">Players you can send to</span>
+              <button type="button" id="send-refresh-players-btn" class="py-1 px-2 border border-gray-500 text-gray-400 rounded text-[8px] hover:bg-gray-700">REFRESH</button>
+            </div>
+            <div id="send-players-list" class="flex flex-wrap gap-1.5 min-h-[32px] max-h-24 overflow-y-auto p-1 rounded border border-gray-700 bg-black/40">
+              <span class="text-[9px] text-gray-500">Tap a player to fill recipient.</span>
+            </div>
           </div>
           <div class="flex gap-2 items-center flex-wrap">
             <input type="number" id="send-amount" min="1" placeholder="Amount" class="bg-black border-2 border-gray-600 rounded px-2 py-2 text-neon-cyan w-24 text-[10px]" />
@@ -1261,6 +1311,8 @@
   </script>
   <script src="dist/wallet.js" onerror="console.warn('Wallet script failed to load')"></script>
   <script src="https://unpkg.com/@tonconnect/ui@2/dist/tonconnect-ui.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script>
     // --- Constants ---
     const CLICKS_PER_TOKEN = 10;
@@ -1541,11 +1593,17 @@
         if (row) {
           var serverTokens = row.tokens != null ? Number(row.tokens) : 0;
           if (serverTokens > tokens) { tokens = Math.max(0, serverTokens); save(); if (typeof updateUI === 'function') updateUI(); }
+          var refCode = (localStorage && localStorage.getItem('tokenClicker_refCode')) || '';
+          refCode = (refCode && refCode.trim()) ? refCode.trim().toUpperCase() : null;
+          if (refCode) {
+            supabase.from('leaderboard').update({ ref_code: refCode, updated_at: new Date().toISOString() }).eq('id', row.id).then(function() {});
+          }
           if (cb) cb(row);
           return;
         }
         var name = (typeof getPlayerName === 'function' ? getPlayerName() : null) || 'Player';
         var refCode = (localStorage && localStorage.getItem('tokenClicker_refCode')) || null;
+        if (refCode && refCode.trim()) refCode = refCode.trim().toUpperCase();
         var payload = { name: name.slice(0, 100), tokens: Math.max(0, tokens), updated_at: new Date().toISOString(), ref_code: refCode };
         if (isGuest) payload.player_id = me;
         else { payload.wallet_address = me; payload.player_id = me; }
@@ -1814,6 +1872,8 @@
       const bountiesBal = document.getElementById('bounties-balance');
       if (boostsBal) boostsBal.textContent = tokens;
       if (bountiesBal) bountiesBal.textContent = tokens;
+      var sendQrBal = document.getElementById('send-qr-balance');
+      if (sendQrBal) sendQrBal.textContent = tokens;
       if (totalClicksEl) totalClicksEl.textContent = totalClicks;
       if (clickCountLabel) clickCountLabel.textContent = totalClicks;
       var tapsPerToken = Math.max(1, Math.ceil(10 / tapPower));
@@ -2517,6 +2577,23 @@
         if (!code) { code = 'REF' + Math.random().toString(36).slice(2, 8).toUpperCase(); try { localStorage.setItem('tokenClicker_refCode', code); } catch (e) {} }
         var codeEl = document.getElementById('send-my-wallet-code');
         if (codeEl) codeEl.textContent = code || '—';
+        var codeUnderEl = document.getElementById('send-my-wallet-code-under');
+        if (codeUnderEl) codeUnderEl.textContent = code || '—';
+        if (typeof loadSendPlayersList === 'function') loadSendPlayersList();
+        var qrContainer = document.getElementById('send-qrcode-container');
+        if (qrContainer && code) {
+          qrContainer.innerHTML = '';
+          var base = (typeof getShareBaseUrl === 'function' ? getShareBaseUrl() : (window.location.origin + window.location.pathname)).replace(/\/?$/, '');
+          var sendToUrl = base + '#wallet?sendTo=' + encodeURIComponent(code);
+          if (typeof QRCode !== 'undefined') {
+            try { new QRCode(qrContainer, { text: sendToUrl, width: 120, height: 120 }); } catch (e) {}
+          }
+        }
+        var sendQrBalanceEl = document.getElementById('send-qr-balance');
+        if (sendQrBalanceEl) {
+          var tokens = Math.max(0, parseInt(localStorage.getItem('tokenClicker_tokens') || '0', 10));
+          sendQrBalanceEl.textContent = String(tokens);
+        }
       }
       if (typeof ensureLeaderboardRow === 'function') ensureLeaderboardRow();
     }
@@ -3337,6 +3414,137 @@
         sendTokensBtn.disabled = false;
       });
     }
+    function loadSendPlayersList() {
+      var listEl = document.getElementById('send-players-list');
+      var sendToInput = document.getElementById('send-to-address');
+      if (!listEl) return;
+      listEl.innerHTML = '<span class="text-[9px] text-gray-500">Loading…</span>';
+      var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
+      var supabase = window.supabaseClient;
+      if (!supabase) { listEl.innerHTML = '<span class="text-[9px] text-gray-500">Leaderboard not available.</span>'; return; }
+      supabase.from('leaderboard').select('id, name, ref_code, player_id, wallet_address').not('ref_code', 'eq', null).limit(150).then(function(r) {
+        if (r.error || !r.data) { listEl.innerHTML = '<span class="text-[9px] text-gray-500">Could not load players.</span>'; return; }
+        var rows = (r.data || []).filter(function(row) {
+          var pid = (row.player_id || '').toString();
+          var w = (row.wallet_address || '').toString();
+          return pid !== me && w !== me;
+        });
+        if (rows.length === 0) { listEl.innerHTML = '<span class="text-[9px] text-gray-500">No other players with codes yet. Ask friends to open the game and share their code.</span>'; return; }
+        listEl.innerHTML = rows.map(function(row) {
+          var name = (row.name || 'Player').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+          var code = (row.ref_code || '').replace(/"/g, '&quot;');
+          return '<button type="button" class="send-player-chip py-1 px-2 rounded border border-gray-600 text-gray-300 text-[9px] hover:border-neon-cyan hover:text-neon-cyan hover:bg-neon-cyan/10 text-left" data-ref="' + code + '">' + name + ' <span class="text-gray-500 font-mono">' + (row.ref_code || '') + '</span></button>';
+        }).join('');
+        listEl.querySelectorAll('.send-player-chip').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var ref = btn.getAttribute('data-ref');
+            if (ref && sendToInput) sendToInput.value = ref;
+          });
+        });
+      });
+    }
+    document.getElementById('send-refresh-players-btn') && document.getElementById('send-refresh-players-btn').addEventListener('click', function() {
+      if (typeof loadSendPlayersList === 'function') loadSendPlayersList();
+    });
+    (function() {
+      var sendScanStream = null;
+      var sendScanRafId = null;
+      var sendScanLastResult = null;
+      function closeSendScanModal() {
+        if (sendScanRafId) { cancelAnimationFrame(sendScanRafId); sendScanRafId = null; }
+        if (sendScanStream) { sendScanStream.getTracks().forEach(function(t) { t.stop(); }); sendScanStream = null; }
+        var modal = document.getElementById('send-scan-qr-modal');
+        var video = document.getElementById('send-scan-qr-video');
+        if (video && video.srcObject) { video.srcObject = null; }
+        if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+        document.getElementById('send-scan-qr-approve-btn').classList.add('hidden');
+        document.getElementById('send-scan-qr-result').classList.add('hidden');
+        sendScanLastResult = null;
+      }
+      function parseScannedValue(data) {
+        if (!data || !data.trim()) return null;
+        var s = data.trim();
+        try {
+          if (s.indexOf('sendTo=') >= 0) {
+            var m = s.match(/sendTo=([^&]+)/i);
+            if (m) return decodeURIComponent(m[1].replace(/\+/g, ' '));
+          }
+          if (s.indexOf('http') === 0) {
+            var url = new URL(s);
+            var sendTo = url.hash && url.hash.indexOf('sendTo=') >= 0 ? (url.hash.match(/sendTo=([^&]+)/i) || [])[1] : null;
+            if (sendTo) return decodeURIComponent(sendTo.replace(/\+/g, ' '));
+          }
+        } catch (e) {}
+        return s;
+      }
+      function tick() {
+        var video = document.getElementById('send-scan-qr-video');
+        var canvas = document.getElementById('send-scan-qr-canvas');
+        var statusEl = document.getElementById('send-scan-qr-status');
+        if (!video || !canvas || video.readyState < 2) { sendScanRafId = requestAnimationFrame(tick); return; }
+        var w = video.videoWidth;
+        var h = video.videoHeight;
+        if (!w || !h) { sendScanRafId = requestAnimationFrame(tick); return; }
+        var ctx = canvas.getContext('2d');
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(video, 0, 0);
+        var imageData = ctx.getImageData(0, 0, w, h);
+        var code = null;
+        if (typeof jsQR !== 'undefined') {
+          try { code = jsQR(imageData.data, w, h, { inversionAttempts: 'dontInvert' }); } catch (e) {}
+        }
+        if (code && code.data) {
+          var value = parseScannedValue(code.data);
+          if (value) {
+            sendScanLastResult = value;
+            if (statusEl) statusEl.textContent = 'QR code found';
+            var resultEl = document.getElementById('send-scan-qr-result');
+            var approveBtn = document.getElementById('send-scan-qr-approve-btn');
+            if (resultEl) { resultEl.textContent = 'Recipient: ' + value; resultEl.classList.remove('hidden'); }
+            if (approveBtn) { approveBtn.classList.remove('hidden'); }
+            sendScanRafId = null;
+            return;
+          }
+        }
+        sendScanRafId = requestAnimationFrame(tick);
+      }
+      document.getElementById('send-scan-qr-btn') && document.getElementById('send-scan-qr-btn').addEventListener('click', function() {
+        var modal = document.getElementById('send-scan-qr-modal');
+        var video = document.getElementById('send-scan-qr-video');
+        var statusEl = document.getElementById('send-scan-qr-status');
+        if (!modal || !video) return;
+        document.getElementById('send-scan-qr-result').classList.add('hidden');
+        document.getElementById('send-scan-qr-approve-btn').classList.add('hidden');
+        statusEl.textContent = 'Starting camera…';
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        if (sendScanStream) sendScanStream.getTracks().forEach(function(t) { t.stop(); });
+        sendScanStream = null;
+        sendScanLastResult = null;
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function(stream) {
+          sendScanStream = stream;
+          video.srcObject = stream;
+          video.play();
+          statusEl.textContent = 'Point at a recipient QR code';
+          sendScanRafId = requestAnimationFrame(tick);
+        }).catch(function(err) {
+          statusEl.textContent = 'Camera access denied or unavailable. You can enter the code manually.';
+        });
+      });
+      document.getElementById('send-scan-qr-close') && document.getElementById('send-scan-qr-close').addEventListener('click', closeSendScanModal);
+      document.getElementById('send-scan-qr-cancel') && document.getElementById('send-scan-qr-cancel').addEventListener('click', closeSendScanModal);
+      document.getElementById('send-scan-qr-approve-btn') && document.getElementById('send-scan-qr-approve-btn').addEventListener('click', function() {
+        if (sendScanLastResult) {
+          var inp = document.getElementById('send-to-address');
+          if (inp) inp.value = sendScanLastResult;
+        }
+        closeSendScanModal();
+      });
+      document.getElementById('send-scan-qr-modal') && document.getElementById('send-scan-qr-modal').addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'send-scan-qr-modal') closeSendScanModal();
+      });
+    })();
     // Swap: $CARD → in-game tokens (backend verifies balance, frontend credits tokens)
     var swapAmountEl = document.getElementById('swap-amount');
     var swapBtn = document.getElementById('swap-btn');
@@ -5067,8 +5275,16 @@
 
     // Routing
     function getPageFromHash() {
-      const hash = (window.location.hash || '#home').slice(1).toLowerCase();
-      return hash === '' ? 'home' : hash;
+      const raw = (window.location.hash || '#home').slice(1);
+      const path = raw.split('?')[0].toLowerCase();
+      return path === '' ? 'home' : path;
+    }
+    function getSendToFromHash() {
+      var raw = (window.location.hash || '').slice(1);
+      if (raw.indexOf('?') < 0) return null;
+      var qs = raw.split('?')[1] || '';
+      var m = qs.match(/sendTo=([^&]+)/i);
+      return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
     }
     function getPvpInvitedRoomId() {
       return window._pvpInvitedRoomId || (typeof URLSearchParams !== 'undefined' && new URLSearchParams(window.location.search).get('room')) || (function() { try { return sessionStorage.getItem('tokenClicker_pvpInvitedRoom'); } catch (e) { return null; } })() || null;
@@ -5162,6 +5378,12 @@
       if (pageId === 'wallet') {
         if (typeof updateProfileDisplayName === 'function') updateProfileDisplayName();
         if (typeof fetchTonPrice === 'function') fetchTonPrice();
+        var sendTo = getSendToFromHash();
+        if (sendTo && typeof showWalletTab === 'function') {
+          showWalletTab('send');
+          var inp = document.getElementById('send-to-address');
+          if (inp) inp.value = sendTo;
+        }
       }
       if (pageId === 'multiplayer') {
         var balEl = document.getElementById('pvp-create-balance');

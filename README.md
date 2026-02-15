@@ -24,13 +24,14 @@ To get **https://biggleem.github.io/nc-clicker-game-v1/** working: **[ENABLE-PAG
 
 ## Run locally
 
-Open `index.html` in a browser, or serve the folder:
+**Run from the project root** (the folder that contains `index.html`). If you serve from a different folder you may see a directory listing or broken assets.
 
 ```bash
+cd nc-clicker-game-v1
 npx serve . -p 3001
 ```
 
-Then open **http://localhost:3001**.
+Or: `npm start` (uses http-server on port 3001). Then open **http://localhost:3001**.
 
 ## Features
 
