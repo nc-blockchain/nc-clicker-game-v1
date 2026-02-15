@@ -26,6 +26,15 @@ test.describe('Pending friend request – accept', () => {
     await expect(page.getByText('FRIENDS — INVITE & REQUESTS')).toBeVisible({ timeout: 10000 });
   });
 
+  test('Friends modal has Pending requests section in DOM (shown when requests exist)', async ({ page }) => {
+    const section = page.locator('#friend-requests-section');
+    const list = page.locator('#friend-requests-list');
+    await expect(section).toBeAttached();
+    await expect(list).toBeAttached();
+    const pendingLabel = page.getByText(/Pending requests/i);
+    await expect(pendingLabel).toBeAttached();
+  });
+
   test('receiver can see Pending requests and ACCEPT button when requests exist', async ({ page }) => {
     const section = page.locator('#friend-requests-section');
     const acceptBtn = page.locator('.friend-request-accept').first();
