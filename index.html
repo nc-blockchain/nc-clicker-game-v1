@@ -489,11 +489,12 @@
       <button type="button" id="share-game-btn" class="w-full py-2 px-4 border-2 border-neon-pink text-neon-pink rounded text-[10px] font-bold hover:bg-neon-pink/10 mb-2">COPY GAME LINK</button>
       <p id="share-game-feedback" class="text-neon-green text-[9px] mb-3 hidden">Link copied!</p>
       <div class="text-[9px] text-gray-500 uppercase tracking-wider mb-1">Your friends</div>
-      <p class="text-gray-500 text-[8px] mb-1">People who used your link or you added by code. Tap DUEL to challenge.</p>
+      <p class="text-gray-500 text-[8px] mb-1">People who used your link or you added by code. Tap DUEL to challenge. Star (☆/★) to add favorite players—they appear at the top.</p>
       <ol id="friends-invited-list" class="space-y-1 text-[10px] min-h-[24px] mb-2"><li class="text-gray-500">Loading…</li></ol>
       <ol id="friends-added-list" class="space-y-1 text-[10px] min-h-[24px] mb-3"><li class="text-gray-500">Loading…</li></ol>
       <div id="friend-requests-section" class="hidden mt-2 pt-2 border-t border-gray-800/60 mb-3">
         <div class="text-[9px] text-gray-500 uppercase tracking-wider">Pending requests</div>
+        <p id="friend-request-feedback" class="text-[10px] mt-1 mb-1 min-h-[14px] px-2 py-1 rounded hidden"></p>
         <ol id="friend-requests-list" class="space-y-2 text-[10px] min-h-[24px]"></ol>
       </div>
       <div class="mb-3">
@@ -1665,6 +1666,7 @@
             supabase.from('leaderboard').update({ ref_code: refCode, updated_at: new Date().toISOString() }).eq('id', row.id).then(function() {});
           }
           if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
+          if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
           if (cb) cb(row);
           return;
         }
@@ -1686,6 +1688,7 @@
           supabase.from('leaderboard').insert(payload).then(function(ir) {
             if (ir.error) { if (cb) cb(null); return; }
             if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
+            if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
             if (cb) cb(ir.data && ir.data[0] ? { id: ir.data[0].id, tokens: ir.data[0].tokens != null ? ir.data[0].tokens : 0 } : null);
           });
         }
@@ -2374,6 +2377,7 @@
       if (refEl) refEl.textContent = refCode;
       if (typeof subscribeReferralsRealtime === 'function') subscribeReferralsRealtime();
       if (typeof subscribeFriendRequestsRealtime === 'function') subscribeFriendRequestsRealtime();
+      if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
       if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
     }
     function loadLeaderboardPvp() {
@@ -4019,6 +4023,42 @@
         friendRequestsChannel = null;
       }
     }
+    var friendRequestAcceptedChannel = null;
+    var friendRequestAcceptedRealtimeFailed = false;
+    function subscribeFriendRequestAcceptedRealtime() {
+      var supabase = window.supabaseClient;
+      var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
+      if (!supabase || !me || (me + '').trim() === '' || friendRequestAcceptedChannel || friendRequestAcceptedRealtimeFailed) return;
+      try {
+        var meId = (me + '').trim();
+        var filterVal = /^[a-zA-Z0-9_-]+$/.test(meId) ? meId : ('"' + meId.replace(/"/g, '""') + '"');
+        var ch = supabase.channel('friend-request-accepted-' + meId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64)).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'friend_requests', filter: 'from_wallet=eq.' + filterVal }, function(payload) {
+          var row = payload.new;
+          if (!row || (row.from_wallet || '').trim() !== meId) return;
+          if ((row.status || '').toLowerCase() !== 'accepted') return;
+          var accepterName = (row.to_name || 'Someone').trim();
+          function showToast() {
+            var toast = document.getElementById('friend-accepted-toast');
+            if (toast) { toast.textContent = accepterName + ' accepted your invite!'; toast.classList.remove('hidden'); setTimeout(function() { toast.classList.add('hidden'); }, 4000); }
+          }
+          try { if (typeof pushNotification === 'function') pushNotification(accepterName + ' accepted your invite!'); } catch (e) {}
+          showToast();
+          if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
+        });
+        friendRequestAcceptedChannel = ch;
+        ch.subscribe(function(status) {
+          if (status === 'CHANNEL_ERROR') { friendRequestAcceptedChannel = null; friendRequestAcceptedRealtimeFailed = true; }
+        });
+      } catch (e) {
+        friendRequestAcceptedRealtimeFailed = true;
+      }
+    }
+    function unsubscribeFriendRequestAcceptedRealtime() {
+      if (window.supabaseClient && friendRequestAcceptedChannel) {
+        try { window.supabaseClient.removeChannel(friendRequestAcceptedChannel); } catch (e) {}
+        friendRequestAcceptedChannel = null;
+      }
+    }
     var tokenReceivedChannel = null;
     var tokenReceivedRealtimeFailed = false;
     function subscribeTokenReceivedRealtime() {
@@ -4118,6 +4158,7 @@
               renderInvitedList(r.data, tokensByWallet);
               subscribeFriendsLeaderboardRealtime();
               if (typeof subscribeFriendRequestsRealtime === 'function') subscribeFriendRequestsRealtime();
+              if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
               if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
             });
           }
@@ -4169,6 +4210,29 @@
       showPage('multiplayer');
       if (typeof openPvpCreateRoomModal === 'function') openPvpCreateRoomModal(friendName || null);
     }
+    function getFavoriteFriendRefs() {
+      try {
+        var raw = localStorage.getItem('tokenClicker_favoriteFriendRefs');
+        var arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr.map(function(r) { return (r || '').toString().trim().toUpperCase(); }).filter(Boolean) : [];
+      } catch (e) { return []; }
+    }
+    function toggleFavoriteFriendRef(refCode) {
+      var ref = (refCode || '').trim().toUpperCase();
+      if (!ref) return false;
+      var favs = getFavoriteFriendRefs();
+      var idx = favs.indexOf(ref);
+      if (idx >= 0) {
+        favs.splice(idx, 1);
+      } else {
+        favs.push(ref);
+      }
+      try { localStorage.setItem('tokenClicker_favoriteFriendRefs', JSON.stringify(favs)); } catch (e) {}
+      return favs.indexOf(ref) >= 0;
+    }
+    function isFavoriteFriendRef(refCode) {
+      return getFavoriteFriendRefs().indexOf((refCode || '').trim().toUpperCase()) >= 0;
+    }
     function loadFriendRequests() {
       var supabase = window.supabaseClient;
       var sect = document.getElementById('friend-requests-section');
@@ -4191,6 +4255,8 @@
             return;
           }
           sect.classList.remove('hidden');
+          // Delay clear so accept/reject feedback stays visible briefly after action
+          setTimeout(function() { setFriendRequestFeedback(''); }, 4000);
           var pushedIds = JSON.parse(localStorage.getItem('tokenClicker_pushedRequestIds') || '[]');
           r.data.forEach(function(req) {
             if (pushedIds.indexOf(req.id) < 0) {
@@ -4228,16 +4294,33 @@
         })
         .catch(function() { sect.classList.add('hidden'); });
     }
+    function setFriendRequestFeedback(msg, isError) {
+      var el = document.getElementById('friend-request-feedback');
+      if (!el) return;
+      el.textContent = msg || '';
+      el.classList.remove('hidden', 'text-neon-green', 'text-neon-yellow', 'bg-neon-yellow/10', 'bg-neon-green/10');
+      if (msg) {
+        el.classList.add(isError ? 'text-neon-yellow bg-neon-yellow/10' : 'text-neon-green bg-neon-green/10');
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    }
     function acceptFriendRequest(reqId, fromWallet, fromName) {
+      setFriendRequestFeedback('');
       var supabase = window.supabaseClient;
       var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
       if (!supabase || !me) {
-        try { pushNotification('Set your name in Wallet → Settings first.'); } catch (e) {}
+        var msg = 'Set your name in Wallet → Settings first.';
+        setFriendRequestFeedback(msg, true);
+        try { pushNotification(msg); } catch (e) {}
         return;
       }
       supabase.from('friend_requests').select('from_wallet, to_wallet, from_name, to_name').eq('id', reqId).eq('to_wallet', me).eq('status', 'pending').single().then(function(r) {
         if (r.error || !r.data) {
-          try { pushNotification('Request expired or already handled.'); } catch (e) {}
+          var msg = 'Request expired or already handled.';
+          setFriendRequestFeedback(msg, true);
+          try { pushNotification(msg); } catch (e) {}
           if (typeof loadFriendRequests === 'function') loadFriendRequests();
           return;
         }
@@ -4258,14 +4341,39 @@
           var fromRef = (refById[req.from_wallet] || '').toUpperCase();
           var toRef = (refById[req.to_wallet] || '').toUpperCase();
           if (!toRef) toRef = (localStorage.getItem('tokenClicker_refCode') || '').trim().toUpperCase();
-          if (!fromRef) {
-            try { pushNotification("Could not accept: " + (req.from_name || "Sender") + "'s invite code not synced. Ask them to save their name in Wallet → Settings."); } catch (e) {}
-            return;
-          }
           if (!toRef) {
-            try { pushNotification('Could not accept: save your name in Wallet → Settings so your invite code is synced.'); } catch (e) {}
+            var msg = 'Could not accept: save your name in Wallet → Settings so your invite code is synced.';
+            setFriendRequestFeedback(msg, true);
+            try { pushNotification(msg); } catch (e) {}
             return;
           }
+          function setFromRefMissing() {
+            var msg = "Could not accept: " + (req.from_name || "Sender") + "'s invite code not synced. Ask them to save their name in Wallet → Settings.";
+            setFriendRequestFeedback(msg, true);
+            try { pushNotification(msg); } catch (e) {}
+          }
+          if (!fromRef && (req.from_name || '').trim()) {
+            var fromNameTrim = (req.from_name || '').trim();
+            supabase.from('leaderboard').select('ref_code, wallet_address, player_id, name').ilike('name', fromNameTrim).limit(10).then(function(nameRow) {
+              var found = nameRow.data && nameRow.data.find(function(row) {
+                var match = (row.wallet_address === req.from_wallet || row.player_id === req.from_wallet);
+                return match && (row.ref_code || '').trim();
+              });
+              if (found && (found.ref_code || '').trim()) {
+                fromRef = (found.ref_code || '').trim().toUpperCase();
+                doInsert();
+              } else {
+                setFromRefMissing();
+              }
+            }).catch(function() { setFromRefMissing(); });
+            return;
+          }
+          if (!fromRef) {
+            setFromRefMissing();
+            return;
+          }
+          doInsert();
+          function doInsert() {
           supabase.from('friends_by_code').insert([
             { user_wallet: req.from_wallet, friend_ref_code: toRef, friend_name: req.to_name || 'Friend' },
             { user_wallet: req.to_wallet, friend_ref_code: fromRef, friend_name: req.from_name || 'Friend' }
@@ -4275,16 +4383,31 @@
               if (ins.error.code === '23505') {
                 msg = 'Already friends with ' + (req.from_name || 'them') + '.';
                 supabase.from('friend_requests').update({ status: 'accepted', updated_at: new Date().toISOString() }).eq('id', reqId).then(function() {});
+              } else if (msg.indexOf('friends_by_code') >= 0 || msg.indexOf('schema cache') >= 0) {
+                msg = 'Database missing friends table. In Supabase: SQL Editor → run supabase/migrations/003_friends_by_code.sql';
               }
+              setFriendRequestFeedback(msg, true);
               try { pushNotification(msg); } catch (e) {}
             } else {
               supabase.from('friend_requests').update({ status: 'accepted', updated_at: new Date().toISOString() }).eq('id', reqId).then(function() {});
+              setFriendRequestFeedback('You are now friends with ' + (req.from_name || 'Someone') + '.', false);
               try { pushNotification('You are now friends with ' + (req.from_name || 'Someone')); } catch (e) {}
             }
             if (typeof loadFriendRequests === 'function') loadFriendRequests();
             if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
           });
+          }
+        }).catch(function(err) {
+          var msg = (err && err.message) ? err.message : 'Could not accept request.';
+          setFriendRequestFeedback(msg, true);
+          try { pushNotification(msg); } catch (e) {}
+          if (typeof loadFriendRequests === 'function') loadFriendRequests();
         });
+      }).catch(function(err) {
+        var msg = (err && err.message) ? err.message : 'Could not accept request.';
+        setFriendRequestFeedback(msg, true);
+        try { pushNotification(msg); } catch (e) {}
+        if (typeof loadFriendRequests === 'function') loadFriendRequests();
       });
     }
     function rejectFriendRequest(reqId) {
@@ -4322,6 +4445,15 @@
             seen[code] = true;
             return true;
           });
+          var favRefs = getFavoriteFriendRefs();
+          uniqueFriends.sort(function(a, b) {
+            var ac = (a.friend_ref_code || '').trim().toUpperCase();
+            var bc = (b.friend_ref_code || '').trim().toUpperCase();
+            var aFav = favRefs.indexOf(ac) >= 0 ? 1 : 0;
+            var bFav = favRefs.indexOf(bc) >= 0 ? 1 : 0;
+            if (bFav !== aFav) return bFav - aFav;
+            return 0;
+          });
           var codes = uniqueFriends.map(function(e) { return (e.friend_ref_code || '').trim(); }).filter(Boolean);
           var cache = getFriendTokenCache();
           var tokensByCode = {};
@@ -4338,6 +4470,7 @@
               renderAddedList(uniqueFriends, tokensByCode);
               subscribeFriendsLeaderboardRealtime();
               if (typeof subscribeFriendRequestsRealtime === 'function') subscribeFriendRequestsRealtime();
+              if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
               if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
             });
           }
@@ -4348,13 +4481,34 @@
             var codeUpper = (e.friend_ref_code || '').trim().toUpperCase();
             var tokens = tokensByCode[codeUpper] != null ? tokensByCode[codeUpper] : null;
             var tokenStr = tokens != null ? '<span class="text-neon-yellow text-[10px] font-bold">' + tokens + ' tokens</span>' : '';
+            var isFav = isFavoriteFriendRef(codeUpper);
+            var starLabel = isFav ? '★' : '☆';
+            var starTitle = isFav ? 'Remove from favorites' : 'Add to favorites';
             return '<li class="flex flex-wrap items-center gap-2 py-1 border-b border-gray-700/50 last:border-0">' +
               '<span class="flex-1 min-w-0">' + (i + 1) + '. ' + (e.friend_name || e.friend_ref_code || 'Friend') + (tokenStr ? '<span class="block mt-0.5">' + tokenStr + '</span>' : '') + '</span>' +
-              '<span class="flex gap-1 shrink-0">' +
+              '<span class="flex gap-1 shrink-0 items-center">' +
+              '<button type="button" class="friend-favorite-btn py-1 px-1.5 border border-neon-yellow rounded text-[10px] ' + (isFav ? 'text-neon-yellow bg-neon-yellow/20' : 'text-gray-500 hover:text-neon-yellow hover:bg-neon-yellow/10') + '" data-ref="' + code + '" title="' + starTitle + '" aria-label="' + starTitle + '">' + starLabel + '</button>' +
               '<button type="button" class="friend-duel-btn py-1 px-2 border border-neon-green text-neon-green rounded text-[9px] hover:bg-neon-green/10" data-name="' + name + '" data-ref="' + code + '">DUEL</button>' +
               '<button type="button" class="friend-remove-btn py-1 px-2 border border-neon-pink text-neon-pink rounded text-[9px] hover:bg-neon-pink/10" data-name="' + name + '" data-ref="' + code + '">REMOVE</button>' +
               '</span></li>';
           }).join('');
+          list.querySelectorAll('.friend-favorite-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              var ref = btn.getAttribute('data-ref') || '';
+              if (!ref) return;
+              toggleFavoriteFriendRef(ref);
+              var favRefs = getFavoriteFriendRefs();
+              uniqueFriends.sort(function(a, b) {
+                var ac = (a.friend_ref_code || '').trim().toUpperCase();
+                var bc = (b.friend_ref_code || '').trim().toUpperCase();
+                var aFav = favRefs.indexOf(ac) >= 0 ? 1 : 0;
+                var bFav = favRefs.indexOf(bc) >= 0 ? 1 : 0;
+                if (bFav !== aFav) return bFav - aFav;
+                return 0;
+              });
+              renderAddedList(uniqueFriends, tokensByCode);
+            });
+          });
           list.querySelectorAll('.friend-remove-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
               var name = btn.getAttribute('data-name') || 'this friend';
@@ -4576,6 +4730,7 @@
       if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
       startFriendsTokenPolling();
       if (typeof subscribeFriendRequestsRealtime === 'function') subscribeFriendRequestsRealtime();
+      if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
       if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
     }
     function closeFriendsModal() {
