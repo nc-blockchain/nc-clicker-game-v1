@@ -1309,8 +1309,8 @@
         </div>
         <p id="pvp-error" class="text-neon-pink text-[9px] mt-2 hidden"></p>
       </div>
-      <!-- Invited to duel: shown when URL has ?room= (open room link) -->
-      <div id="pvp-invited-card" class="hidden mb-4 p-4 rounded-lg border-2 border-neon-cyan bg-neon-cyan/5">
+      <!-- Invited to duel: shown when URL has ?room= (open room link). Whole card is clickable to join. -->
+      <div id="pvp-invited-card" class="hidden mb-4 p-4 rounded-lg border-2 border-neon-cyan bg-neon-cyan/5 cursor-pointer hover:bg-neon-cyan/10 transition-colors select-none" role="button" tabindex="0" aria-label="Join duel invitation">
         <p class="text-neon-cyan text-[10px] font-bold mb-1">YOU’RE INVITED TO A DUEL</p>
         <p class="text-gray-300 text-[9px] mb-3">Open this link to join the room and play. Enter your name and have enough in-game tokens for the wager, then join.</p>
         <button type="button" id="pvp-invited-join-btn" class="w-full py-3 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] font-bold hover:bg-neon-green/10 min-h-[48px]">JOIN & PLAY</button>
@@ -1325,39 +1325,41 @@
       </div>
       </div>
 
-      <!-- Duel view: side-by-side clicker (shown when in active game) -->
+      <!-- Duel view: side-by-side clicker (shown when in active game), all in one card -->
       <div id="pvp-duel-view" class="hidden mt-4">
-        <p class="text-neon-pink text-[10px] font-bold mb-2 text-center">CLICK RACE — 30 SEC</p>
-        <p id="pvp-duel-timer" class="text-center text-neon-yellow text-sm mb-3">0:30</p>
-        <div class="grid grid-cols-2 gap-3">
-          <div id="pvp-duel-you" class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-3 text-center">
-            <p id="pvp-duel-you-name" class="text-neon-cyan text-[10px] font-bold truncate">You</p>
-            <p id="pvp-duel-you-clicks" class="text-2xl neon-text-cyan">0</p>
-            <button type="button" id="pvp-duel-click-btn" class="nft-clicker w-24 h-24 pixel-border rounded-lg bg-black/80 mt-2 focus:outline-none focus:ring-2 focus:ring-neon-cyan overflow-hidden disabled:opacity-50 disabled:pointer-events-none" aria-label="Click to score">
-              <img src="assets/cardinal.png" alt="Tap" class="w-full h-full object-contain image-pixel" />
-            </button>
+        <div class="bg-pixel-panel border-2 border-neon-pink/50 rounded-lg p-4 shadow-lg">
+          <p class="text-neon-pink text-[10px] font-bold mb-2 text-center">CLICK RACE — 30 SEC</p>
+          <p id="pvp-duel-timer" class="text-center text-neon-yellow text-sm mb-3">0:30</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div id="pvp-duel-you" class="bg-black/40 border-2 border-neon-cyan rounded-lg p-3 text-center">
+              <p id="pvp-duel-you-name" class="text-neon-cyan text-[10px] font-bold truncate">You</p>
+              <p id="pvp-duel-you-clicks" class="text-2xl neon-text-cyan">0</p>
+              <button type="button" id="pvp-duel-click-btn" class="nft-clicker w-24 h-24 pixel-border rounded-lg bg-black/80 mt-2 focus:outline-none focus:ring-2 focus:ring-neon-cyan overflow-hidden disabled:opacity-50 disabled:pointer-events-none" aria-label="Click to score">
+                <img src="assets/cardinal.png" alt="Tap" class="w-full h-full object-contain image-pixel" />
+              </button>
+            </div>
+            <div id="pvp-duel-opponent" class="bg-black/40 border-2 border-gray-600 rounded-lg p-3 text-center">
+              <p id="pvp-duel-opp-name" class="text-gray-400 text-[10px] font-bold truncate">Opponent</p>
+              <p id="pvp-duel-opp-clicks" class="text-2xl text-gray-300">0</p>
+              <div class="w-24 h-24 pixel-border rounded-lg bg-black/80 mt-2 mx-auto flex items-center justify-center text-3xl text-gray-600">?</div>
+            </div>
           </div>
-          <div id="pvp-duel-opponent" class="bg-pixel-panel border-2 border-gray-600 rounded-lg p-3 text-center">
-            <p id="pvp-duel-opp-name" class="text-gray-400 text-[10px] font-bold truncate">Opponent</p>
-            <p id="pvp-duel-opp-clicks" class="text-2xl text-gray-300">0</p>
-            <div class="w-24 h-24 pixel-border rounded-lg bg-black/80 mt-2 mx-auto flex items-center justify-center text-3xl text-gray-600">?</div>
+          <div id="pvp-duel-waiting" class="text-center text-gray-500 text-[9px] mt-2 hidden">
+            <p class="font-bold text-neon-cyan mb-1">Waiting for opponent…</p>
+            <p>Share the room link with a friend. They join to start the race. Customize your boosts below before the race starts.</p>
+            <div class="flex items-center justify-center gap-2 mt-2 flex-wrap">
+              <p id="pvp-duel-room-link" class="text-[8px] text-gray-600 break-all flex-1 min-w-0"></p>
+              <button type="button" id="pvp-duel-copy-link-btn" class="py-1 px-2 border-2 border-neon-cyan text-neon-cyan rounded text-[8px] hover:bg-neon-cyan/10 shrink-0">COPY</button>
+              <button type="button" id="pvp-duel-customize-boosts-btn" class="py-1 px-2 border-2 border-neon-cyan text-neon-cyan rounded text-[8px] hover:bg-neon-cyan/10 shrink-0">CUSTOMIZE BOOSTS</button>
+            </div>
           </div>
-        </div>
-        <div id="pvp-duel-waiting" class="text-center text-gray-500 text-[9px] mt-2 hidden">
-          <p class="font-bold text-neon-cyan mb-1">Waiting for opponent…</p>
-          <p>Share the room link with a friend. They join to start the race. Customize your boosts below before the race starts.</p>
-          <div class="flex items-center justify-center gap-2 mt-2 flex-wrap">
-            <p id="pvp-duel-room-link" class="text-[8px] text-gray-600 break-all flex-1 min-w-0"></p>
-            <button type="button" id="pvp-duel-copy-link-btn" class="py-1 px-2 border-2 border-neon-cyan text-neon-cyan rounded text-[8px] hover:bg-neon-cyan/10 shrink-0">COPY</button>
-            <button type="button" id="pvp-duel-customize-boosts-btn" class="py-1 px-2 border-2 border-neon-cyan text-neon-cyan rounded text-[8px] hover:bg-neon-cyan/10 shrink-0">CUSTOMIZE BOOSTS</button>
+          <div id="pvp-duel-ready-wrap" class="text-center mt-3 hidden">
+            <p id="pvp-duel-ready-status" class="text-[9px] text-gray-400 mb-2">Both players must click READY. Then 5… 4… 3… 2… 1… GO!</p>
+            <button type="button" id="pvp-duel-ready-btn" class="py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] font-bold hover:bg-neon-green/10">READY</button>
           </div>
-        </div>
-        <div id="pvp-duel-ready-wrap" class="text-center mt-3 hidden">
-          <p id="pvp-duel-ready-status" class="text-[9px] text-gray-400 mb-2">Both players must click READY. Then 5… 4… 3… 2… 1… GO!</p>
-          <button type="button" id="pvp-duel-ready-btn" class="py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] font-bold hover:bg-neon-green/10">READY</button>
-        </div>
-        <div class="mt-3 text-center">
-          <button type="button" id="pvp-duel-end-game-btn" class="py-2 px-4 border-2 border-neon-pink text-neon-pink rounded text-[9px] hover:bg-neon-pink/10">END GAME</button>
+          <div class="mt-3 text-center">
+            <button type="button" id="pvp-duel-end-game-btn" class="py-2 px-4 border-2 border-neon-pink text-neon-pink rounded text-[9px] hover:bg-neon-pink/10">END GAME</button>
+          </div>
         </div>
       </div>
 
@@ -5045,7 +5047,7 @@
             var shortId = room.id.slice(0, 8);
             var joinBtn = isOpen && p1 !== me ? '<button type="button" class="pvp-join-btn mt-2 py-1 px-2 border border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10" data-room-id="' + room.id + '">JOIN</button>' : '';
             var agreeBtn = isWagerPending && isMine && !myAgreed ? '<button type="button" class="pvp-agree-wager-btn mt-2 py-1 px-2 border border-neon-green text-neon-green rounded text-[9px] hover:bg-neon-green/10" data-room-id="' + room.id + '">AGREE TO START</button>' : '';
-            var enterDuelBtn = room.status === 'in_progress' && isMine ? '<button type="button" class="pvp-enter-duel-btn mt-2 py-1 px-2 border border-neon-green text-neon-green rounded text-[9px] hover:bg-neon-green/10" data-room-id="' + room.id + '">ENTER DUEL</button>' : '';
+            var enterDuelBtn = room.status === 'in_progress' && isMine && pvpDuelRoomId !== room.id ? '<button type="button" class="pvp-enter-duel-btn mt-2 py-1 px-2 border border-neon-green text-neon-green rounded text-[9px] hover:bg-neon-green/10" data-room-id="' + room.id + '">ENTER DUEL</button>' : '';
             var showClose = room.status === 'open' && p1 === me && count < 2;
             var settingsBtn = isMine ? '<button type="button" class="pvp-game-settings-btn w-6 h-6 flex items-center justify-center p-0 border border-gray-500 text-gray-400 rounded hover:bg-gray-700 hover:text-neon-cyan hover:border-neon-cyan text-[12px] leading-none shrink-0" data-room-id="' + room.id + '" title="Game settings" aria-label="Game settings">&#9881;</button>' : '';
             var closeXBtn = showClose ? '<button type="button" class="pvp-close-room-btn w-6 h-6 flex items-center justify-center p-0 border border-neon-pink text-neon-pink rounded text-[12px] hover:bg-neon-pink/10 shrink-0" data-room-id="' + room.id + '" title="Close room" aria-label="Close room">&#215;</button>' : '';
@@ -5054,13 +5056,25 @@
             var shareLink = base + '/?room=' + room.id;
             var stake = room.stake_amount != null ? parseInt(room.stake_amount, 10) : 5;
             if (isNaN(stake) || stake < 1) stake = 5;
-            var cardAction = isOpen && p1 !== me ? 'join' : (isWagerPending && isMine ? 'agree-wager' : ((room.status === 'in_progress' || (isOpen && isMine)) ? 'enter-duel' : ''));
-            var statusText = isWagerPending ? (myAgreed ? 'Waiting for other player…' : 'Agree to start') : (room.status === 'in_progress' ? 'Race in progress — tap ENTER DUEL' : count + '/2 · ' + room.status);
+            var alreadyInDuel = pvpDuelRoomId === room.id;
+            var cardAction = isOpen && p1 !== me ? 'join' : (isWagerPending && isMine ? 'agree-wager' : ((room.status === 'in_progress' || (isOpen && isMine)) && !alreadyInDuel ? 'enter-duel' : ''));
+            var statusText;
+            if (isWagerPending) {
+              statusText = myAgreed ? 'Waiting for other player…' : 'Agree to start';
+            } else if (room.status === 'in_progress') {
+              statusText = alreadyInDuel ? 'You are in this duel' : 'Race in progress — tap ENTER DUEL';
+            } else if (room.status === 'open' && count === 1) {
+              var whoInRoom = (room.player1_name && room.player1_name.trim()) || (room.player2_name && room.player2_name.trim()) || null;
+              statusText = whoInRoom ? whoInRoom + ' in room — waiting for player to join' : 'Waiting for player to join';
+            } else {
+              statusText = count + '/2 · ' + room.status;
+            }
+            var statusLine = room.status === 'open' && count === 1 ? statusText : (count + '/2 · ' + statusText);
             return '<div class="pvp-room-card bg-pixel-panel border-2 border-gray-700 p-3 rounded text-left cursor-pointer hover:border-gray-500 relative" data-room-id="' + room.id + '" data-room-action="' + cardAction + '" data-room-stake="' + stake + '">' +
               '<div class="flex justify-between items-center gap-2">' +
               '<span class="text-[10px] text-neon-pink truncate">Room ' + (room.room_name && room.room_name.trim() ? room.room_name.trim() : (typeof getLocalRoomName === 'function' ? getLocalRoomName(room.id) : '') || shortId) + (isMine ? ' (you)' : '') + ' · ' + stake + ' tokens</span>' + closeXBtn +
               '</div>' +
-              '<div class="text-gray-500 text-[9px] mt-1">' + count + '/2 · ' + statusText + '</div>' +
+              '<div class="text-gray-500 text-[9px] mt-1">' + statusLine + '</div>' +
               '<div class="mt-2 flex flex-wrap gap-2 items-center justify-between">' +
               '<div class="flex flex-wrap gap-2 items-center">' + joinBtn + agreeBtn + enterDuelBtn + customizeBoostsBtn +
               '<button type="button" class="pvp-copy-link-btn py-1 px-2 border border-gray-500 text-gray-400 rounded text-[9px] hover:bg-gray-700" data-room-id="' + room.id + '" data-room-url="' + shareLink + '">COPY LINK</button>' +
@@ -5609,10 +5623,16 @@
         var c1 = room.player1_clicks || 0, c2 = room.player2_clicks || 0;
         var winner = c1 > c2 ? room.player1_wallet : (c2 > c1 ? room.player2_wallet : null);
         var rematchUntil = new Date(Date.now() + 60 * 1000).toISOString();
-        supabase.from('rooms').update({ status: 'finished', winner_wallet: winner, updated_at: new Date().toISOString(), rematch_until: rematchUntil }).eq('id', pvpDuelRoomId).then(function() {
+        supabase.from('rooms').update({ status: 'finished', winner_wallet: winner, updated_at: new Date().toISOString(), rematch_until: rematchUntil }).eq('id', pvpDuelRoomId).then(function(u) {
           room.status = 'finished';
           room.winner_wallet = winner;
-          room.rematch_until = rematchUntil;
+          room.rematch_until = (u.error && (u.error.message || '').toLowerCase().indexOf('rematch') >= 0) ? null : rematchUntil;
+          showDuelResult(room);
+          if (winner) { var st = room.stake_amount != null ? parseInt(room.stake_amount, 10) : 0; upsertLeaderboardWin(winner, room.player1_wallet === winner ? room.player1_name : room.player2_name, isNaN(st) ? 0 : st); }
+        }).catch(function() {
+          room.status = 'finished';
+          room.winner_wallet = winner;
+          room.rematch_until = null;
           showDuelResult(room);
           if (winner) { var st = room.stake_amount != null ? parseInt(room.stake_amount, 10) : 0; upsertLeaderboardWin(winner, room.player1_wallet === winner ? room.player1_name : room.player2_name, isNaN(st) ? 0 : st); }
         });
@@ -5802,12 +5822,25 @@
       if (!pvpDuelRoomId || !pvpDuelMyRole) { showDuelLobby(); if (typeof loadPvpRooms === 'function') loadPvpRooms(); return; }
       var supabase = window.supabaseClient;
       if (!supabase) { showDuelLobby(); if (typeof loadPvpRooms === 'function') loadPvpRooms(); return; }
+      var rematchBtn = document.getElementById('pvp-duel-rematch-btn');
+      var rematchHint = document.getElementById('pvp-duel-rematch-hint');
+      var errMsg = 'Rematch needs DB columns. In Supabase SQL Editor run: supabase/migrations/006_rooms_rematch.sql';
       var me = getPvpPlayerId();
       var col = pvpDuelMyRole === 1 ? 'player1_wants_rematch' : 'player2_wants_rematch';
-      supabase.from('rooms').update({ [col]: true, updated_at: new Date().toISOString() }).eq('id', pvpDuelRoomId).then(function() {
+      supabase.from('rooms').update({ [col]: true, updated_at: new Date().toISOString() }).eq('id', pvpDuelRoomId).then(function(u) {
+        if (u.error) {
+          var m = (u.error.message || '').toLowerCase();
+          if (m.indexOf('wants_rematch') >= 0 || m.indexOf('rematch') >= 0 || m.indexOf('schema') >= 0) { if (rematchHint) { rematchHint.textContent = errMsg; rematchHint.classList.remove('hidden'); rematchHint.classList.add('text-neon-pink'); } }
+          return;
+        }
         supabase.from('rooms').select('player1_wants_rematch, player2_wants_rematch, rematch_until').eq('id', pvpDuelRoomId).single().then(function(r) {
-          if (r.error || !r.data) return;
+          if (r.error) {
+            var m = (r.error.message || '').toLowerCase();
+            if (m.indexOf('wants_rematch') >= 0 || m.indexOf('rematch') >= 0 || m.indexOf('schema') >= 0) { if (rematchHint) { rematchHint.textContent = errMsg; rematchHint.classList.remove('hidden'); rematchHint.classList.add('text-neon-pink'); } }
+            return;
+          }
           var room = r.data;
+          if (!room) return;
           var until = room.rematch_until ? new Date(room.rematch_until).getTime() : 0;
           if (until <= Date.now()) return;
           if (room.player1_wants_rematch && room.player2_wants_rematch) {
@@ -5819,18 +5852,21 @@
               winner_wallet: null,
               player1_clicks: 0,
               player2_clicks: 0,
+              player1_ready: false,
+              player2_ready: false,
               game_started_at: now.toISOString(),
               game_ends_at: endsAt.toISOString(),
               player1_wants_rematch: false,
               player2_wants_rematch: false,
               rematch_until: null,
               updated_at: now.toISOString()
-            }).eq('id', pvpDuelRoomId).then(function() {
+            }).eq('id', pvpDuelRoomId).then(function(u2) {
+              if (u2.error) return;
               enterDuel(pvpDuelRoomId);
             });
           }
         });
-      });
+      }).catch(function() { if (rematchHint) { rematchHint.textContent = 'Rematch failed. Try again or run migration 006.'; rematchHint.classList.remove('hidden'); rematchHint.classList.add('text-neon-pink'); } });
     });
     document.getElementById('pvp-duel-lobby-btn') && document.getElementById('pvp-duel-lobby-btn').addEventListener('click', function() {
       showDuelLobby();
@@ -5932,9 +5968,17 @@
         window.startVsComputer();
       }
     });
-    document.getElementById('pvp-invited-join-btn') && document.getElementById('pvp-invited-join-btn').addEventListener('click', function() {
-      var roomId = window._pvpInvitedRoomId || new URLSearchParams(window.location.search).get('room');
-      if (roomId) { joinPvpRoom(roomId); window.location.hash = 'multiplayer'; showPage('multiplayer'); }
+    function handleInvitedCardJoin() {
+      var roomId = window._pvpInvitedRoomId || (typeof URLSearchParams !== 'undefined' && new URLSearchParams(window.location.search).get('room'));
+      if (roomId && typeof joinPvpRoom === 'function') { joinPvpRoom(roomId); window.location.hash = 'multiplayer'; if (typeof showPage === 'function') showPage('multiplayer'); }
+    }
+    document.getElementById('pvp-invited-join-btn') && document.getElementById('pvp-invited-join-btn').addEventListener('click', function(ev) { ev.preventDefault(); ev.stopPropagation(); handleInvitedCardJoin(); });
+    document.getElementById('pvp-invited-card') && document.getElementById('pvp-invited-card').addEventListener('click', function(ev) {
+      if (ev.target && ev.target.closest && ev.target.closest('#pvp-invited-join-btn')) return;
+      handleInvitedCardJoin();
+    });
+    document.getElementById('pvp-invited-card') && document.getElementById('pvp-invited-card').addEventListener('keydown', function(ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); handleInvitedCardJoin(); }
     });
     document.addEventListener('click', function(ev) {
       if (ev.target && ev.target.closest && ev.target.closest('.pvp-invite-banner-join-btn')) {
