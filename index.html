@@ -351,73 +351,123 @@
         <p class="text-neon-cyan text-[10px] font-bold">SETTINGS</p>
         <button type="button" id="wallet-settings-modal-close-x" aria-label="Close settings" class="p-1.5 rounded border-2 border-gray-500 text-gray-400 hover:border-neon-cyan hover:text-neon-cyan hover:bg-neon-cyan/10 text-sm leading-none">×</button>
       </div>
-      <div class="space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-[10px] text-gray-400">Player · Profile name:</span>
-          <span id="wallet-settings-name" class="neon-text-cyan text-[10px]">—</span>
-          <button type="button" id="wallet-settings-btn" class="py-1 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">CHANGE NAME</button>
-        </div>
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-[10px] text-gray-400">Game · Feather effects:</span>
-          <label class="inline-flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" id="wallet-setting-feather-effects" class="rounded border-2 border-gray-500 bg-black text-neon-cyan focus:ring-neon-cyan" checked />
-            <span id="wallet-setting-feather-label" class="text-[9px] text-gray-300">On</span>
-          </label>
-        </div>
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-[10px] text-gray-400">Sound:</span>
-          <label class="inline-flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" id="wallet-setting-sound" class="rounded border-2 border-gray-500 bg-black text-neon-cyan focus:ring-neon-cyan" checked />
-            <span id="wallet-setting-sound-label" class="text-[9px] text-gray-300">On</span>
-          </label>
-        </div>
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-[10px] text-gray-400">Haptics (vibration):</span>
-          <label class="inline-flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" id="wallet-setting-haptics" class="rounded border-2 border-gray-500 bg-black text-neon-cyan focus:ring-neon-cyan" checked />
-            <span id="wallet-setting-haptics-label" class="text-[9px] text-gray-300">On</span>
-          </label>
-        </div>
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-[10px] text-gray-400">Reduced motion:</span>
-          <label class="inline-flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" id="wallet-setting-reduced-motion" class="rounded border-2 border-gray-500 bg-black text-neon-cyan focus:ring-neon-cyan" />
-            <span id="wallet-setting-reduced-motion-label" class="text-[9px] text-gray-300">Off</span>
-          </label>
-        </div>
-        <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
-          <span class="text-[10px] text-gray-400">Get latest version:</span>
-          <button type="button" id="wallet-settings-reload-app" class="py-1.5 px-3 border-2 border-neon-yellow text-neon-yellow rounded text-[9px] hover:bg-neon-yellow/10">RELOAD APP</button>
+      <!-- Settings tab buttons -->
+      <div class="flex flex-wrap gap-1 mb-3 border-b-2 border-gray-700 pb-2">
+        <button type="button" class="settings-tab-btn py-1.5 px-2.5 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] font-bold bg-neon-cyan/10" data-settings-tab="general">⚙️ Settings</button>
+        <button type="button" class="settings-tab-btn py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-cyan/50 hover:text-neon-cyan" data-settings-tab="friends">👥 Friends</button>
+        <button type="button" class="settings-tab-btn py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-green/50 hover:text-neon-green" data-settings-tab="wallet">💰 Wallet</button>
+        <button type="button" class="settings-tab-btn py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-yellow/50 hover:text-neon-yellow" data-settings-tab="info">ℹ️ Info</button>
+      </div>
+      <!-- Panel: General Settings (default visible) -->
+      <div class="settings-panel" data-settings-panel="general">
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-[10px] text-gray-400">Player · Profile name:</span>
+            <span id="wallet-settings-name" class="neon-text-cyan text-[10px]">—</span>
+            <button type="button" id="wallet-settings-btn" class="py-1 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">CHANGE NAME</button>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-[10px] text-gray-400">Game · Feather effects:</span>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" id="wallet-setting-feather-effects" class="rounded border-2 border-gray-500 bg-black text-neon-cyan focus:ring-neon-cyan" checked />
+              <span id="wallet-setting-feather-label" class="text-[9px] text-gray-300">On</span>
+            </label>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-[10px] text-gray-400">Sound:</span>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" id="wallet-setting-sound" class="rounded border-2 border-gray-500 bg-black text-neon-cyan focus:ring-neon-cyan" checked />
+              <span id="wallet-setting-sound-label" class="text-[9px] text-gray-300">On</span>
+            </label>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-[10px] text-gray-400">Haptics (vibration):</span>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" id="wallet-setting-haptics" class="rounded border-2 border-gray-500 bg-black text-neon-cyan focus:ring-neon-cyan" checked />
+              <span id="wallet-setting-haptics-label" class="text-[9px] text-gray-300">On</span>
+            </label>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-[10px] text-gray-400">Reduced motion:</span>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" id="wallet-setting-reduced-motion" class="rounded border-2 border-gray-500 bg-black text-neon-cyan focus:ring-neon-cyan" />
+              <span id="wallet-setting-reduced-motion-label" class="text-[9px] text-gray-300">Off</span>
+            </label>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+            <span class="text-[10px] text-gray-400">Get latest version:</span>
+            <button type="button" id="wallet-settings-reload-app" class="py-1.5 px-3 border-2 border-neon-yellow text-neon-yellow rounded text-[9px] hover:bg-neon-yellow/10">RELOAD APP</button>
+          </div>
         </div>
       </div>
-      <div class="mt-4 pt-3 border-t border-gray-700">
-        <p class="text-neon-cyan text-[10px] font-bold mb-2">WALLET STATUS</p>
-        <p id="wallet-settings-connection" class="text-[9px] text-gray-400 mb-2">—</p>
-      </div>
-      <div class="mt-4 pt-3 border-t border-gray-700">
-        <p class="text-neon-cyan text-[10px] font-bold mb-2">WALLET HELP</p>
-        <div class="p-2 rounded border-2 border-neon-green/50 bg-neon-green/5 mb-2">
-          <p class="text-neon-green text-[9px] font-bold">📱 On phone</p>
-          <p class="text-gray-300 text-[9px] mt-1">Open <a href="https://biggleem.github.io/nc-clicker-game-v1" target="_blank" rel="noopener" class="text-neon-cyan underline">biggleem.github.io/nc-clicker-game-v1</a> in your browser. Tap CONNECT WALLET → Tonkeeper opens → Approve. No desktop needed.</p>
+      <!-- Panel: Friends (hidden by default) -->
+      <div class="settings-panel hidden" data-settings-panel="friends">
+        <p class="text-gray-500 text-[9px] mb-2">Your code: <span id="referral-code" class="neon-text-cyan">------</span></p>
+        <div class="mb-2 flex flex-col items-center">
+          <div class="text-[9px] text-gray-500 uppercase tracking-wider mb-1">Scan to join with my code</div>
+          <div id="friends-invite-qrcode" class="inline-block p-2 bg-white rounded border-2 border-gray-600 shrink-0 mb-2" aria-hidden="true"></div>
+          <button type="button" id="friends-scan-qr-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10 shrink-0" title="Scan a friend's invite QR">📷 Scan QR</button>
         </div>
-        <p class="text-gray-400 text-[9px] mb-1">1) Tap CONNECT WALLET on the Wallet tab → 2) Approve in Tonkeeper (green button) → 3) Return here. If it didn’t detect, tap below:</p>
-        <button type="button" id="ton-check-connection-btn" class="w-full mt-2 py-2 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10 font-bold">I APPROVED – CHECK CONNECTION</button>
-        <p class="text-neon-yellow text-[8px] mt-2">On desktop localhost: run the backend or use the <a href="https://biggleem.github.io/nc-clicker-game-v1" target="_blank" rel="noopener" class="underline">live site</a>.</p>
+        <button type="button" id="invite-btn" class="w-full py-2 px-4 border-2 border-neon-cyan text-neon-cyan rounded hover:bg-neon-cyan/10 text-[10px] mb-2">COPY INVITE LINK</button>
+        <p id="invite-feedback" class="text-neon-green text-[9px] mb-2 hidden">Link copied! Send to friends—when they open it, your code is applied.</p>
+        <button type="button" id="share-game-btn" class="w-full py-2 px-4 border-2 border-neon-pink text-neon-pink rounded text-[10px] font-bold hover:bg-neon-pink/10 mb-2">COPY GAME LINK</button>
+        <p id="share-game-feedback" class="text-neon-green text-[9px] mb-3 hidden">Link copied!</p>
+        <div class="text-[9px] text-gray-500 uppercase tracking-wider mb-1">Your friends</div>
+        <p class="text-gray-500 text-[8px] mb-1">People who used your link or you added by code. Tap DUEL to challenge. Star (☆/★) to add favorite players—they appear at the top.</p>
+        <ol id="friends-invited-list" class="space-y-1 text-[10px] min-h-[24px] mb-2"><li class="text-gray-500">Loading…</li></ol>
+        <ol id="friends-added-list" class="space-y-1 text-[10px] min-h-[24px] mb-3"><li class="text-gray-500">Loading…</li></ol>
+        <div id="friend-requests-section" class="hidden mt-2 pt-2 border-t border-gray-800/60 mb-3">
+          <div class="text-[9px] text-gray-500 uppercase tracking-wider">Pending requests</div>
+          <p id="friend-request-feedback" class="text-[10px] mt-1 mb-1 min-h-[14px] px-2 py-1 rounded hidden"></p>
+          <ol id="friend-requests-list" class="space-y-2 text-[10px] min-h-[24px]"></ol>
+        </div>
+        <div class="mb-3">
+          <button type="button" id="friends-play-vs-computer-btn" class="w-full py-2 px-4 border-2 border-neon-yellow text-neon-yellow rounded text-[10px] hover:bg-neon-yellow/10">ENTER TRAINING</button>
+        </div>
+        <div class="pt-2 border-t border-gray-800/60">
+          <div class="text-[9px] text-gray-500 mb-1">Add friend by invite code</div>
+          <div class="flex gap-2 flex-wrap items-center">
+            <input type="text" id="friend-code-input" placeholder="E.G. REFABC12" maxlength="20" class="flex-1 min-w-[100px] bg-black border-2 border-gray-600 rounded px-2 py-1.5 text-neon-cyan text-[10px] uppercase" />
+            <button type="button" id="friend-code-add-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">ADD FRIEND</button>
+          </div>
+          <p id="friend-code-feedback" class="text-[9px] min-h-[14px] hidden"></p>
+        </div>
       </div>
-      <div class="mt-4 pt-3 border-t border-gray-700">
-        <p class="text-neon-yellow text-[10px] font-bold mb-2">LEVELS & DEATH RULES</p>
-        <p class="text-gray-400 text-[9px] mb-1">Levels (by total taps):</p>
-        <ul class="text-gray-500 text-[8px] mb-2 space-y-0.5 list-none">
-          <li>🥚 Egg: 0</li>
-          <li>🐣 Chick Lv.1–10: 1–99, 100–199, … 900–999</li>
-          <li>🐦 Adult Lv.1–10: 1,000–1,099, … 1,900–1,999</li>
-          <li>🏅 Elite Lv.1–10: 2,000–2,099, … 2,900–2,999</li>
-          <li>🏆 Legend Lv.1–10: 3,000+</li>
-        </ul>
-        <p class="text-gray-400 text-[9px] mb-1">Death: If away &gt; 48 hours, your bird dies 🕊️</p>
-        <p class="text-gray-400 text-[9px] mb-1">Revive: 10 tokens or 10% of balance (whichever is higher). A friend can send you tokens if you have none. Or wait 48 hours for the egg to hatch (free revive).</p>
+      <!-- Panel: Wallet (hidden by default) -->
+      <div class="settings-panel hidden" data-settings-panel="wallet">
+        <div class="mb-3">
+          <p class="text-neon-cyan text-[10px] font-bold mb-2">WALLET STATUS</p>
+          <p id="wallet-settings-connection" class="text-[9px] text-gray-400 mb-2">—</p>
+        </div>
+        <div class="pt-3 border-t border-gray-700">
+          <p class="text-neon-cyan text-[10px] font-bold mb-2">WALLET HELP</p>
+          <div class="p-2 rounded border-2 border-neon-green/50 bg-neon-green/5 mb-2">
+            <p class="text-neon-green text-[9px] font-bold">📱 On phone</p>
+            <p class="text-gray-300 text-[9px] mt-1">Open <a href="https://biggleem.github.io/nc-clicker-game-v1" target="_blank" rel="noopener" class="text-neon-cyan underline">biggleem.github.io/nc-clicker-game-v1</a> in your browser. Tap CONNECT WALLET → Tonkeeper opens → Approve. No desktop needed.</p>
+          </div>
+          <p class="text-gray-400 text-[9px] mb-1">1) Tap CONNECT WALLET on the Wallet tab → 2) Approve in Tonkeeper (green button) → 3) Return here. If it didn't detect, tap below:</p>
+          <button type="button" id="ton-check-connection-btn" class="w-full mt-2 py-2 border-2 border-neon-green text-neon-green rounded text-[10px] hover:bg-neon-green/10 font-bold">I APPROVED – CHECK CONNECTION</button>
+          <p class="text-neon-yellow text-[8px] mt-2">On desktop localhost: run the backend or use the <a href="https://biggleem.github.io/nc-clicker-game-v1" target="_blank" rel="noopener" class="underline">live site</a>.</p>
+        </div>
       </div>
-      <button type="button" id="wallet-settings-replay-intro" class="mt-2 w-full py-2 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:bg-gray-700">REPLAY INTRO</button>
+      <!-- Panel: Info (hidden by default) -->
+      <div class="settings-panel hidden" data-settings-panel="info">
+        <div class="mb-3">
+          <p class="text-neon-yellow text-[10px] font-bold mb-2">LEVELS & DEATH RULES</p>
+          <p class="text-gray-400 text-[9px] mb-1">Levels (by total taps):</p>
+          <ul class="text-gray-500 text-[8px] mb-2 space-y-0.5 list-none">
+            <li>🥚 Egg: 0</li>
+            <li>🐣 Chick Lv.1–10: 1–99, 100–199, … 900–999</li>
+            <li>🐦 Adult Lv.1–10: 1,000–1,099, … 1,900–1,999</li>
+            <li>🏅 Elite Lv.1–10: 2,000–2,099, … 2,900–2,999</li>
+            <li>🏆 Legend Lv.1–10: 3,000+</li>
+          </ul>
+          <p class="text-gray-400 text-[9px] mb-1">Death: If away &gt; 48 hours, your bird dies 🕊️</p>
+          <p class="text-gray-400 text-[9px] mb-1">Revive: 10 tokens or 10% of balance (whichever is higher). A friend can send you tokens if you have none. Or wait 48 hours for the egg to hatch (free revive).</p>
+        </div>
+        <button type="button" id="wallet-settings-replay-intro" class="w-full py-2 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:bg-gray-700">REPLAY INTRO</button>
+      </div>
+      <!-- Close button (always visible) -->
       <button type="button" id="wallet-settings-modal-close" class="mt-4 w-full py-2 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">CLOSE</button>
     </div>
   </div>
@@ -472,44 +522,6 @@
     </div>
   </div>
   <!-- Friends modal: invite & requests (opened by FRIENDS button in header) -->
-  <div id="friends-modal" class="hidden" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
-    <div class="bg-pixel-panel border-2 border-neon-cyan/50 rounded-lg p-4 max-w-sm w-full my-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between gap-2 mb-3 border-b border-gray-700 pb-2">
-        <p class="text-neon-cyan text-[10px] font-bold">FRIENDS — INVITE & REQUESTS</p>
-        <button type="button" id="friends-modal-close" class="p-1.5 border-2 border-gray-500 text-gray-400 rounded text-[9px] hover:bg-gray-700" aria-label="Close">✕</button>
-      </div>
-      <p class="text-gray-500 text-[9px] mb-2">Your code: <span id="referral-code" class="neon-text-cyan">------</span></p>
-      <div class="mb-2 flex flex-col items-center">
-        <div class="text-[9px] text-gray-500 uppercase tracking-wider mb-1">Scan to join with my code</div>
-        <div id="friends-invite-qrcode" class="inline-block p-2 bg-white rounded border-2 border-gray-600 shrink-0 mb-2" aria-hidden="true"></div>
-        <button type="button" id="friends-scan-qr-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10 shrink-0" title="Scan a friend's invite QR">📷 Scan QR</button>
-      </div>
-      <button type="button" id="invite-btn" class="w-full py-2 px-4 border-2 border-neon-cyan text-neon-cyan rounded hover:bg-neon-cyan/10 text-[10px] mb-2">COPY INVITE LINK</button>
-      <p id="invite-feedback" class="text-neon-green text-[9px] mb-2 hidden">Link copied! Send to friends—when they open it, your code is applied.</p>
-      <button type="button" id="share-game-btn" class="w-full py-2 px-4 border-2 border-neon-pink text-neon-pink rounded text-[10px] font-bold hover:bg-neon-pink/10 mb-2">COPY GAME LINK</button>
-      <p id="share-game-feedback" class="text-neon-green text-[9px] mb-3 hidden">Link copied!</p>
-      <div class="text-[9px] text-gray-500 uppercase tracking-wider mb-1">Your friends</div>
-      <p class="text-gray-500 text-[8px] mb-1">People who used your link or you added by code. Tap DUEL to challenge. Star (☆/★) to add favorite players—they appear at the top.</p>
-      <ol id="friends-invited-list" class="space-y-1 text-[10px] min-h-[24px] mb-2"><li class="text-gray-500">Loading…</li></ol>
-      <ol id="friends-added-list" class="space-y-1 text-[10px] min-h-[24px] mb-3"><li class="text-gray-500">Loading…</li></ol>
-      <div id="friend-requests-section" class="hidden mt-2 pt-2 border-t border-gray-800/60 mb-3">
-        <div class="text-[9px] text-gray-500 uppercase tracking-wider">Pending requests</div>
-        <p id="friend-request-feedback" class="text-[10px] mt-1 mb-1 min-h-[14px] px-2 py-1 rounded hidden"></p>
-        <ol id="friend-requests-list" class="space-y-2 text-[10px] min-h-[24px]"></ol>
-      </div>
-      <div class="mb-3">
-        <button type="button" id="friends-play-vs-computer-btn" class="w-full py-2 px-4 border-2 border-neon-yellow text-neon-yellow rounded text-[10px] hover:bg-neon-yellow/10">ENTER TRAINING</button>
-      </div>
-      <div class="pt-2 border-t border-gray-800/60">
-        <div class="text-[9px] text-gray-500 mb-1">Add friend by invite code</div>
-        <div class="flex gap-2 flex-wrap items-center">
-          <input type="text" id="friend-code-input" placeholder="E.G. REFABC12" maxlength="20" class="flex-1 min-w-[100px] bg-black border-2 border-gray-600 rounded px-2 py-1.5 text-neon-cyan text-[10px] uppercase" />
-          <button type="button" id="friend-code-add-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">ADD FRIEND</button>
-        </div>
-        <p id="friend-code-feedback" class="text-[9px] min-h-[14px] hidden"></p>
-      </div>
-    </div>
-  </div>
   <!-- Friends: scan QR to add friend by their invite code -->
   <div id="friends-scan-qr-modal" class="hidden" style="position:fixed;inset:0;z-index:10004;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-4 max-w-sm w-full">
@@ -1253,7 +1265,6 @@
     <section id="page-multiplayer" class="page p-4">
       <div class="flex items-center justify-between gap-2 mb-4 border-b-2 border-gray-700 pb-2">
         <h2 class="text-neon-pink">MULTIPLAYER</h2>
-        <button type="button" id="header-friends-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10 shrink-0">ADD FRIENDS</button>
       </div>
       <p class="text-gray-400 mb-4">Share the game. When friends open the link on their phone, they can play and challenge you.</p>
       <!-- PVP leaderboard: wins and tokens won from duels -->
@@ -2403,6 +2414,20 @@
       if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
       if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
     }
+    function aggregatePvpLeaderboard(data, limit) {
+      var byName = {};
+      data.forEach(function(e) {
+        var name = (e.name || 'Player').trim() || 'Player';
+        var w = e.pvp_wins != null ? Number(e.pvp_wins) : 0;
+        var tok = e.pvp_tokens_won != null ? Number(e.pvp_tokens_won) : 0;
+        if (!byName[name]) byName[name] = { wins: 0, tokensWon: 0 };
+        byName[name].wins += w;
+        byName[name].tokensWon += tok;
+      });
+      return Object.keys(byName).map(function(name) {
+        return { name: name, wins: byName[name].wins, tokensWon: byName[name].tokensWon };
+      }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, limit);
+    }
     function loadLeaderboardPvp() {
       var supabase = window.supabaseClient;
       var tbody = document.getElementById('leaderboard-pvp-tbody');
@@ -2414,40 +2439,26 @@
       }
       var hadContent = tbody.innerHTML && tbody.innerHTML.indexOf('Loading') < 0 && tbody.innerHTML.indexOf('No duel wins') < 0 && tbody.innerHTML.indexOf('unavailable') < 0;
       if (!hadContent) setAll('<tr><td colspan="4" class="py-2 px-2 text-gray-500">Loading…</td></tr>');
+      function renderRows(data) {
+        if (!data || data.length === 0) {
+          setAll('<tr><td colspan="4" class="py-2 px-2 text-gray-500">No duel wins yet.</td></tr>');
+          return;
+        }
+        var sorted = aggregatePvpLeaderboard(data, 5);
+        setAll(sorted.map(function(e, i) {
+          var name = (e.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          return '<tr class="border-b border-gray-700/50"><td class="py-1.5 px-2">' + (i + 1) + '</td><td class="py-1.5 px-2">' + name + '</td><td class="py-1.5 px-2">' + e.wins + '</td><td class="py-1.5 px-2">' + e.tokensWon + '</td></tr>';
+        }).join(''));
+      }
       supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').not('pvp_wins', 'is', null).then(function(r) {
         if (r.error) {
           supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').not('pvp_wins', 'is', null).then(function(r2) {
-            if (r2.error || !r2.data || r2.data.length === 0) { setAll('<tr><td colspan="4" class="py-2 px-2 text-gray-500">No duel wins yet.</td></tr>'); return; }
-            var byName = {};
-            r2.data.forEach(function(e) {
-              var name = (e.name || 'Player').trim() || 'Player';
-              var w = e.pvp_wins != null ? Number(e.pvp_wins) : 0;
-              var tok = (e.pvp_tokens_won != null ? Number(e.pvp_tokens_won) : 0);
-              if (!byName[name]) byName[name] = { wins: 0, tokensWon: 0 };
-              byName[name].wins += w;
-              byName[name].tokensWon += tok;
-            });
-            var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name].wins, tokensWon: byName[name].tokensWon }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 5);
-            setAll(sorted.map(function(e, i) { return '<tr class="border-b border-gray-700/50"><td class="py-1.5 px-2">' + (i + 1) + '</td><td class="py-1.5 px-2">' + (e.name || '').replace(/</g, '&lt;') + '</td><td class="py-1.5 px-2">' + e.wins + '</td><td class="py-1.5 px-2">' + e.tokensWon + '</td></tr>'; }).join(''));
+            if (r2.error || !r2.data) { setAll('<tr><td colspan="4" class="py-2 px-2 text-gray-500">No duel wins yet.</td></tr>'); return; }
+            renderRows(r2.data);
           });
           return;
         }
-        if (!r.data || r.data.length === 0) { setAll('<tr><td colspan="4" class="py-2 px-2 text-gray-500">No duel wins yet.</td></tr>'); return; }
-        var byName = {};
-        r.data.forEach(function(e) {
-          var name = (e.name || 'Player').trim() || 'Player';
-          var w = e.pvp_wins != null ? Number(e.pvp_wins) : 0;
-          var tok = e.pvp_tokens_won != null ? Number(e.pvp_tokens_won) : 0;
-          if (!byName[name]) byName[name] = { wins: 0, tokensWon: 0 };
-          byName[name].wins += w;
-          byName[name].tokensWon += tok;
-        });
-        var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name].wins, tokensWon: byName[name].tokensWon }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 5);
-        var html = sorted.map(function(e, i) {
-          var name = (e.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-          return '<tr class="border-b border-gray-700/50"><td class="py-1.5 px-2">' + (i + 1) + '</td><td class="py-1.5 px-2">' + name + '</td><td class="py-1.5 px-2">' + e.wins + '</td><td class="py-1.5 px-2">' + e.tokensWon + '</td></tr>';
-        }).join('');
-        setAll(html);
+        renderRows(r.data);
       });
     }
     function loadPvpFullList() {
@@ -2456,39 +2467,26 @@
       if (!list) return;
       if (!supabase) { list.innerHTML = '<li class="text-gray-500">Leaderboard unavailable.</li>'; return; }
       list.innerHTML = '<li class="text-gray-500">Loading…</li>';
-      supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').not('pvp_wins', 'is', null).then(function(r) {
-        if (r.error) {
-          supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').not('pvp_wins', 'is', null).then(function(r2) {
-            if (r2.error || !r2.data || r2.data.length === 0) { list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>'; return; }
-            var byName = {};
-            r2.data.forEach(function(e) {
-              var name = (e.name || 'Player').trim() || 'Player';
-              var w = e.pvp_wins != null ? Number(e.pvp_wins) : 0;
-              var tok = e.pvp_tokens_won != null ? Number(e.pvp_tokens_won) : 0;
-              if (!byName[name]) byName[name] = { wins: 0, tokensWon: 0 };
-              byName[name].wins += w;
-              byName[name].tokensWon += tok;
-            });
-            var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name].wins, tokensWon: byName[name].tokensWon }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 100);
-            list.innerHTML = sorted.map(function(e) { var tok = e.tokensWon; return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + ', ' + tok + ' token' + (tok !== 1 ? 's' : '') + ' won</li>'; }).join('');
-          });
+      function renderList(data) {
+        if (!data || data.length === 0) {
+          list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>';
           return;
         }
-        if (!r.data || r.data.length === 0) { list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>'; return; }
-        var byName = {};
-        r.data.forEach(function(e) {
-          var name = (e.name || 'Player').trim() || 'Player';
-          var w = e.pvp_wins != null ? Number(e.pvp_wins) : 0;
-          var tok = e.pvp_tokens_won != null ? Number(e.pvp_tokens_won) : 0;
-          if (!byName[name]) byName[name] = { wins: 0, tokensWon: 0 };
-          byName[name].wins += w;
-          byName[name].tokensWon += tok;
-        });
-        var sorted = Object.keys(byName).map(function(name) { return { name: name, wins: byName[name].wins, tokensWon: byName[name].tokensWon }; }).sort(function(a, b) { return b.wins - a.wins; }).slice(0, 100);
+        var sorted = aggregatePvpLeaderboard(data, 100);
         list.innerHTML = sorted.map(function(e) {
           var tok = e.tokensWon;
           return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + ', ' + tok + ' token' + (tok !== 1 ? 's' : '') + ' won</li>';
         }).join('');
+      }
+      supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').not('pvp_wins', 'is', null).then(function(r) {
+        if (r.error) {
+          supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').not('pvp_wins', 'is', null).then(function(r2) {
+            if (r2.error || !r2.data) { list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>'; return; }
+            renderList(r2.data);
+          });
+          return;
+        }
+        renderList(r.data);
       });
     }
 
@@ -4035,8 +4033,9 @@
         if (r && (r in cache.byRefCode)) { mergeFriendTokenCache(null, { [r]: t }, null); changed = true; }
         if (p && (p in cache.byPlayerId)) { mergeFriendTokenCache(null, null, { [p]: t }); changed = true; }
         if (changed) {
-          var fm = document.getElementById('friends-modal');
-          if (fm && !fm.classList.contains('hidden')) {
+          var settingsModal = document.getElementById('wallet-settings-modal');
+          var friendsPanel = document.querySelector('.settings-panel[data-settings-panel="friends"]');
+          if (settingsModal && !settingsModal.classList.contains('hidden') && friendsPanel && !friendsPanel.classList.contains('hidden')) {
             if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
             if (typeof loadFriendRequests === 'function') loadFriendRequests();
             if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
@@ -4179,8 +4178,9 @@
     function startFriendsTokenPolling() {
       if (friendsPollInterval) return;
       friendsPollInterval = setInterval(function() {
-        var fm = document.getElementById('friends-modal');
-        var onFriends = fm && !fm.classList.contains('hidden');
+        var settingsModal = document.getElementById('wallet-settings-modal');
+        var friendsPanel = document.querySelector('.settings-panel[data-settings-panel="friends"]');
+        var onFriends = settingsModal && !settingsModal.classList.contains('hidden') && friendsPanel && !friendsPanel.classList.contains('hidden');
         if (onFriends) {
           if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
           if (typeof loadFriendRequests === 'function') loadFriendRequests();
@@ -4755,7 +4755,56 @@
         updateUI();
       }
     });
-    function openWalletSettingsModal() {
+    // Settings modal tab switching (same pattern as boosts tabs)
+    function showSettingsTab(tabId) {
+      tabId = tabId || 'general';
+      document.querySelectorAll('.settings-tab-btn').forEach(function(btn) {
+        var t = btn.getAttribute('data-settings-tab');
+        if (t === tabId) {
+          btn.classList.remove('border-gray-600', 'text-gray-400');
+          btn.classList.add('border-neon-cyan', 'text-neon-cyan', 'bg-neon-cyan/10', 'font-bold');
+        } else {
+          btn.classList.add('border-gray-600', 'text-gray-400');
+          btn.classList.remove('border-neon-cyan', 'text-neon-cyan', 'bg-neon-cyan/10', 'font-bold',
+            'border-neon-green', 'text-neon-green', 'bg-neon-green/10',
+            'border-neon-yellow', 'text-neon-yellow', 'bg-neon-yellow/10');
+        }
+      });
+      document.querySelectorAll('.settings-panel').forEach(function(panel) {
+        var p = panel.getAttribute('data-settings-panel');
+        if (p === tabId) { panel.classList.remove('hidden'); } else { panel.classList.add('hidden'); }
+      });
+      if (tabId === 'friends') { initFriendsPanel(); }
+      if (tabId !== 'friends') { stopFriendsTokenPolling(); }
+      try { localStorage.setItem('tokenClicker_settingsTab', tabId); } catch (e) {}
+    }
+    function initFriendsPanel() {
+      var refCode = localStorage.getItem('tokenClicker_refCode');
+      if (!refCode || !refCode.trim()) {
+        refCode = 'REF' + Math.random().toString(36).slice(2, 8).toUpperCase();
+        try { localStorage.setItem('tokenClicker_refCode', refCode); } catch (e) {}
+      }
+      refCode = (refCode || '').trim().toUpperCase();
+      var refEl = document.getElementById('referral-code');
+      if (refEl) refEl.textContent = refCode || '------';
+      var qrContainer = document.getElementById('friends-invite-qrcode');
+      if (qrContainer && refCode && typeof QRCode !== 'undefined') {
+        qrContainer.innerHTML = '';
+        var inviteUrl = (typeof getInviteUrl === 'function' ? getInviteUrl() : ((window.TON_CONFIG && window.TON_CONFIG.gameBaseUrl) || (window.location.origin + window.location.pathname).replace(/\/$/, '')) + '/?ref=' + encodeURIComponent(refCode));
+        try { new QRCode(qrContainer, { text: inviteUrl, width: 120, height: 120 }); } catch (e) {}
+      }
+      if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
+      if (typeof loadFriendRequests === 'function') loadFriendRequests();
+      if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
+      startFriendsTokenPolling();
+      if (typeof subscribeFriendRequestsRealtime === 'function') subscribeFriendRequestsRealtime();
+      if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
+      if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
+    }
+    document.querySelectorAll('.settings-tab-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { showSettingsTab(btn.getAttribute('data-settings-tab')); });
+    });
+    function openWalletSettingsModal(initialTab) {
       if (typeof updateProfileDisplayName === 'function') updateProfileDisplayName();
       var connEl = document.getElementById('wallet-settings-connection');
       if (connEl) {
@@ -4776,12 +4825,16 @@
       if (notifModal) { notifModal.classList.add('hidden'); notifModal.style.display = 'none'; }
       var modal = document.getElementById('wallet-settings-modal');
       if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
+      // Set tab: use provided initialTab, else last saved tab, else 'general'
+      var tab = initialTab || localStorage.getItem('tokenClicker_settingsTab') || 'general';
+      showSettingsTab(tab);
     }
-    document.getElementById('header-settings-btn') && document.getElementById('header-settings-btn').addEventListener('click', openWalletSettingsModal);
-    document.getElementById('wallet-need-help-btn') && document.getElementById('wallet-need-help-btn').addEventListener('click', openWalletSettingsModal);
+    document.getElementById('header-settings-btn') && document.getElementById('header-settings-btn').addEventListener('click', function() { openWalletSettingsModal(); });
+    document.getElementById('wallet-need-help-btn') && document.getElementById('wallet-need-help-btn').addEventListener('click', function() { openWalletSettingsModal('wallet'); });
     function closeWalletSettingsModal() {
       var modal = document.getElementById('wallet-settings-modal');
       if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+      stopFriendsTokenPolling();
     }
     document.getElementById('wallet-settings-modal-close') && document.getElementById('wallet-settings-modal-close').addEventListener('click', closeWalletSettingsModal);
     document.getElementById('wallet-settings-modal-close-x') && document.getElementById('wallet-settings-modal-close-x').addEventListener('click', closeWalletSettingsModal);
@@ -4789,41 +4842,9 @@
     document.getElementById('wallet-settings-modal') && document.getElementById('wallet-settings-modal').addEventListener('click', function (e) {
       if (e.target === this) closeWalletSettingsModal();
     });
-    function openFriendsModal() {
-      var refCode = localStorage.getItem('tokenClicker_refCode');
-      if (!refCode || !refCode.trim()) {
-        refCode = 'REF' + Math.random().toString(36).slice(2, 8).toUpperCase();
-        try { localStorage.setItem('tokenClicker_refCode', refCode); } catch (e) {}
-      }
-      refCode = (refCode || '').trim().toUpperCase();
-      var refEl = document.getElementById('referral-code');
-      if (refEl) refEl.textContent = refCode || '------';
-      var qrContainer = document.getElementById('friends-invite-qrcode');
-      if (qrContainer && refCode && typeof QRCode !== 'undefined') {
-        qrContainer.innerHTML = '';
-        var inviteUrl = (typeof getInviteUrl === 'function' ? getInviteUrl() : ((window.TON_CONFIG && window.TON_CONFIG.gameBaseUrl) || (window.location.origin + window.location.pathname).replace(/\/$/, '')) + '/?ref=' + encodeURIComponent(refCode));
-        try { new QRCode(qrContainer, { text: inviteUrl, width: 120, height: 120 }); } catch (e) {}
-      }
-      var modal = document.getElementById('friends-modal');
-      if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
-      if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
-      if (typeof loadFriendRequests === 'function') loadFriendRequests();
-      if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
-      startFriendsTokenPolling();
-      if (typeof subscribeFriendRequestsRealtime === 'function') subscribeFriendRequestsRealtime();
-      if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
-      if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
-    }
-    function closeFriendsModal() {
-      var modal = document.getElementById('friends-modal');
-      if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
-      stopFriendsTokenPolling();
-    }
-    document.getElementById('header-friends-btn') && document.getElementById('header-friends-btn').addEventListener('click', openFriendsModal);
-    document.getElementById('friends-modal-close') && document.getElementById('friends-modal-close').addEventListener('click', closeFriendsModal);
-    document.getElementById('friends-modal') && document.getElementById('friends-modal').addEventListener('click', function(e) {
-      if (e.target && e.target.id === 'friends-modal') closeFriendsModal();
-    });
+    // Friends modal wrappers (for backward compatibility with other code that calls openFriendsModal)
+    function openFriendsModal() { openWalletSettingsModal('friends'); }
+    function closeFriendsModal() { closeWalletSettingsModal(); }
     document.getElementById('wallet-settings-replay-intro') && document.getElementById('wallet-settings-replay-intro').addEventListener('click', function() {
       var modal = document.getElementById('wallet-settings-modal');
       if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
