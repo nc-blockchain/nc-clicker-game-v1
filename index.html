@@ -3487,11 +3487,12 @@
         })
         .catch(() => {});
     }
-    // Wallet: backend / admin links in black square (open in new tab)
+    // Wallet: backend / admin links in black square (only for admins)
     var walletBackendSquare = document.getElementById('wallet-backend-square');
     var walletBackendLink = document.getElementById('wallet-backend-link');
     var walletAdminSetupLink = document.getElementById('wallet-admin-setup-link');
-    if (backendUrl) {
+    var isAdmin = localStorage.getItem('tokenClicker_admin') === 'true';
+    if (backendUrl && isAdmin) {
       if (walletBackendSquare) walletBackendSquare.classList.remove('hidden');
       if (walletBackendLink) walletBackendLink.href = backendUrl.replace(/\/$/, '');
       if (walletAdminSetupLink) walletAdminSetupLink.href = backendUrl.replace(/\/$/, '') + '/setup';
@@ -4769,6 +4770,9 @@
           connEl.classList.add('text-gray-400');
         }
       }
+      // Close notifications modal if open
+      var notifModal = document.getElementById('notifications-modal');
+      if (notifModal) { notifModal.classList.add('hidden'); notifModal.style.display = 'none'; }
       var modal = document.getElementById('wallet-settings-modal');
       if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
     }
@@ -4780,6 +4784,10 @@
     }
     document.getElementById('wallet-settings-modal-close') && document.getElementById('wallet-settings-modal-close').addEventListener('click', closeWalletSettingsModal);
     document.getElementById('wallet-settings-modal-close-x') && document.getElementById('wallet-settings-modal-close-x').addEventListener('click', closeWalletSettingsModal);
+    // Click outside settings modal to close
+    document.getElementById('wallet-settings-modal') && document.getElementById('wallet-settings-modal').addEventListener('click', function (e) {
+      if (e.target === this) closeWalletSettingsModal();
+    });
     function openFriendsModal() {
       var refCode = localStorage.getItem('tokenClicker_refCode');
       if (!refCode || !refCode.trim()) {
@@ -4922,14 +4930,22 @@
     document.getElementById('notifications-btn') && document.getElementById('notifications-btn').addEventListener('click', function () {
       var modal = document.getElementById('notifications-modal');
       if (!modal) return;
+      // Close settings modal if open
+      var settingsModal = document.getElementById('wallet-settings-modal');
+      if (settingsModal) { settingsModal.classList.add('hidden'); settingsModal.style.display = 'none'; }
       updateNotificationsPermissionLabel();
       renderNotificationsList();
       modal.classList.remove('hidden');
       modal.style.display = 'flex';
     });
-    document.getElementById('notifications-close') && document.getElementById('notifications-close').addEventListener('click', function () {
+    document.getElementById('notifications-close') && document.getElementById('notifications-close').addEventListener('click', function (e) {
+      e.stopPropagation();
       var modal = document.getElementById('notifications-modal');
       if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+    });
+    // Click outside notifications modal to close
+    document.getElementById('notifications-modal') && document.getElementById('notifications-modal').addEventListener('click', function (e) {
+      if (e.target === this) { this.classList.add('hidden'); this.style.display = 'none'; }
     });
     document.getElementById('pvp-full-list-btn') && document.getElementById('pvp-full-list-btn').addEventListener('click', function () {
       var modal = document.getElementById('pvp-full-list-modal');
