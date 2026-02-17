@@ -1369,6 +1369,10 @@
         <div class="bg-pixel-panel border-2 border-neon-pink/50 rounded-lg p-4 shadow-lg">
           <p class="text-neon-pink text-[10px] font-bold mb-2 text-center">CLICK RACE — 30 SEC</p>
           <p id="pvp-duel-timer" class="text-center text-neon-yellow text-sm mb-3">0:30</p>
+          <div id="pvp-duel-boost-indicator" class="hidden text-center mb-2">
+            <p id="pvp-duel-my-boost-label" class="text-[8px] text-neon-cyan font-bold"></p>
+            <p id="pvp-duel-opp-boost-label" class="text-[8px] text-gray-500 mt-0.5"></p>
+          </div>
           <div class="grid grid-cols-2 gap-3">
             <div id="pvp-duel-you" class="bg-black/40 border-2 border-neon-cyan rounded-lg p-3 text-center">
               <p id="pvp-duel-you-name" class="text-neon-cyan text-[10px] font-bold truncate">You</p>
@@ -1385,11 +1389,10 @@
           </div>
           <div id="pvp-duel-waiting" class="text-center text-gray-500 text-[9px] mt-2 hidden">
             <p class="font-bold text-neon-cyan mb-1">Waiting for opponent…</p>
-            <p>Share the room link with a friend. They join to start the race. Customize your boosts below before the race starts.</p>
+            <p>Share the room link with a friend. They join to start the race. Pick a duel boost below before the race starts!</p>
             <div class="flex items-center justify-center gap-2 mt-2 flex-wrap">
               <p id="pvp-duel-room-link" class="text-[8px] text-gray-600 break-all flex-1 min-w-0"></p>
-              <button type="button" id="pvp-duel-copy-link-btn" class="py-1 px-2 border-2 border-neon-cyan text-neon-cyan rounded text-[8px] hover:bg-neon-cyan/10 shrink-0">COPY</button>
-              <button type="button" id="pvp-duel-customize-boosts-btn" class="py-1 px-2 border-2 border-neon-cyan text-neon-cyan rounded text-[8px] hover:bg-neon-cyan/10 shrink-0">CUSTOMIZE BOOSTS</button>
+              <button type="button" id="pvp-duel-copy-link-btn" class="py-1 px-2 border-2 border-neon-cyan text-neon-cyan rounded text-[8px] hover:bg-neon-cyan/10 shrink-0">COPY LINK</button>
             </div>
           </div>
           <div id="pvp-duel-ready-wrap" class="text-center mt-3 hidden">
@@ -1397,8 +1400,9 @@
             <button type="button" id="pvp-duel-ready-btn" class="py-2 px-4 border-2 border-neon-green text-neon-green rounded text-[10px] font-bold hover:bg-neon-green/10">READY</button>
           </div>
           <div id="pvp-duel-boosts-wrap" class="mt-3">
-            <p class="text-neon-cyan text-[9px] font-bold mb-1.5 text-center">Use boosts during race</p>
-            <div id="pvp-duel-buff-strip" class="grid grid-cols-3 gap-2"></div>
+            <p class="text-neon-cyan text-[9px] font-bold mb-1.5 text-center">SELECT DUEL BOOST <span class="text-gray-500">(1 per duel)</span></p>
+            <div id="pvp-duel-boost-grid" class="grid grid-cols-3 gap-2"></div>
+            <p id="pvp-duel-boost-msg" class="text-[8px] text-gray-500 text-center mt-1.5">No boost selected — you can play without one.</p>
           </div>
           <div class="mt-3 text-center">
             <button type="button" id="pvp-duel-end-game-btn" class="py-2 px-4 border-2 border-neon-pink text-neon-pink rounded text-[9px] hover:bg-neon-pink/10">END GAME</button>
@@ -1467,6 +1471,16 @@
     const CRIT_PROC_DURATION_MS = 3 * 1000;
     const CRIT_ICD_MS = 4 * 1000;
     const MAX_ACTIVE_BUFFS = 2;
+    // --- Duel Boost catalog (one-shot, server-enforced) ---
+    var DUEL_BOOST_CATALOG = [
+      { id: 'duel_2x',        label: 'Double Tap',  icon: '2\u00d7', cost: 2, desc: 'Clicks x2 for 10s',        accent: 'neon-cyan' },
+      { id: 'duel_3x',        label: 'Triple Tap',  icon: '3\u00d7', cost: 4, desc: 'Clicks x3 for 10s',        accent: 'neon-yellow' },
+      { id: 'duel_burst',     label: 'Click Burst',  icon: '\ud83d\udca5', cost: 3, desc: '+15 clicks on 1st tap', accent: 'neon-pink' },
+      { id: 'duel_freeze',    label: 'Freeze',       icon: '\ud83e\uddf2', cost: 5, desc: 'Freeze opp 5s',         accent: 'blue-400' },
+      { id: 'duel_slow',      label: 'Slow',         icon: '\ud83d\udc0c', cost: 3, desc: 'Opp half-speed 8s',     accent: 'neon-green' },
+      { id: 'duel_headstart', label: 'Head Start',   icon: '\ud83d\ude80', cost: 2, desc: '+8 clicks at start',    accent: 'neon-cyan' }
+    ];
+    var DUEL_BOOST_DURATION_SEC = 10;
     const DEATH_IDLE_HOURS = 48;
     const REVIVE_PERCENT = 0.1;
     const REVIVE_MIN = 10;
@@ -2335,38 +2349,118 @@
       }
       return html;
     }
-    function renderDuelStripCards() {
-      var container = document.getElementById('pvp-duel-buff-strip');
+    function renderDuelBoostGrid() {
+      var container = document.getElementById('pvp-duel-boost-grid');
       if (!container) return;
-      container.innerHTML = buildBuffStripHtml();
+      container.innerHTML = DUEL_BOOST_CATALOG.map(function(b) {
+        var selected = pvpSelectedDuelBoost === b.id;
+        var canAfford = tokens >= b.cost || selected;
+        var borderCls = selected ? 'border-' + b.accent + ' ring-1 ring-' + b.accent : 'border-gray-600';
+        var dimCls = (!canAfford && !selected) ? ' opacity-40 pointer-events-none' : '';
+        return '<div class="duel-boost-card bg-black/50 border-2 ' + borderCls + ' rounded-lg p-2 text-center cursor-pointer transition-all' + dimCls + '" data-boost-id="' + b.id + '" data-boost-cost="' + b.cost + '">' +
+          '<div class="text-lg leading-none mb-0.5">' + b.icon + '</div>' +
+          '<p class="text-[8px] font-bold text-white truncate">' + b.label + '</p>' +
+          '<p class="text-[7px] text-gray-400 leading-tight">' + b.desc + '</p>' +
+          '<p class="text-[8px] text-neon-yellow font-bold mt-0.5">' + b.cost + ' tok</p>' +
+          '</div>';
+      }).join('');
+      // Attach click handlers
+      container.querySelectorAll('.duel-boost-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+          var boostId = card.getAttribute('data-boost-id');
+          var cost = parseInt(card.getAttribute('data-boost-cost'), 10);
+          selectDuelBoost(boostId, cost);
+        });
+      });
     }
-    function updateDuelStrip() {
-      var container = document.getElementById('pvp-duel-buff-strip');
-      var duelView = document.getElementById('pvp-duel-view');
-      if (!container || !duelView || duelView.classList.contains('hidden')) return;
-      if (container.children.length === 0 && typeof renderDuelStripCards === 'function') renderDuelStripCards();
-      var now = Date.now();
-      var cards = container.querySelectorAll('.home-strip-card');
-      function setCard(card, cost, boost) {
-        if (!card) return;
-        var btn = card.querySelector('.home-strip-btn');
-        var st = getBuffState(boost);
-        var canAfford = tokens >= cost && !st.blocked;
-        card.classList.toggle('opacity-50', !canAfford);
-        card.classList.toggle('pointer-events-none', !canAfford);
-        if (btn) {
-          btn.style.display = canAfford ? '' : 'none';
-          if (canAfford) {
-            btn.textContent = st.active ? getBuffCountdown(st.until) + 's' : 'USE';
-            btn.disabled = tokens < cost || st.blocked;
+    function selectDuelBoost(boostId, cost) {
+      if (pvpSelectedDuelBoost === boostId) {
+        // Deselect — refund
+        tokens += pvpDuelBoostCostDeducted;
+        pvpSelectedDuelBoost = null;
+        pvpDuelBoostCostDeducted = 0;
+      } else {
+        // Refund old selection if any
+        if (pvpDuelBoostCostDeducted > 0) tokens += pvpDuelBoostCostDeducted;
+        // Check can afford
+        if (tokens < cost) return;
+        tokens -= cost;
+        pvpSelectedDuelBoost = boostId;
+        pvpDuelBoostCostDeducted = cost;
+      }
+      if (typeof save === 'function') save();
+      if (typeof updateUI === 'function') updateUI();
+      renderDuelBoostGrid();
+      updateDuelBoostMsg();
+    }
+    function updateDuelBoostMsg() {
+      var msg = document.getElementById('pvp-duel-boost-msg');
+      if (!msg) return;
+      if (!pvpSelectedDuelBoost) {
+        msg.textContent = 'No boost selected \u2014 you can play without one.';
+        msg.className = 'text-[8px] text-gray-500 text-center mt-1.5';
+        return;
+      }
+      var b = DUEL_BOOST_CATALOG.find(function(x) { return x.id === pvpSelectedDuelBoost; });
+      if (!b) return;
+      msg.textContent = 'Selected: ' + b.icon + ' ' + b.label + ' (' + b.cost + ' tokens)';
+      msg.className = 'text-[8px] text-' + b.accent + ' text-center mt-1.5 font-bold';
+    }
+    function getDuelBoostById(id) {
+      return DUEL_BOOST_CATALOG.find(function(x) { return x.id === id; }) || null;
+    }
+    function updateDuelBoostIndicator(room) {
+      var indicator = document.getElementById('pvp-duel-boost-indicator');
+      var myLabel = document.getElementById('pvp-duel-my-boost-label');
+      var oppLabel = document.getElementById('pvp-duel-opp-boost-label');
+      if (!indicator || !myLabel || !oppLabel) return;
+      var myBoostId = pvpDuelMyRole === 1 ? (room.player1_duel_boost || null) : (room.player2_duel_boost || null);
+      var oppBoostId = pvpDuelMyRole === 1 ? (room.player2_duel_boost || null) : (room.player1_duel_boost || null);
+      var activatedAt = pvpDuelBoostActivatedAt;
+      if (!myBoostId && !oppBoostId) { indicator.classList.add('hidden'); return; }
+      indicator.classList.remove('hidden');
+      // My boost
+      if (myBoostId) {
+        var mb = getDuelBoostById(myBoostId);
+        if (mb) {
+          var durMs = getDuelBoostDurMs(myBoostId);
+          var leftMs = activatedAt ? (activatedAt + durMs - Date.now()) : 0;
+          if (leftMs > 0) {
+            myLabel.textContent = 'YOUR BOOST: ' + mb.icon + ' ' + mb.label + ' \u2014 ' + Math.ceil(leftMs / 1000) + 's';
+            myLabel.className = 'text-[8px] text-' + mb.accent + ' font-bold';
+          } else if (myBoostId === 'duel_headstart' || myBoostId === 'duel_burst') {
+            myLabel.textContent = 'YOUR BOOST: ' + mb.icon + ' ' + mb.label + ' \u2714';
+            myLabel.className = 'text-[8px] text-gray-500 font-bold';
+          } else {
+            myLabel.textContent = 'YOUR BOOST: ' + mb.icon + ' ' + mb.label + ' \u2014 expired';
+            myLabel.className = 'text-[8px] text-gray-500 font-bold';
           }
         }
-      }
-      for (var i = 0; i < cards.length; i++) {
-        var c = cards[i];
-        setCard(c, parseInt(c.getAttribute('data-cost'), 10), c.getAttribute('data-boost'));
-      }
+      } else { myLabel.textContent = ''; }
+      // Opponent boost
+      if (oppBoostId) {
+        var ob = getDuelBoostById(oppBoostId);
+        if (ob) {
+          var durMs2 = getDuelBoostDurMs(oppBoostId);
+          var leftMs2 = activatedAt ? (activatedAt + durMs2 - Date.now()) : 0;
+          if (leftMs2 > 0) {
+            oppLabel.textContent = 'OPP BOOST: ' + ob.icon + ' ' + ob.label + ' \u2014 ' + Math.ceil(leftMs2 / 1000) + 's';
+            oppLabel.className = 'text-[8px] text-neon-pink mt-0.5 font-bold';
+          } else {
+            oppLabel.textContent = 'OPP BOOST: ' + ob.icon + ' ' + ob.label + ' \u2014 expired';
+            oppLabel.className = 'text-[8px] text-gray-500 mt-0.5';
+          }
+        }
+      } else { oppLabel.textContent = ''; }
     }
+    function getDuelBoostDurMs(boostId) {
+      if (boostId === 'duel_2x' || boostId === 'duel_3x') return 10000;
+      if (boostId === 'duel_freeze') return 5000;
+      if (boostId === 'duel_slow') return 8000;
+      return 0; // burst/headstart are instant
+    }
+    function renderDuelStripCards() { renderDuelBoostGrid(); }
+    function updateDuelStrip() { /* no-op: replaced by duel boost grid */ }
     function updateHomeStrip() {
       var now = Date.now();
       var cards = document.querySelectorAll('#home-strip-cards .home-strip-card');
@@ -5510,6 +5604,10 @@
     var pvpRematchCountdownId = null;
     var pvpRematchChannelUnsub = null;
     // Play vs Computer (no Supabase)
+    var pvpSelectedDuelBoost = null;
+    var pvpDuelBoostCostDeducted = 0;
+    var pvpOpponentDuelBoost = null;
+    var pvpDuelBoostActivatedAt = 0;
     var pvpVsBotMode = false;
     var pvpBotClicks = 0;
     var pvpMyClicksVsBot = 0;
@@ -5542,7 +5640,11 @@
       document.getElementById('pvp-duel-view').classList.remove('hidden');
       document.getElementById('pvp-duel-result').classList.add('hidden');
       document.getElementById('pvp-duel-waiting').classList.add('hidden');
-      if (typeof renderDuelStripCards === 'function') renderDuelStripCards();
+      // Hide duel boost grid in vs computer mode
+      var boostWrap = document.getElementById('pvp-duel-boosts-wrap');
+      if (boostWrap) boostWrap.classList.add('hidden');
+      var boostIndicator = document.getElementById('pvp-duel-boost-indicator');
+      if (boostIndicator) boostIndicator.classList.add('hidden');
       document.getElementById('pvp-duel-you-name').textContent = getPlayerName() || 'You';
       document.getElementById('pvp-duel-opp-name').textContent = 'Computer';
       document.getElementById('pvp-duel-you-clicks').textContent = '0';
@@ -5590,12 +5692,25 @@
     function enterDuel(roomId) {
       pvpDuelRoomId = roomId;
       pvpVsBotMode = false;
+      // Reset duel boost state
+      pvpSelectedDuelBoost = null;
+      pvpDuelBoostCostDeducted = 0;
+      pvpOpponentDuelBoost = null;
+      pvpDuelBoostActivatedAt = 0;
       var lobbyWrap = document.getElementById('pvp-lobby-wrap');
       if (lobbyWrap) lobbyWrap.style.display = 'none';
       document.getElementById('pvp-duel-view').classList.remove('hidden');
       document.getElementById('pvp-duel-result').classList.add('hidden');
       document.getElementById('pvp-duel-waiting').classList.add('hidden');
-      if (typeof renderDuelStripCards === 'function') renderDuelStripCards();
+      // Show boost grid, hide indicator
+      var boostWrap = document.getElementById('pvp-duel-boosts-wrap');
+      if (boostWrap) boostWrap.classList.remove('hidden');
+      var boostGrid = document.getElementById('pvp-duel-boost-grid');
+      if (boostGrid) { boostGrid.classList.remove('pointer-events-none'); boostGrid.classList.remove('opacity-50'); }
+      var boostIndicator = document.getElementById('pvp-duel-boost-indicator');
+      if (boostIndicator) boostIndicator.classList.add('hidden');
+      if (typeof renderDuelBoostGrid === 'function') renderDuelBoostGrid();
+      if (typeof updateDuelBoostMsg === 'function') updateDuelBoostMsg();
       var readyWrap = document.getElementById('pvp-duel-ready-wrap');
       if (readyWrap) readyWrap.classList.add('hidden');
       var me = getPvpPlayerId();
@@ -5611,6 +5726,8 @@
         document.getElementById('pvp-duel-opp-name').textContent = oppName;
         document.getElementById('pvp-duel-you-clicks').textContent = String(pvpDuelMyRole === 1 ? room.player1_clicks : room.player2_clicks);
         document.getElementById('pvp-duel-opp-clicks').textContent = String(pvpDuelMyRole === 1 ? room.player2_clicks : room.player1_clicks);
+        // Store boost activation time if game already started
+        if (room.player1_boost_activated_at) pvpDuelBoostActivatedAt = new Date(room.player1_boost_activated_at).getTime();
         var endsAt = room.game_ends_at ? new Date(room.game_ends_at).getTime() : 0;
         var needReady = room.status === 'in_progress' && !endsAt && room.player2_wallet && (typeof room.player1_ready === 'boolean' || typeof room.player2_ready === 'boolean');
         if (needReady) {
@@ -5623,17 +5740,24 @@
           if (readyWrap) readyWrap.classList.add('hidden');
           var linkEl = document.getElementById('pvp-duel-room-link');
           if (linkEl) linkEl.textContent = (getShareBaseUrl ? getShareBaseUrl() : window.location.href.split('?')[0]) + '?room=' + roomId;
-        } else if (readyWrap) readyWrap.classList.add('hidden');
+        } else {
+          if (readyWrap) readyWrap.classList.add('hidden');
+          // Game active — hide boost grid, show indicator
+          if (boostWrap) boostWrap.classList.add('hidden');
+        }
         startDuelTimer(endsAt);
         subscribeDuelRoom(roomId);
         if (pvpDuelPollId) clearInterval(pvpDuelPollId);
         pvpDuelPollId = setInterval(function() {
           if (!pvpDuelRoomId) { if (pvpDuelPollId) clearInterval(pvpDuelPollId); pvpDuelPollId = null; return; }
-          supabase.from('rooms').select('player1_clicks, player2_clicks, status, game_ends_at, player1_ready, player2_ready').eq('id', roomId).single().then(function(r) {
+          supabase.from('rooms').select('player1_clicks, player2_clicks, status, game_ends_at, player1_ready, player2_ready, player1_duel_boost, player2_duel_boost, player1_boost_activated_at').eq('id', roomId).single().then(function(r) {
             if (r.error || !r.data) return;
             var room = r.data;
             document.getElementById('pvp-duel-you-clicks').textContent = String(pvpDuelMyRole === 1 ? room.player1_clicks : room.player2_clicks);
             document.getElementById('pvp-duel-opp-clicks').textContent = String(pvpDuelMyRole === 1 ? room.player2_clicks : room.player1_clicks);
+            // Update boost activation time and indicator
+            if (room.player1_boost_activated_at) pvpDuelBoostActivatedAt = new Date(room.player1_boost_activated_at).getTime();
+            if (room.game_ends_at && typeof updateDuelBoostIndicator === 'function') updateDuelBoostIndicator(room);
             if (room.status === 'finished') { if (pvpDuelPollId) clearInterval(pvpDuelPollId); pvpDuelPollId = null; if (pvpDuelTimerId) clearInterval(pvpDuelTimerId); pvpDuelTimerId = null; endDuelGame(); return; }
             var endsAt2 = room.game_ends_at ? new Date(room.game_ends_at).getTime() : 0;
             if (room.player1_ready && room.player2_ready && !endsAt2 && typeof startDuelWhenBothReady === 'function') startDuelWhenBothReady(roomId);
@@ -5659,14 +5783,23 @@
       var now = new Date();
       var totalSec = PVP_COUNTDOWN_SEC + PVP_GAME_DURATION_SEC;
       var endsAt = new Date(now.getTime() + totalSec * 1000);
+      var boostActivatesAt = new Date(now.getTime() + PVP_COUNTDOWN_SEC * 1000);
+      pvpDuelBoostActivatedAt = boostActivatesAt.getTime();
       supabase.from('rooms').update({
         game_started_at: now.toISOString(),
         game_ends_at: endsAt.toISOString(),
         player1_ready: false,
         player2_ready: false,
+        player1_boost_activated_at: boostActivatesAt.toISOString(),
+        player2_boost_activated_at: boostActivatesAt.toISOString(),
+        player1_burst_applied: false,
+        player2_burst_applied: false,
         updated_at: now.toISOString()
       }).eq('id', roomId).is('game_ends_at', null).then(function() {
-        startDuelTimer(endsAt.getTime());
+        // Apply headstart boosts server-side
+        supabase.rpc('apply_duel_headstarts', { p_room_id: roomId }).then(function() {
+          startDuelTimer(endsAt.getTime());
+        }).catch(function() { startDuelTimer(endsAt.getTime()); });
       });
     }
     function startDuelTimer(endsAtMs) {
@@ -5691,7 +5824,12 @@
           }
           return;
         }
-        if (clickBtn && clickBtn.disabled) clickBtn.disabled = false;
+        if (clickBtn && clickBtn.disabled) {
+          clickBtn.disabled = false;
+          // Race started — hide boost grid, show indicator
+          var boostWrap = document.getElementById('pvp-duel-boosts-wrap');
+          if (boostWrap) boostWrap.classList.add('hidden');
+        }
         var left = Math.max(0, Math.ceil((endsAtMs - now) / 1000));
         var el = document.getElementById('pvp-duel-timer');
         if (el) { el.classList.remove('pvp-go-glow'); el.textContent = '0:' + (left < 10 ? '0' : '') + left; }
@@ -5864,44 +6002,56 @@
     }
     document.getElementById('pvp-duel-click-btn') && document.getElementById('pvp-duel-click-btn').addEventListener('click', function(e) {
       var clickBtn = document.getElementById('pvp-duel-click-btn');
+      var cx = 0, cy = 0;
       if (clickBtn) {
         clickBtn.classList.remove('pvp-duel-tap-pulse');
         clickBtn.offsetHeight;
         clickBtn.classList.add('pvp-duel-tap-pulse');
         setTimeout(function() { if (clickBtn) clickBtn.classList.remove('pvp-duel-tap-pulse'); }, 120);
         var rect = clickBtn.getBoundingClientRect();
-        var cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+        cx = rect.left + rect.width / 2; cy = rect.top + rect.height / 2;
         if (localStorage.getItem('tokenClicker_featherEffects') !== '0') {
           spawnFeathersAt(cx, cy);
         }
-        var eff = typeof getEffectiveTapPower === 'function' ? getEffectiveTapPower() : 1;
-        var floatEl = document.createElement('div');
-        floatEl.className = 'tap-value-float';
-        floatEl.textContent = '+' + eff;
-        floatEl.style.left = cx + 'px';
-        floatEl.style.top = cy + 'px';
-        document.body.appendChild(floatEl);
-        setTimeout(function() { if (floatEl.parentNode) floatEl.remove(); }, 800);
       }
       if (pvpVsBotMode) {
         var now = Date.now();
         if (now - pvpDuelLastClickAt < PVP_CLICK_COOLDOWN_MS) return;
         pvpDuelLastClickAt = now;
-        var effBot = typeof getEffectiveTapPower === 'function' ? getEffectiveTapPower() : 1;
-        pvpMyClicksVsBot += effBot;
+        pvpMyClicksVsBot += 1;
         var el = document.getElementById('pvp-duel-you-clicks');
         if (el) el.textContent = String(pvpMyClicksVsBot);
+        // Float +1
+        var floatEl = document.createElement('div');
+        floatEl.className = 'tap-value-float';
+        floatEl.textContent = '+1';
+        floatEl.style.left = cx + 'px'; floatEl.style.top = cy + 'px';
+        document.body.appendChild(floatEl);
+        setTimeout(function() { if (floatEl.parentNode) floatEl.remove(); }, 800);
         return;
       }
       if (!pvpDuelRoomId || !pvpDuelMyRole) return;
       var now = Date.now();
       if (now - pvpDuelLastClickAt < PVP_CLICK_COOLDOWN_MS) return;
       pvpDuelLastClickAt = now;
-      var eff = typeof getEffectiveTapPower === 'function' ? getEffectiveTapPower() : 1;
       var supabase = window.supabaseClient;
       if (!supabase) return;
-      supabase.rpc('increment_pvp_clicks', { room_id: pvpDuelRoomId, player_num: pvpDuelMyRole, click_delta: eff }).then(function(r) {
+      supabase.rpc('increment_pvp_clicks', { room_id: pvpDuelRoomId, player_num: pvpDuelMyRole }).then(function(r) {
         if (r.data && r.data.clicks != null) document.getElementById('pvp-duel-you-clicks').textContent = String(r.data.clicks);
+        // Show float based on server click_value
+        var cv = (r.data && r.data.click_value != null) ? r.data.click_value : 1;
+        var floatEl = document.createElement('div');
+        floatEl.className = 'tap-value-float';
+        if (cv === 0) {
+          floatEl.textContent = 'BLOCKED!';
+          floatEl.style.color = '#60a5fa';
+        } else {
+          floatEl.textContent = '+' + cv;
+          if (cv > 1) floatEl.style.color = '#22d3ee';
+        }
+        floatEl.style.left = cx + 'px'; floatEl.style.top = cy + 'px';
+        document.body.appendChild(floatEl);
+        setTimeout(function() { if (floatEl.parentNode) floatEl.remove(); }, 800);
       });
     });
     document.getElementById('pvp-duel-ready-btn') && document.getElementById('pvp-duel-ready-btn').addEventListener('click', function() {
@@ -5909,11 +6059,16 @@
       var supabase = window.supabaseClient;
       if (!supabase) return;
       var col = pvpDuelMyRole === 1 ? 'player1_ready' : 'player2_ready';
-      supabase.from('rooms').update({ [col]: true, updated_at: new Date().toISOString() }).eq('id', pvpDuelRoomId).then(function() {
+      var boostCol = pvpDuelMyRole === 1 ? 'player1_duel_boost' : 'player2_duel_boost';
+      var updateObj = { [col]: true, [boostCol]: pvpSelectedDuelBoost || null, updated_at: new Date().toISOString() };
+      supabase.from('rooms').update(updateObj).eq('id', pvpDuelRoomId).then(function() {
         if (typeof updatePvpReadyUI === 'function') {
           var r = { player1_ready: pvpDuelMyRole === 1, player2_ready: pvpDuelMyRole === 2 };
           updatePvpReadyUI(r);
         }
+        // Lock boost grid after clicking READY
+        var grid = document.getElementById('pvp-duel-boost-grid');
+        if (grid) { grid.classList.add('pointer-events-none'); grid.classList.add('opacity-50'); }
       });
     });
     document.getElementById('pvp-duel-end-game-btn') && document.getElementById('pvp-duel-end-game-btn').addEventListener('click', function() {
@@ -5931,9 +6086,6 @@
       } else {
         try { var ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); } catch (e) {}
       }
-    });
-    document.getElementById('pvp-duel-customize-boosts-btn') && document.getElementById('pvp-duel-customize-boosts-btn').addEventListener('click', function() {
-      if (typeof openCustomizeBuffsModal === 'function') openCustomizeBuffsModal();
     });
     document.getElementById('pvp-duel-rematch-btn') && document.getElementById('pvp-duel-rematch-btn').addEventListener('click', function() {
       if (pvpLastWasVsBot) {
@@ -5969,6 +6121,7 @@
             var now = new Date();
             var totalSec = (typeof PVP_COUNTDOWN_SEC !== 'undefined' ? PVP_COUNTDOWN_SEC : 3) + (typeof PVP_GAME_DURATION_SEC !== 'undefined' ? PVP_GAME_DURATION_SEC : 30);
             var endsAt = new Date(now.getTime() + totalSec * 1000);
+            var boostActivatesAt = new Date(now.getTime() + (typeof PVP_COUNTDOWN_SEC !== 'undefined' ? PVP_COUNTDOWN_SEC : 3) * 1000);
             supabase.from('rooms').update({
               status: 'in_progress',
               winner_wallet: null,
@@ -5981,6 +6134,12 @@
               player1_wants_rematch: false,
               player2_wants_rematch: false,
               rematch_until: null,
+              player1_duel_boost: null,
+              player2_duel_boost: null,
+              player1_boost_activated_at: boostActivatesAt.toISOString(),
+              player2_boost_activated_at: boostActivatesAt.toISOString(),
+              player1_burst_applied: false,
+              player2_burst_applied: false,
               updated_at: now.toISOString()
             }).eq('id', pvpDuelRoomId).then(function(u2) {
               if (u2.error) return;
