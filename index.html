@@ -575,6 +575,20 @@
       </div>
     </div>
   </div>
+  <!-- Duel invite popup: shown when a friend challenges you to a duel -->
+  <div id="duel-invite-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Duel invitation" style="position:fixed;inset:0;z-index:10005;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:center;padding:20px;">
+    <div class="bg-pixel-panel border-2 border-neon-yellow rounded-lg p-5 max-w-xs w-full text-center shadow-lg">
+      <div class="text-4xl mb-2">&#9876;&#65039;</div>
+      <p class="text-neon-yellow text-sm font-bold mb-1">DUEL CHALLENGE!</p>
+      <p id="duel-invite-msg" class="text-gray-300 text-[10px] mb-3">Someone wants to duel you!</p>
+      <p id="duel-invite-stake" class="text-neon-green text-[10px] font-bold mb-4"></p>
+      <div class="flex gap-3">
+        <button type="button" id="duel-invite-accept-btn" class="flex-1 py-2.5 border-2 border-neon-green text-neon-green rounded text-[10px] font-bold hover:bg-neon-green/10">ACCEPT</button>
+        <button type="button" id="duel-invite-decline-btn" class="flex-1 py-2.5 border-2 border-neon-pink text-neon-pink rounded text-[10px] font-bold hover:bg-neon-pink/10">DECLINE</button>
+      </div>
+      <p id="duel-invite-error" class="text-neon-pink text-[8px] mt-2 hidden"></p>
+    </div>
+  </div>
   <!-- Create new room dialog: opened when clicking Duel or Create room (for both players) -->
   <div id="pvp-create-room-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Create room" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
     <div class="bg-pixel-panel border-2 border-neon-green/60 rounded-lg p-4 max-w-sm w-full my-4">
@@ -1763,6 +1777,7 @@
           }
           if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
           if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
+          if (typeof subscribeDuelInvitesRealtime === 'function') subscribeDuelInvitesRealtime();
           if (cb) cb(row);
           return;
         }
@@ -1785,6 +1800,7 @@
             if (ir.error) { if (cb) cb(null); return; }
             if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
             if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
+            if (typeof subscribeDuelInvitesRealtime === 'function') subscribeDuelInvitesRealtime();
             if (cb) cb(ir.data && ir.data[0] ? { id: ir.data[0].id, tokens: ir.data[0].tokens != null ? ir.data[0].tokens : 0 } : null);
           });
         }
@@ -2606,6 +2622,7 @@
       if (typeof subscribeFriendRequestsRealtime === 'function') subscribeFriendRequestsRealtime();
       if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
       if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
+      if (typeof subscribeDuelInvitesRealtime === 'function') subscribeDuelInvitesRealtime();
     }
     function aggregatePvpLeaderboard(data, limit) {
       var byName = {};
@@ -4313,6 +4330,129 @@
         friendRequestAcceptedChannel = null;
       }
     }
+    /* ── Duel Invites Realtime ── */
+    var duelInviteChannel = null;
+    var duelInviteRealtimeFailed = false;
+    var _pendingDuelInvite = null;
+    function subscribeDuelInvitesRealtime() {
+      var supabase = window.supabaseClient;
+      var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
+      if (!supabase || !me || (me + '').trim() === '' || duelInviteChannel || duelInviteRealtimeFailed) return;
+      try {
+        var meId = (me + '').trim();
+        var filterVal = /^[a-zA-Z0-9_-]+$/.test(meId) ? meId : ('"' + meId.replace(/"/g, '""') + '"');
+        var ch = supabase.channel('duel-invites-' + meId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64)).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'duel_invites', filter: 'to_player_id=eq.' + filterVal }, function(payload) {
+          var row = payload.new;
+          if (!row || (row.to_player_id || '').trim() !== meId) return;
+          if ((row.status || '') !== 'pending') return;
+          showDuelInvitePopup(row);
+        });
+        duelInviteChannel = ch;
+        ch.subscribe(function(status) {
+          if (status === 'CHANNEL_ERROR') { duelInviteChannel = null; duelInviteRealtimeFailed = true; }
+        });
+      } catch (e) {
+        duelInviteRealtimeFailed = true;
+      }
+    }
+    function unsubscribeDuelInvitesRealtime() {
+      if (window.supabaseClient && duelInviteChannel) {
+        try { window.supabaseClient.removeChannel(duelInviteChannel); } catch (e) {}
+        duelInviteChannel = null;
+      }
+    }
+    function showDuelInvitePopup(invite) {
+      _pendingDuelInvite = invite;
+      var modal = document.getElementById('duel-invite-modal');
+      var msgEl = document.getElementById('duel-invite-msg');
+      var stakeEl = document.getElementById('duel-invite-stake');
+      var errEl = document.getElementById('duel-invite-error');
+      if (!modal) return;
+      var fromName = (invite.from_name || 'Someone').trim();
+      var stake = invite.stake_amount != null ? parseInt(invite.stake_amount, 10) : 5;
+      if (msgEl) msgEl.textContent = fromName + ' wants to duel you!';
+      if (stakeEl) stakeEl.textContent = 'Wager: ' + stake + ' tokens';
+      if (errEl) { errEl.textContent = ''; errEl.classList.add('hidden'); }
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+      if (typeof pushNotification === 'function') pushNotification(fromName + ' challenged you to a duel!');
+      /* Auto-expire after 60s */
+      if (window._duelInviteTimeout) clearTimeout(window._duelInviteTimeout);
+      window._duelInviteTimeout = setTimeout(function() {
+        if (_pendingDuelInvite && _pendingDuelInvite.id === invite.id) {
+          hideDuelInvitePopup();
+          expireDuelInvite(invite.id);
+        }
+      }, 60000);
+    }
+    function hideDuelInvitePopup() {
+      var modal = document.getElementById('duel-invite-modal');
+      if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+      _pendingDuelInvite = null;
+      if (window._duelInviteTimeout) { clearTimeout(window._duelInviteTimeout); window._duelInviteTimeout = null; }
+    }
+    function acceptDuelInvite() {
+      var invite = _pendingDuelInvite;
+      if (!invite || !invite.id || !invite.room_id) return;
+      var supabase = window.supabaseClient;
+      if (!supabase) return;
+      var errEl = document.getElementById('duel-invite-error');
+      var acceptBtn = document.getElementById('duel-invite-accept-btn');
+      var declineBtn = document.getElementById('duel-invite-decline-btn');
+      if (acceptBtn) acceptBtn.disabled = true;
+      if (declineBtn) declineBtn.disabled = true;
+      /* Check we have enough tokens */
+      var stake = invite.stake_amount != null ? parseInt(invite.stake_amount, 10) : 5;
+      if (typeof hasEnoughTokens === 'function' && !hasEnoughTokens(stake)) {
+        if (errEl) { errEl.textContent = 'You need ' + stake + ' tokens to accept. Your balance: ' + (typeof getInGameTokenBalance === 'function' ? getInGameTokenBalance() : '?'); errEl.classList.remove('hidden'); }
+        if (acceptBtn) acceptBtn.disabled = false;
+        if (declineBtn) declineBtn.disabled = false;
+        return;
+      }
+      /* Update invite status to accepted */
+      supabase.from('duel_invites').update({ status: 'accepted', updated_at: new Date().toISOString() }).eq('id', invite.id).then(function(r) {
+        if (r.error) {
+          if (errEl) { errEl.textContent = 'Error: ' + (r.error.message || 'Could not accept'); errEl.classList.remove('hidden'); }
+          if (acceptBtn) acceptBtn.disabled = false;
+          if (declineBtn) declineBtn.disabled = false;
+          return;
+        }
+        hideDuelInvitePopup();
+        if (acceptBtn) acceptBtn.disabled = false;
+        if (declineBtn) declineBtn.disabled = false;
+        /* Navigate to multiplayer and join the room */
+        window.location.hash = 'multiplayer';
+        if (typeof showPage === 'function') showPage('multiplayer');
+        if (typeof joinPvpRoom === 'function') joinPvpRoom(invite.room_id);
+      }).catch(function(e) {
+        if (errEl) { errEl.textContent = (e.message || 'Error'); errEl.classList.remove('hidden'); }
+        if (acceptBtn) acceptBtn.disabled = false;
+        if (declineBtn) declineBtn.disabled = false;
+      });
+    }
+    function declineDuelInvite() {
+      var invite = _pendingDuelInvite;
+      if (!invite || !invite.id) { hideDuelInvitePopup(); return; }
+      var supabase = window.supabaseClient;
+      if (supabase) {
+        supabase.from('duel_invites').update({ status: 'declined', updated_at: new Date().toISOString() }).eq('id', invite.id).then(function() {});
+      }
+      hideDuelInvitePopup();
+    }
+    function expireDuelInvite(inviteId) {
+      if (!inviteId) return;
+      var supabase = window.supabaseClient;
+      if (supabase) {
+        supabase.from('duel_invites').update({ status: 'expired', updated_at: new Date().toISOString() }).eq('id', inviteId).eq('status', 'pending').then(function() {});
+      }
+    }
+    /* Wire up accept/decline buttons */
+    (function() {
+      var acceptBtn = document.getElementById('duel-invite-accept-btn');
+      var declineBtn = document.getElementById('duel-invite-decline-btn');
+      if (acceptBtn) acceptBtn.addEventListener('click', acceptDuelInvite);
+      if (declineBtn) declineBtn.addEventListener('click', declineDuelInvite);
+    })();
     var tokenReceivedChannel = null;
     var tokenReceivedRealtimeFailed = false;
     function subscribeTokenReceivedRealtime() {
@@ -4419,6 +4559,7 @@
               if (typeof subscribeFriendRequestsRealtime === 'function') subscribeFriendRequestsRealtime();
               if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
               if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
+              if (typeof subscribeDuelInvitesRealtime === 'function') subscribeDuelInvitesRealtime();
             });
           }
           function renderInvitedList(data, tokensByWallet) {
@@ -4455,20 +4596,41 @@
             list.querySelectorAll('.invited-duel-btn').forEach(function(btn) {
               btn.addEventListener('click', function() {
                 var name = btn.getAttribute('data-name') || 'Friend';
-                startDuelWithFriend(name);
+                var wallet = btn.getAttribute('data-wallet') || '';
+                startDuelWithFriend(name, wallet, null);
               });
             });
           }
         })
         .catch(function() { list.innerHTML = '<li class="text-gray-500">Could not load.</li>'; });
     }
-    function startDuelWithFriend(friendName) {
+    function startDuelWithFriend(friendName, friendWallet, friendRef) {
       var name = getPlayerName();
       if (!name) { window.location.hash = 'wallet'; showPage('wallet'); return; }
       if (typeof closeFriendsModal === 'function') closeFriendsModal();
       window.location.hash = 'multiplayer';
       showPage('multiplayer');
-      if (typeof openPvpCreateRoomModal === 'function') openPvpCreateRoomModal(friendName || null);
+      /* If we have a wallet directly, send invite right away; if we have ref code, resolve wallet first */
+      var toWallet = (friendWallet || '').trim();
+      var toRef = (friendRef || '').trim().toUpperCase();
+      if (toWallet) {
+        openPvpCreateRoomModal(friendName || null, toWallet, friendName);
+      } else if (toRef) {
+        /* Resolve ref code → wallet via leaderboard */
+        var supabase = window.supabaseClient;
+        if (!supabase) { openPvpCreateRoomModal(friendName || null); return; }
+        supabase.from('leaderboard').select('player_id, wallet_address').ilike('ref_code', toRef).limit(1).then(function(r) {
+          var resolved = '';
+          if (r.data && r.data.length > 0) {
+            resolved = (r.data[0].wallet_address || r.data[0].player_id || '').trim();
+          }
+          openPvpCreateRoomModal(friendName || null, resolved, friendName);
+        }).catch(function() {
+          openPvpCreateRoomModal(friendName || null);
+        });
+      } else {
+        openPvpCreateRoomModal(friendName || null);
+      }
     }
     function getFavoriteFriendRefs() {
       try {
@@ -4729,6 +4891,7 @@
               if (typeof subscribeFriendRequestsRealtime === 'function') subscribeFriendRequestsRealtime();
               if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
               if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
+              if (typeof subscribeDuelInvitesRealtime === 'function') subscribeDuelInvitesRealtime();
             });
           }
           function renderAddedList(data, tokensByCode) {
@@ -4761,7 +4924,8 @@
           list.querySelectorAll('.friend-duel-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
               var name = btn.getAttribute('data-name') || 'Friend';
-              startDuelWithFriend(name);
+              var ref = btn.getAttribute('data-ref') || '';
+              startDuelWithFriend(name, null, ref);
             });
           });
           }
@@ -4962,6 +5126,7 @@
       if (typeof subscribeFriendRequestsRealtime === 'function') subscribeFriendRequestsRealtime();
       if (typeof subscribeFriendRequestAcceptedRealtime === 'function') subscribeFriendRequestAcceptedRealtime();
       if (typeof subscribeTokenReceivedRealtime === 'function') subscribeTokenReceivedRealtime();
+      if (typeof subscribeDuelInvitesRealtime === 'function') subscribeDuelInvitesRealtime();
     }
     document.querySelectorAll('.settings-tab-btn').forEach(function(btn) {
       btn.addEventListener('click', function() { showSettingsTab(btn.getAttribute('data-settings-tab')); });
@@ -5416,10 +5581,12 @@
       });
     }
     window.updatePvpPlayerRowAboveCreate = updatePvpPlayerRowAboveCreate;
-    function openPvpCreateRoomModal(friendName) {
+    function openPvpCreateRoomModal(friendName, friendWalletId, friendDisplayName) {
       var modal = document.getElementById('pvp-create-room-modal');
       if (!modal) return;
       window._pvpCreateForFriend = friendName || null;
+      window._pvpCreateForFriendWallet = friendWalletId || null;
+      window._pvpCreateForFriendDisplayName = friendDisplayName || friendName || null;
       var title = document.getElementById('pvp-create-modal-title');
       var subtitle = document.getElementById('pvp-create-modal-subtitle');
       if (title) title.textContent = friendName ? 'DUEL — ' + (friendName.length > 12 ? friendName.slice(0, 12) + '…' : friendName) : '➕ CREATE NEW ROOM';
@@ -5447,6 +5614,8 @@
       var modal = document.getElementById('pvp-create-room-modal');
       if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
       window._pvpCreateForFriend = null;
+      window._pvpCreateForFriendWallet = null;
+      window._pvpCreateForFriendDisplayName = null;
     }
     window.openPvpCreateRoomModal = openPvpCreateRoomModal;
     window.closePvpCreateRoomModal = closePvpCreateRoomModal;
@@ -5469,6 +5638,8 @@
       if (btn) btn.disabled = true;
       var me = getPvpPlayerId();
       var createForFriend = window._pvpCreateForFriend || null;
+      var createForFriendWallet = window._pvpCreateForFriendWallet || null;
+      var createForFriendName = window._pvpCreateForFriendDisplayName || createForFriend || null;
       supabase.from('rooms').insert({
         status: 'open',
         player1_wallet: me,
@@ -5480,18 +5651,38 @@
           if (r.error) { if (errEl) { errEl.textContent = r.error.message || 'Failed to create room'; errEl.classList.remove('hidden'); } return; }
           var roomId = r.data.id;
           if (typeof closePvpCreateRoomModal === 'function') closePvpCreateRoomModal();
-          var status = document.getElementById('pvp-status');
-          if (status) { status.textContent = 'Room created! Share the link — game starts when your opponent joins.'; status.className = 'text-[9px] text-neon-green mb-2 min-h-[14px]'; setTimeout(function() { status.textContent = ''; status.className = 'text-[9px] text-gray-500 mb-2 min-h-[14px]'; }, 6000); }
+          var statusEl = document.getElementById('pvp-status');
           loadPvpRooms();
           if (errEl) errEl.classList.add('hidden');
           if (typeof subscribeCreatorRoomAutoEnter === 'function') subscribeCreatorRoomAutoEnter(roomId);
-          var url = (typeof getShareBaseUrl === 'function' ? getShareBaseUrl() : (window.location.origin + window.location.pathname)) + '/?room=' + roomId;
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(function() {
-              if (typeof pushNotification === 'function') pushNotification(createForFriend ? 'Link copied. Send to ' + createForFriend + ' to join.' : 'Room link copied! Send it to your opponent to join.');
-            }).catch(function() {});
+          /* If we have the friend's wallet, send a duel invite via duel_invites table */
+          if (createForFriendWallet) {
+            supabase.from('duel_invites').insert({
+              from_player_id: me,
+              from_name: name,
+              to_player_id: createForFriendWallet,
+              to_name: createForFriendName,
+              room_id: roomId,
+              stake_amount: stake,
+              status: 'pending'
+            }).then(function(inv) {
+              if (inv.error) console.error('Duel invite insert failed:', inv.error);
+            });
+            if (statusEl) { statusEl.textContent = 'Duel invite sent to ' + (createForFriendName || 'friend') + '! Waiting for them to accept…'; statusEl.className = 'text-[9px] text-neon-green mb-2 min-h-[14px]'; setTimeout(function() { statusEl.textContent = ''; statusEl.className = 'text-[9px] text-gray-500 mb-2 min-h-[14px]'; }, 8000); }
+            if (typeof pushNotification === 'function') pushNotification('Duel invite sent to ' + (createForFriendName || 'friend') + '!');
+          } else {
+            /* No friend wallet — fallback to clipboard link */
+            if (statusEl) { statusEl.textContent = 'Room created! Share the link — game starts when your opponent joins.'; statusEl.className = 'text-[9px] text-neon-green mb-2 min-h-[14px]'; setTimeout(function() { statusEl.textContent = ''; statusEl.className = 'text-[9px] text-gray-500 mb-2 min-h-[14px]'; }, 6000); }
+            var url = (typeof getShareBaseUrl === 'function' ? getShareBaseUrl() : (window.location.origin + window.location.pathname)) + '/?room=' + roomId;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(url).then(function() {
+                if (typeof pushNotification === 'function') pushNotification(createForFriend ? 'Link copied. Send to ' + createForFriend + ' to join.' : 'Room link copied! Send it to your opponent to join.');
+              }).catch(function() {});
+            }
           }
           if (createForFriend) window._pvpCreateForFriend = null;
+          window._pvpCreateForFriendWallet = null;
+          window._pvpCreateForFriendDisplayName = null;
         })
         .catch(function(e) {
           if (btn) btn.disabled = false;
