@@ -354,7 +354,6 @@
       <!-- Settings tab buttons -->
       <div class="flex flex-wrap gap-1 mb-3 border-b-2 border-gray-700 pb-2">
         <button type="button" class="settings-tab-btn py-1.5 px-2.5 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] font-bold bg-neon-cyan/10" data-settings-tab="general">⚙️ Settings</button>
-        <button type="button" class="settings-tab-btn py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-cyan/50 hover:text-neon-cyan" data-settings-tab="friends">👥 Friends</button>
         <button type="button" class="settings-tab-btn py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-green/50 hover:text-neon-green" data-settings-tab="wallet">💰 Wallet</button>
         <button type="button" class="settings-tab-btn py-1.5 px-2.5 border-2 border-gray-600 text-gray-400 rounded text-[9px] hover:border-neon-yellow/50 hover:text-neon-yellow" data-settings-tab="info">ℹ️ Info</button>
       </div>
@@ -400,39 +399,7 @@
           </div>
         </div>
       </div>
-      <!-- Panel: Friends (hidden by default) -->
-      <div class="settings-panel hidden" data-settings-panel="friends">
-        <p class="text-gray-500 text-[9px] mb-2">Your code: <span id="referral-code" class="neon-text-cyan">------</span></p>
-        <div class="mb-2 flex flex-col items-center">
-          <div class="text-[9px] text-gray-500 uppercase tracking-wider mb-1">Scan to join with my code</div>
-          <div id="friends-invite-qrcode" class="inline-block p-2 bg-white rounded border-2 border-gray-600 shrink-0 mb-2" aria-hidden="true"></div>
-          <button type="button" id="friends-scan-qr-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10 shrink-0" title="Scan a friend's invite QR">📷 Scan QR</button>
-        </div>
-        <button type="button" id="invite-btn" class="w-full py-2 px-4 border-2 border-neon-cyan text-neon-cyan rounded hover:bg-neon-cyan/10 text-[10px] mb-2">COPY INVITE LINK</button>
-        <p id="invite-feedback" class="text-neon-green text-[9px] mb-2 hidden">Link copied! Send to friends—when they open it, your code is applied.</p>
-        <button type="button" id="share-game-btn" class="w-full py-2 px-4 border-2 border-neon-pink text-neon-pink rounded text-[10px] font-bold hover:bg-neon-pink/10 mb-2">COPY GAME LINK</button>
-        <p id="share-game-feedback" class="text-neon-green text-[9px] mb-3 hidden">Link copied!</p>
-        <div class="text-[9px] text-gray-500 uppercase tracking-wider mb-1">Your friends</div>
-        <p class="text-gray-500 text-[8px] mb-1">People who used your link or you added by code. Tap DUEL to challenge. Star (☆/★) to add favorite players—they appear at the top.</p>
-        <ol id="friends-invited-list" class="space-y-1 text-[10px] min-h-[24px] mb-2"><li class="text-gray-500">Loading…</li></ol>
-        <ol id="friends-added-list" class="space-y-1 text-[10px] min-h-[24px] mb-3"><li class="text-gray-500">Loading…</li></ol>
-        <div id="friend-requests-section" class="hidden mt-2 pt-2 border-t border-gray-800/60 mb-3">
-          <div class="text-[9px] text-gray-500 uppercase tracking-wider">Pending requests</div>
-          <p id="friend-request-feedback" class="text-[10px] mt-1 mb-1 min-h-[14px] px-2 py-1 rounded hidden"></p>
-          <ol id="friend-requests-list" class="space-y-2 text-[10px] min-h-[24px]"></ol>
-        </div>
-        <div class="mb-3">
-          <button type="button" id="friends-play-vs-computer-btn" class="w-full py-2 px-4 border-2 border-neon-yellow text-neon-yellow rounded text-[10px] hover:bg-neon-yellow/10">ENTER TRAINING</button>
-        </div>
-        <div class="pt-2 border-t border-gray-800/60">
-          <div class="text-[9px] text-gray-500 mb-1">Add friend by invite code</div>
-          <div class="flex gap-2 flex-wrap items-center">
-            <input type="text" id="friend-code-input" placeholder="E.G. REFABC12" maxlength="20" class="flex-1 min-w-[100px] bg-black border-2 border-gray-600 rounded px-2 py-1.5 text-neon-cyan text-[10px] uppercase" />
-            <button type="button" id="friend-code-add-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">ADD FRIEND</button>
-          </div>
-          <p id="friend-code-feedback" class="text-[9px] min-h-[14px] hidden"></p>
-        </div>
-      </div>
+      <!-- Friends panel removed — now in standalone friends-modal -->
       <!-- Panel: Wallet (hidden by default) -->
       <div class="settings-panel hidden" data-settings-panel="wallet">
         <div class="mb-3">
@@ -477,6 +444,52 @@
       </div>
       <!-- Close button (always visible) -->
       <button type="button" id="wallet-settings-modal-close" class="mt-4 w-full py-2 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">CLOSE</button>
+    </div>
+  </div>
+  <!-- Friends modal: standalone, opened from Multiplayer page -->
+  <div id="friends-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Friends" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+    <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-4 max-w-sm w-full max-h-[90vh] overflow-y-auto relative">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-neon-cyan text-[10px] font-bold">👥 FRIENDS</p>
+        <button type="button" id="friends-modal-close-x" aria-label="Close friends" class="p-1.5 rounded border-2 border-gray-500 text-gray-400 hover:border-neon-cyan hover:text-neon-cyan hover:bg-neon-cyan/10 text-sm leading-none">×</button>
+      </div>
+      <p class="text-gray-500 text-[9px] mb-2">Your code: <span id="referral-code" class="neon-text-cyan">------</span></p>
+      <div class="mb-2 flex flex-col items-center">
+        <div class="text-[9px] text-gray-500 uppercase tracking-wider mb-1">Scan to join with my code</div>
+        <div id="friends-invite-qrcode" class="inline-block p-2 bg-white rounded border-2 border-gray-600 shrink-0 mb-2" aria-hidden="true"></div>
+        <button type="button" id="friends-scan-qr-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10 shrink-0" title="Scan a friend's invite QR">📷 Scan QR</button>
+      </div>
+      <button type="button" id="invite-btn" class="w-full py-2 px-4 border-2 border-neon-cyan text-neon-cyan rounded hover:bg-neon-cyan/10 text-[10px] mb-2">COPY INVITE LINK</button>
+      <p id="invite-feedback" class="text-neon-green text-[9px] mb-2 hidden">Link copied! Send to friends—when they open it, your code is applied.</p>
+      <button type="button" id="share-game-btn" class="w-full py-2 px-4 border-2 border-neon-pink text-neon-pink rounded text-[10px] font-bold hover:bg-neon-pink/10 mb-2">COPY GAME LINK</button>
+      <p id="share-game-feedback" class="text-neon-green text-[9px] mb-3 hidden">Link copied!</p>
+      <!-- Connected friends -->
+      <div class="text-[9px] text-gray-500 uppercase tracking-wider mb-1">Your friends</div>
+      <p class="text-gray-500 text-[8px] mb-1">People who used your link or you added by code. Tap DUEL to challenge.</p>
+      <ol id="friends-invited-list" class="space-y-1 text-[10px] min-h-[24px] mb-2"><li class="text-gray-500">Loading…</li></ol>
+      <ol id="friends-added-list" class="space-y-1 text-[10px] min-h-[24px] mb-3"><li class="text-gray-500">Loading…</li></ol>
+      <div id="friend-requests-section" class="hidden mt-2 pt-2 border-t border-gray-800/60 mb-3">
+        <div class="text-[9px] text-gray-500 uppercase tracking-wider">Pending requests</div>
+        <p id="friend-request-feedback" class="text-[10px] mt-1 mb-1 min-h-[14px] px-2 py-1 rounded hidden"></p>
+        <ol id="friend-requests-list" class="space-y-2 text-[10px] min-h-[24px]"></ol>
+      </div>
+      <!-- Training room -->
+      <div class="mb-3 pt-2 border-t border-gray-800/60">
+        <p class="text-neon-yellow text-[10px] font-bold mb-1">🖥️ TRAINING ROOM</p>
+        <p class="text-gray-400 text-[9px] mb-2">No friends online? Tap against the computer. No wallet or stake required.</p>
+        <button type="button" id="friends-play-vs-computer-btn" class="w-full py-2 px-4 border-2 border-neon-yellow text-neon-yellow rounded text-[10px] hover:bg-neon-yellow/10">ENTER TRAINING</button>
+      </div>
+      <!-- Add friend by code -->
+      <div class="pt-2 border-t border-gray-800/60">
+        <div class="text-[9px] text-gray-500 mb-1">Add friend by invite code</div>
+        <div class="flex gap-2 flex-wrap items-center">
+          <input type="text" id="friend-code-input" placeholder="E.G. REFABC12" maxlength="20" class="flex-1 min-w-[100px] bg-black border-2 border-gray-600 rounded px-2 py-1.5 text-neon-cyan text-[10px] uppercase" />
+          <button type="button" id="friend-code-add-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] hover:bg-neon-cyan/10">ADD FRIEND</button>
+        </div>
+        <p id="friend-code-feedback" class="text-[9px] min-h-[14px] hidden"></p>
+      </div>
+      <!-- Close button -->
+      <button type="button" id="friends-modal-close" class="mt-4 w-full py-2 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">CLOSE</button>
     </div>
   </div>
   <!-- Wallet: no wallet / connect help – Back to game or open install in new tab -->
@@ -1273,6 +1286,7 @@
     <section id="page-multiplayer" class="page p-4">
       <div class="flex items-center justify-between gap-2 mb-4 border-b-2 border-gray-700 pb-2">
         <h2 class="text-neon-pink">MULTIPLAYER</h2>
+        <button type="button" id="multiplayer-friends-btn" class="py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] font-bold hover:bg-neon-cyan/10">👥 FRIENDS</button>
       </div>
       <p class="text-gray-400 mb-4">Share the game. When friends open the link on their phone, they can play and challenge you.</p>
       <!-- PVP leaderboard: wins and tokens won from duels -->
@@ -1296,7 +1310,7 @@
         </div>
         <button type="button" id="pvp-full-list-btn" class="mt-2 py-1.5 px-3 border-2 border-neon-pink text-neon-pink rounded text-[9px] hover:bg-neon-pink/10">VIEW FULL LIST</button>
       </div>
-      <!-- Player row above Create room: first friend (favorites first) for quick duel -->
+      <!-- Player row above Create room: first friend for quick duel -->
       <div id="pvp-player-row-above-create" class="bg-pixel-panel border-2 border-gray-700 rounded-lg mb-3 overflow-hidden hidden" data-friend-ref="" data-friend-name="">
         <div class="flex flex-wrap items-center gap-2 p-3 border-b border-gray-700/50">
           <span class="flex-1 min-w-0">
@@ -1305,7 +1319,6 @@
             <span id="pvp-player-row-tokens" class="block mt-0.5 text-neon-yellow text-[10px] font-bold">0 tokens</span>
           </span>
           <span class="flex gap-1 shrink-0 items-center">
-            <button type="button" id="pvp-player-row-favorite-btn" class="pvp-player-row-star py-1 px-1.5 border border-neon-yellow rounded text-[10px] text-gray-500 hover:text-neon-yellow hover:bg-neon-yellow/10" title="Add to favorites" aria-label="Add to favorites">☆</button>
             <button type="button" id="pvp-player-row-duel-btn" class="py-1 px-2 border border-neon-green text-neon-green rounded text-[9px] hover:bg-neon-green/10">DUEL</button>
             <button type="button" id="pvp-player-row-remove-btn" class="py-1 px-2 border border-neon-pink text-neon-pink rounded text-[9px] hover:bg-neon-pink/10">REMOVE</button>
           </span>
@@ -1336,12 +1349,7 @@
         <p id="pvp-invited-room-id" class="text-gray-500 text-[8px] mt-2 truncate"></p>
       </div>
       <div id="pvp-lobby-wrap">
-      <!-- Play vs Computer: no friends / no stake needed -->
-      <div class="bg-pixel-panel border-2 border-neon-yellow/60 p-4 rounded mb-4">
-        <p class="text-neon-yellow text-[10px] font-bold mb-2">🖥️ TRAINING ROOM</p>
-        <p class="text-gray-400 text-[9px] mb-3">No friends online? Tap against the computer. No wallet or stake required. Practice only.</p>
-        <button type="button" id="pvp-vs-computer-btn" class="py-2 px-4 border-2 border-neon-yellow text-neon-yellow rounded text-[10px] hover:bg-neon-yellow/10 min-h-[44px]">ENTER TRAINING</button>
-      </div>
+      <!-- Training Room removed from PVP page — now in Friends modal only -->
       </div>
 
       <!-- Duel view: side-by-side clicker (shown when in active game), all in one card -->
@@ -4079,9 +4087,8 @@
         if (r && (r in cache.byRefCode)) { mergeFriendTokenCache(null, { [r]: t }, null); changed = true; }
         if (p && (p in cache.byPlayerId)) { mergeFriendTokenCache(null, null, { [p]: t }); changed = true; }
         if (changed) {
-          var settingsModal = document.getElementById('wallet-settings-modal');
-          var friendsPanel = document.querySelector('.settings-panel[data-settings-panel="friends"]');
-          if (settingsModal && !settingsModal.classList.contains('hidden') && friendsPanel && !friendsPanel.classList.contains('hidden')) {
+          var friendsModal = document.getElementById('friends-modal');
+          if (friendsModal && !friendsModal.classList.contains('hidden')) {
             if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
             if (typeof loadFriendRequests === 'function') loadFriendRequests();
             if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
@@ -4220,9 +4227,8 @@
     function startFriendsTokenPolling() {
       if (friendsPollInterval) return;
       friendsPollInterval = setInterval(function() {
-        var settingsModal = document.getElementById('wallet-settings-modal');
-        var friendsPanel = document.querySelector('.settings-panel[data-settings-panel="friends"]');
-        var onFriends = settingsModal && !settingsModal.classList.contains('hidden') && friendsPanel && !friendsPanel.classList.contains('hidden');
+        var friendsModal = document.getElementById('friends-modal');
+        var onFriends = friendsModal && !friendsModal.classList.contains('hidden');
         if (onFriends) {
           if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
           if (typeof loadFriendRequests === 'function') loadFriendRequests();
@@ -4316,6 +4322,7 @@
     function startDuelWithFriend(friendName) {
       var name = getPlayerName();
       if (!name) { window.location.hash = 'wallet'; showPage('wallet'); return; }
+      if (typeof closeFriendsModal === 'function') closeFriendsModal();
       window.location.hash = 'multiplayer';
       showPage('multiplayer');
       if (typeof openPvpCreateRoomModal === 'function') openPvpCreateRoomModal(friendName || null);
@@ -4555,15 +4562,6 @@
             seen[code] = true;
             return true;
           });
-          var favRefs = getFavoriteFriendRefs();
-          uniqueFriends.sort(function(a, b) {
-            var ac = (a.friend_ref_code || '').trim().toUpperCase();
-            var bc = (b.friend_ref_code || '').trim().toUpperCase();
-            var aFav = favRefs.indexOf(ac) >= 0 ? 1 : 0;
-            var bFav = favRefs.indexOf(bc) >= 0 ? 1 : 0;
-            if (bFav !== aFav) return bFav - aFav;
-            return 0;
-          });
           var codes = uniqueFriends.map(function(e) { return (e.friend_ref_code || '').trim(); }).filter(Boolean);
           var cache = getFriendTokenCache();
           var tokensByCode = {};
@@ -4597,34 +4595,13 @@
             var codeUpper = (e.friend_ref_code || '').trim().toUpperCase();
             var tokens = tokensByCode[codeUpper] != null ? tokensByCode[codeUpper] : null;
             var tokenStr = tokens != null ? '<span class="text-neon-yellow text-[10px] font-bold">' + tokens + ' tokens</span>' : '';
-            var isFav = isFavoriteFriendRef(codeUpper);
-            var starLabel = isFav ? '★' : '☆';
-            var starTitle = isFav ? 'Remove from favorites' : 'Add to favorites';
             return '<li class="flex flex-wrap items-center gap-2 py-1 border-b border-gray-700/50 last:border-0">' +
               '<span class="flex-1 min-w-0">' + (i + 1) + '. ' + (e.friend_name || e.friend_ref_code || 'Friend') + (tokenStr ? '<span class="block mt-0.5">' + tokenStr + '</span>' : '') + '</span>' +
               '<span class="flex gap-1 shrink-0 items-center">' +
-              '<button type="button" class="friend-favorite-btn py-1 px-1.5 border border-neon-yellow rounded text-[10px] ' + (isFav ? 'text-neon-yellow bg-neon-yellow/20' : 'text-gray-500 hover:text-neon-yellow hover:bg-neon-yellow/10') + '" data-ref="' + code + '" title="' + starTitle + '" aria-label="' + starTitle + '">' + starLabel + '</button>' +
               '<button type="button" class="friend-duel-btn py-1 px-2 border border-neon-green text-neon-green rounded text-[9px] hover:bg-neon-green/10" data-name="' + name + '" data-ref="' + code + '">DUEL</button>' +
               '<button type="button" class="friend-remove-btn py-1 px-2 border border-neon-pink text-neon-pink rounded text-[9px] hover:bg-neon-pink/10" data-name="' + name + '" data-ref="' + code + '">REMOVE</button>' +
               '</span></li>';
           }).join('');
-          list.querySelectorAll('.friend-favorite-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-              var ref = btn.getAttribute('data-ref') || '';
-              if (!ref) return;
-              toggleFavoriteFriendRef(ref);
-              var favRefs = getFavoriteFriendRefs();
-              uniqueFriends.sort(function(a, b) {
-                var ac = (a.friend_ref_code || '').trim().toUpperCase();
-                var bc = (b.friend_ref_code || '').trim().toUpperCase();
-                var aFav = favRefs.indexOf(ac) >= 0 ? 1 : 0;
-                var bFav = favRefs.indexOf(bc) >= 0 ? 1 : 0;
-                if (bFav !== aFav) return bFav - aFav;
-                return 0;
-              });
-              renderAddedList(uniqueFriends, tokensByCode);
-            });
-          });
           list.querySelectorAll('.friend-remove-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
               var name = btn.getAttribute('data-name') || 'this friend';
@@ -4800,6 +4777,8 @@
     // Settings modal tab switching (same pattern as boosts tabs)
     function showSettingsTab(tabId) {
       tabId = tabId || 'general';
+      // Friends tab no longer in settings — redirect to general
+      if (tabId === 'friends') tabId = 'general';
       document.querySelectorAll('.settings-tab-btn').forEach(function(btn) {
         var t = btn.getAttribute('data-settings-tab');
         if (t === tabId) {
@@ -4816,8 +4795,6 @@
         var p = panel.getAttribute('data-settings-panel');
         if (p === tabId) { panel.classList.remove('hidden'); } else { panel.classList.add('hidden'); }
       });
-      if (tabId === 'friends') { initFriendsPanel(); }
-      if (tabId !== 'friends') { stopFriendsTokenPolling(); }
       try { localStorage.setItem('tokenClicker_settingsTab', tabId); } catch (e) {}
     }
     function initFriendsPanel() {
@@ -4868,7 +4845,9 @@
       var modal = document.getElementById('wallet-settings-modal');
       if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
       // Set tab: use provided initialTab, else last saved tab, else 'general'
+      // Friends tab no longer in settings — redirect to general
       var tab = initialTab || localStorage.getItem('tokenClicker_settingsTab') || 'general';
+      if (tab === 'friends') tab = 'general';
       showSettingsTab(tab);
     }
     document.getElementById('header-settings-btn') && document.getElementById('header-settings-btn').addEventListener('click', function() { openWalletSettingsModal(); });
@@ -4876,7 +4855,6 @@
     function closeWalletSettingsModal() {
       var modal = document.getElementById('wallet-settings-modal');
       if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
-      stopFriendsTokenPolling();
     }
     document.getElementById('wallet-settings-modal-close') && document.getElementById('wallet-settings-modal-close').addEventListener('click', closeWalletSettingsModal);
     document.getElementById('wallet-settings-modal-close-x') && document.getElementById('wallet-settings-modal-close-x').addEventListener('click', closeWalletSettingsModal);
@@ -4884,9 +4862,25 @@
     document.getElementById('wallet-settings-modal') && document.getElementById('wallet-settings-modal').addEventListener('click', function (e) {
       if (e.target === this) closeWalletSettingsModal();
     });
-    // Friends modal wrappers (for backward compatibility with other code that calls openFriendsModal)
-    function openFriendsModal() { openWalletSettingsModal('friends'); }
-    function closeFriendsModal() { closeWalletSettingsModal(); }
+    // Standalone Friends modal (opened from Multiplayer page)
+    function openFriendsModal() {
+      // Close settings modal if open
+      closeWalletSettingsModal();
+      var modal = document.getElementById('friends-modal');
+      if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
+      initFriendsPanel();
+    }
+    function closeFriendsModal() {
+      var modal = document.getElementById('friends-modal');
+      if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+      stopFriendsTokenPolling();
+    }
+    document.getElementById('multiplayer-friends-btn') && document.getElementById('multiplayer-friends-btn').addEventListener('click', openFriendsModal);
+    document.getElementById('friends-modal-close') && document.getElementById('friends-modal-close').addEventListener('click', closeFriendsModal);
+    document.getElementById('friends-modal-close-x') && document.getElementById('friends-modal-close-x').addEventListener('click', closeFriendsModal);
+    document.getElementById('friends-modal') && document.getElementById('friends-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeFriendsModal();
+    });
     document.getElementById('wallet-settings-replay-intro') && document.getElementById('wallet-settings-replay-intro').addEventListener('click', function() {
       var modal = document.getElementById('wallet-settings-modal');
       if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
@@ -5242,25 +5236,14 @@
       var rowWrap = document.getElementById('pvp-player-row-above-create');
       var nameEl = document.getElementById('pvp-player-row-name');
       var tokensEl = document.getElementById('pvp-player-row-tokens');
-      var starBtn = document.getElementById('pvp-player-row-favorite-btn');
       var removeBtn = document.getElementById('pvp-player-row-remove-btn');
       if (!rowWrap) return;
       var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
       var supabase = window.supabaseClient;
       if (!me || !supabase) { rowWrap.classList.add('hidden'); rowWrap.setAttribute('data-friend-ref', ''); rowWrap.setAttribute('data-friend-name', ''); return; }
-      supabase.from('friends_by_code').select('friend_ref_code, friend_name, created_at').eq('user_wallet', me).order('created_at', { ascending: false }).limit(50).then(function(r) {
+      supabase.from('friends_by_code').select('friend_ref_code, friend_name, created_at').eq('user_wallet', me).order('created_at', { ascending: false }).limit(1).then(function(r) {
         if (r.error || !r.data || r.data.length === 0) { rowWrap.classList.add('hidden'); rowWrap.setAttribute('data-friend-ref', ''); rowWrap.setAttribute('data-friend-name', ''); return; }
-        var favRefs = typeof getFavoriteFriendRefs === 'function' ? getFavoriteFriendRefs() : [];
-        var list = r.data.slice();
-        list.sort(function(a, b) {
-          var ac = (a.friend_ref_code || '').trim().toUpperCase();
-          var bc = (b.friend_ref_code || '').trim().toUpperCase();
-          var aFav = favRefs.indexOf(ac) >= 0 ? 1 : 0;
-          var bFav = favRefs.indexOf(bc) >= 0 ? 1 : 0;
-          if (bFav !== aFav) return bFav - aFav;
-          return 0;
-        });
-        var first = list[0];
+        var first = r.data[0];
         var ref = (first.friend_ref_code || '').trim().toUpperCase();
         var name = (first.friend_name || first.friend_ref_code || 'Friend').trim();
         var cache = typeof getFriendTokenCache === 'function' ? getFriendTokenCache() : { byRefCode: {} };
@@ -5269,14 +5252,6 @@
         rowWrap.setAttribute('data-friend-name', name);
         if (nameEl) nameEl.textContent = name;
         if (tokensEl) tokensEl.textContent = (tokenCount != null ? tokenCount : '—') + (tokenCount != null ? ' tokens' : '');
-        if (starBtn) {
-          var isFav = typeof isFavoriteFriendRef === 'function' && isFavoriteFriendRef(ref);
-          starBtn.textContent = isFav ? '★' : '☆';
-          starBtn.title = isFav ? 'Remove from favorites' : 'Add to favorites';
-          starBtn.classList.toggle('text-neon-yellow', isFav);
-          starBtn.classList.toggle('bg-neon-yellow/20', isFav);
-          starBtn.classList.toggle('text-gray-500', !isFav);
-        }
         if (removeBtn) removeBtn.classList.remove('hidden');
         rowWrap.classList.remove('hidden');
         if (ref && typeof subscribeFriendsLeaderboardRealtime === 'function') subscribeFriendsLeaderboardRealtime();
@@ -5992,13 +5967,6 @@
       var friendName = row && row.getAttribute('data-friend-name');
       openPvpCreateRoomModal(friendName || null);
     });
-    document.getElementById('pvp-player-row-favorite-btn') && document.getElementById('pvp-player-row-favorite-btn').addEventListener('click', function() {
-      var row = document.getElementById('pvp-player-row-above-create');
-      var ref = row && row.getAttribute('data-friend-ref');
-      if (!ref || typeof toggleFavoriteFriendRef !== 'function') return;
-      toggleFavoriteFriendRef(ref);
-      if (typeof updatePvpPlayerRowAboveCreate === 'function') updatePvpPlayerRowAboveCreate();
-    });
     document.getElementById('pvp-player-row-remove-btn') && document.getElementById('pvp-player-row-remove-btn').addEventListener('click', function() {
       var row = document.getElementById('pvp-player-row-above-create');
       var ref = row && row.getAttribute('data-friend-ref');
@@ -6047,11 +6015,10 @@
         var n = prompt('Enter your name to play vs computer (practice):', 'Player');
         if (n && n.trim()) setPlayerName(n.trim().slice(0, 20));
       }
-      try { sessionStorage.setItem('tokenClicker_startVsComputer', '1'); } catch (e) {}
+      if (typeof closeFriendsModal === 'function') closeFriendsModal();
       window.location.hash = 'multiplayer';
       showPage('multiplayer');
       if (typeof window.startVsComputer === 'function') {
-        try { sessionStorage.removeItem('tokenClicker_startVsComputer'); } catch (e) {}
         window.startVsComputer();
       }
     });
