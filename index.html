@@ -536,9 +536,21 @@
   <div id="pvp-full-list-modal" class="hidden" role="dialog" aria-modal="true" aria-label="PVP leaderboard" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-pink rounded-lg p-4 max-w-sm w-full max-h-[80vh] flex flex-col">
       <p class="text-neon-pink text-[10px] font-bold mb-3">PVP DUEL WINS (TOP 100)</p>
-      <ol id="pvp-full-list-content" class="space-y-1 text-[10px] list-decimal list-inside text-gray-300 overflow-y-auto flex-1 min-h-[120px]">
-        <li class="text-gray-500">Loading…</li>
-      </ol>
+      <div id="pvp-full-list-content" class="overflow-y-auto flex-1 min-h-[120px]">
+        <table class="w-full text-[10px] text-gray-300 border-collapse">
+          <thead>
+            <tr class="text-left border-b border-gray-600">
+              <th class="py-1.5 px-2 text-gray-500 font-medium">Rank</th>
+              <th class="py-1.5 px-2 text-gray-500 font-medium">Username</th>
+              <th class="py-1.5 px-2 text-gray-500 font-medium">Wins</th>
+              <th class="py-1.5 px-2 text-gray-500 font-medium">Tokens won</th>
+            </tr>
+          </thead>
+          <tbody id="pvp-full-list-tbody">
+            <tr><td colspan="4" class="py-2 px-2 text-gray-500">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
       <button type="button" id="pvp-full-list-modal-close" class="mt-3 py-2 border-2 border-gray-500 text-gray-400 rounded text-[10px] hover:bg-gray-700">CLOSE</button>
     </div>
   </div>
@@ -2550,25 +2562,32 @@
     }
     function loadPvpFullList() {
       var supabase = window.supabaseClient;
-      var list = document.getElementById('pvp-full-list-content');
-      if (!list) return;
-      if (!supabase) { list.innerHTML = '<li class="text-gray-500">Leaderboard unavailable.</li>'; return; }
-      list.innerHTML = '<li class="text-gray-500">Loading…</li>';
+      var tbody = document.getElementById('pvp-full-list-tbody');
+      if (!tbody) return;
+      if (!supabase) { tbody.innerHTML = '<tr><td colspan="4" class="py-2 px-2 text-gray-500">Leaderboard unavailable.</td></tr>'; return; }
+      tbody.innerHTML = '<tr><td colspan="4" class="py-2 px-2 text-gray-500">Loading…</td></tr>';
       function renderList(data) {
         if (!data || data.length === 0) {
-          list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>';
+          tbody.innerHTML = '<tr><td colspan="4" class="py-2 px-2 text-gray-500">No duel wins yet.</td></tr>';
           return;
         }
         var sorted = aggregatePvpLeaderboard(data, 100);
-        list.innerHTML = sorted.map(function(e) {
+        tbody.innerHTML = sorted.map(function(e, i) {
           var tok = e.tokensWon;
-          return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + ', ' + tok + ' token' + (tok !== 1 ? 's' : '') + ' won</li>';
+          var rankColors = ['text-neon-yellow', 'text-gray-300', 'text-neon-pink'];
+          var rc = i < 3 ? rankColors[i] : 'text-gray-400';
+          return '<tr class="border-b border-gray-700/50">' +
+            '<td class="py-1.5 px-2 ' + rc + ' font-bold">' + (i + 1) + '</td>' +
+            '<td class="py-1.5 px-2 text-white">' + (typeof escHtml === 'function' ? escHtml(e.name) : e.name) + '</td>' +
+            '<td class="py-1.5 px-2 text-neon-green font-bold">' + e.wins + '</td>' +
+            '<td class="py-1.5 px-2 text-neon-yellow">' + tok + '</td>' +
+            '</tr>';
         }).join('');
       }
       supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').gt('pvp_wins', 0).then(function(r) {
         if (r.error) {
           supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').gt('pvp_wins', 0).then(function(r2) {
-            if (r2.error || !r2.data) { list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>'; return; }
+            if (r2.error || !r2.data) { tbody.innerHTML = '<tr><td colspan="4" class="py-2 px-2 text-gray-500">No duel wins yet.</td></tr>'; return; }
             renderList(r2.data);
           });
           return;
@@ -4260,25 +4279,25 @@
         var friendsModal = document.getElementById('friends-modal');
         var onFriends = friendsModal && !friendsModal.classList.contains('hidden');
         if (onFriends) {
-          if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
-          if (typeof loadFriendRequests === 'function') loadFriendRequests();
-          if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
+          if (typeof loadFriendsInvited === 'function') loadFriendsInvited(true);
+          if (typeof loadFriendRequests === 'function') loadFriendRequests(true);
+          if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode(true);
         }
-      }, 5000);
+      }, 15000);
     }
     function stopFriendsTokenPolling() {
       if (friendsPollInterval) { clearInterval(friendsPollInterval); friendsPollInterval = null; }
     }
-    function loadFriendsInvited() {
+    function loadFriendsInvited(silent) {
       var supabase = window.supabaseClient;
       var list = document.getElementById('friends-invited-list');
       if (!list) return;
       if (!supabase) {
-        list.innerHTML = '<li class="text-gray-500">Friends unavailable.</li>';
+        if (!silent) list.innerHTML = '<li class="text-gray-500">Friends unavailable.</li>';
         return;
       }
       var refCode = localStorage.getItem('tokenClicker_refCode') || '';
-      if (!refCode) { list.innerHTML = '<li class="text-gray-500">Your code not set yet.</li>'; return; }
+      if (!refCode) { if (!silent) list.innerHTML = '<li class="text-gray-500">Your code not set yet.</li>'; return; }
       supabase.from('referrals').select('invited_name, invited_wallet, created_at').eq('inviter_ref_code', refCode).order('created_at', { ascending: false }).limit(50)
         .then(function(r) {
           if (r.error || !r.data || r.data.length === 0) {
@@ -4380,7 +4399,7 @@
     function isFavoriteFriendRef(refCode) {
       return getFavoriteFriendRefs().indexOf((refCode || '').trim().toUpperCase()) >= 0;
     }
-    function loadFriendRequests() {
+    function loadFriendRequests(silent) {
       var supabase = window.supabaseClient;
       var sect = document.getElementById('friend-requests-section');
       var list = document.getElementById('friend-requests-list');
@@ -4390,7 +4409,7 @@
         sect.classList.add('hidden');
         return;
       }
-      list.innerHTML = '<li class="text-gray-500">Loading…</li>';
+      if (!silent) list.innerHTML = '<li class="text-gray-500">Loading…</li>';
       supabase.from('friend_requests').select('id, from_wallet, from_name, created_at').eq('to_wallet', me).eq('status', 'pending').order('created_at', { ascending: false }).limit(20)
         .then(function(r) {
           if (r.error) {
@@ -4565,20 +4584,20 @@
         if (typeof loadFriendRequests === 'function') loadFriendRequests();
       });
     }
-    function loadFriendsAddedByCode() {
+    function loadFriendsAddedByCode(silent) {
       var supabase = window.supabaseClient;
       var list = document.getElementById('friends-added-list');
       if (!list) return;
       var me = typeof getPvpPlayerId === 'function' ? getPvpPlayerId() : null;
       if (!supabase) {
-        list.innerHTML = '<li class="text-gray-500">Friends unavailable.</li>';
+        if (!silent) list.innerHTML = '<li class="text-gray-500">Friends unavailable.</li>';
         return;
       }
       if (!me) {
-        list.innerHTML = '<li class="text-gray-500">Set your name in Wallet → Settings to add friends by code.</li>';
+        if (!silent) list.innerHTML = '<li class="text-gray-500">Set your name in Wallet → Settings to add friends by code.</li>';
         return;
       }
-      list.innerHTML = '<li class="text-gray-500">Loading…</li>';
+      if (!silent) list.innerHTML = '<li class="text-gray-500">Loading…</li>';
       supabase.from('friends_by_code').select('friend_ref_code, friend_name, created_at').eq('user_wallet', me).order('created_at', { ascending: false }).limit(50)
         .then(function(r) {
           if (r.error || !r.data || r.data.length === 0) {
