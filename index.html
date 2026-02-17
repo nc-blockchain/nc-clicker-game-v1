@@ -2450,9 +2450,9 @@
           return '<tr class="border-b border-gray-700/50"><td class="py-1.5 px-2">' + (i + 1) + '</td><td class="py-1.5 px-2">' + name + '</td><td class="py-1.5 px-2">' + e.wins + '</td><td class="py-1.5 px-2">' + e.tokensWon + '</td></tr>';
         }).join(''));
       }
-      supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').not('pvp_wins', 'is', null).then(function(r) {
+      supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').gt('pvp_wins', 0).then(function(r) {
         if (r.error) {
-          supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').not('pvp_wins', 'is', null).then(function(r2) {
+          supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').gt('pvp_wins', 0).then(function(r2) {
             if (r2.error || !r2.data) { setAll('<tr><td colspan="4" class="py-2 px-2 text-gray-500">No duel wins yet.</td></tr>'); return; }
             renderRows(r2.data);
           });
@@ -2478,9 +2478,9 @@
           return '<li>' + e.name + ' — ' + e.wins + ' win' + (e.wins !== 1 ? 's' : '') + ', ' + tok + ' token' + (tok !== 1 ? 's' : '') + ' won</li>';
         }).join('');
       }
-      supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').not('pvp_wins', 'is', null).then(function(r) {
+      supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').gt('pvp_wins', 0).then(function(r) {
         if (r.error) {
-          supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').not('pvp_wins', 'is', null).then(function(r2) {
+          supabase.from('leaderboard').select('name, pvp_wins, pvp_tokens_won').gt('pvp_wins', 0).then(function(r2) {
             if (r2.error || !r2.data) { list.innerHTML = '<li class="text-gray-500">No duel wins yet.</li>'; return; }
             renderList(r2.data);
           });
@@ -4158,11 +4158,10 @@
       if (!me || !supabase) { if (cb) cb(); return; }
       var isGuest = (me + '').indexOf('guest_') === 0;
       var q = isGuest
-        ? supabase.from('leaderboard').select('tokens').eq('player_id', me).maybeSingle()
+        ? supabase.from('leaderboard').select('tokens').eq('player_id', me).limit(1)
         : supabase.from('leaderboard').select('tokens').ilike('wallet_address', me).limit(1);
       q.then(function(r) {
-        var row = isGuest ? r.data : (r.data && r.data[0] ? r.data[0] : null);
-        if (!row && !isGuest && r.data && r.data[0]) row = r.data[0];
+        var row = (r.data && r.data[0]) ? r.data[0] : null;
         if (row && row.tokens != null) {
           var serverTokens = Math.max(0, Number(row.tokens));
           tokens = serverTokens;
@@ -5760,10 +5759,17 @@
       if (!supabase || !wallet || String(wallet).trim() === '') return;
       var w = String(wallet).trim();
       var n = (name && String(name).trim()) || 'Player';
+      // Strip hash suffixes from names (e.g. "T~Baby#29f7c2aa" -> "T~Baby")
+      n = n.replace(/#[a-f0-9]{8}$/i, '');
       var addTokens = (tokensWon != null && !isNaN(tokensWon)) ? Math.max(0, parseInt(tokensWon, 10)) : 0;
-      supabase.from('leaderboard').select('id, pvp_wins, pvp_tokens_won, name').eq('wallet_address', w).maybeSingle().then(function(r) {
+      var isGuest = w.indexOf('guest_') === 0;
+      // Look up by wallet_address OR player_id, use limit(1) to avoid maybeSingle failure on duplicates
+      var query = isGuest
+        ? supabase.from('leaderboard').select('id, pvp_wins, pvp_tokens_won, name').or('wallet_address.eq.' + w + ',player_id.eq.' + w).limit(1)
+        : supabase.from('leaderboard').select('id, pvp_wins, pvp_tokens_won, name').eq('wallet_address', w).limit(1);
+      query.then(function(r) {
         if (r.error) { console.warn('Leaderboard select for win failed:', r.error); return; }
-        var row = r.data;
+        var row = r.data && r.data.length > 0 ? r.data[0] : null;
         var wins = (row && (row.pvp_wins != null ? Number(row.pvp_wins) : 0)) || 0;
         var newWins = Math.max(0, wins) + 1;
         var prevTokens = (row && row.pvp_tokens_won != null) ? Math.max(0, Number(row.pvp_tokens_won)) : 0;
@@ -5774,7 +5780,10 @@
             if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
           });
         } else {
-          supabase.from('leaderboard').insert({ name: n, wallet_address: w, tokens: 0, pvp_wins: 1, pvp_tokens_won: addTokens, ref_code: localStorage.getItem('tokenClicker_refCode') || null }).then(function(u) {
+          var insertData = { name: n, tokens: 0, pvp_wins: 1, pvp_tokens_won: addTokens, ref_code: localStorage.getItem('tokenClicker_refCode') || null };
+          if (isGuest) { insertData.player_id = w; insertData.wallet_address = w; }
+          else { insertData.wallet_address = w; }
+          supabase.from('leaderboard').insert(insertData).then(function(u) {
             if (u.error) console.warn('Leaderboard win insert failed:', u.error);
             if (typeof loadLeaderboardPvp === 'function') loadLeaderboardPvp();
           });
