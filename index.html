@@ -462,6 +462,14 @@
             <li>🏅 Elite Lv.1–10: 2,000–2,099, … 2,900–2,999</li>
             <li>🏆 Legend Lv.1–10: 3,000+</li>
           </ul>
+          <p class="text-gray-400 text-[9px] mb-1 mt-2">Click Trophies (badge above bird):</p>
+          <ul class="text-gray-500 text-[8px] mb-2 space-y-0.5 list-none">
+            <li>🧢 Rookie: 0+ taps</li>
+            <li>🎩 Regular: 1,000+ taps</li>
+            <li>🎓 Graduate: 5,000+ taps</li>
+            <li>🪖 Veteran: 15,000+ taps</li>
+            <li>👑 Legend: 25,000+ taps</li>
+          </ul>
           <p class="text-gray-400 text-[9px] mb-1">Death: If away &gt; 48 hours, your bird dies 🕊️</p>
           <p class="text-gray-400 text-[9px] mb-1">Revive: 10 tokens or 10% of balance (whichever is higher). A friend can send you tokens if you have none. Or wait 48 hours for the egg to hatch (free revive).</p>
         </div>
@@ -718,7 +726,7 @@
       <div class="flex justify-center">
         <div class="relative inline-block">
           <div class="absolute top-1 left-1 z-10">
-            <div class="badge-circle w-9 h-9 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel shadow-lg pointer-events-auto cursor-default" id="badge-1" title="25k tap club" role="img" aria-label="25k tap club">👑</div>
+            <div class="badge-circle w-9 h-9 rounded-full border-2 border-gray-600 flex items-center justify-center text-base bg-pixel-panel shadow-lg pointer-events-auto cursor-default" id="badge-1" title="Rookie" role="img" aria-label="Click trophy">🧢</div>
           </div>
           <button
             type="button"
@@ -1439,6 +1447,22 @@
     const REVIVE_PERCENT = 0.1;
     const REVIVE_MIN = 10;
     const EGG_HATCH_HOURS = 48;
+    // Graduating click trophies — shown on the badge above the bird
+    const CLICK_TROPHIES = [
+      { taps: 0,     emoji: '🧢', name: 'Rookie',     color: 'gray-400' },
+      { taps: 1000,  emoji: '🎩', name: 'Regular',    color: 'neon-cyan' },
+      { taps: 5000,  emoji: '🎓', name: 'Graduate',   color: 'neon-green' },
+      { taps: 15000, emoji: '🪖', name: 'Veteran',    color: 'neon-yellow' },
+      { taps: 25000, emoji: '👑', name: 'Legend',      color: 'neon-pink' }
+    ];
+    function getClickTrophy(taps) {
+      var trophy = CLICK_TROPHIES[0];
+      for (var i = CLICK_TROPHIES.length - 1; i >= 0; i--) {
+        if (taps >= CLICK_TROPHIES[i].taps) { trophy = CLICK_TROPHIES[i]; break; }
+      }
+      return trophy;
+    }
+
     const BIRD_LEVELS = [
       { taps: 0, emoji: '🥚', name: 'Egg' },
       { taps: 1, emoji: '🐣', name: 'Chick Lv.1' },
@@ -2136,8 +2160,24 @@
     function updateBadges() {
       const firstPvpWin = localStorage.getItem('tokenClicker_firstPvpWin') === '1';
       const firstFriend = !!localStorage.getItem('tokenClicker_invitedBy');
+      // Update graduating click trophy (badge-1)
+      var trophy = getClickTrophy(totalClicks);
+      var badge1El = document.getElementById('badge-1');
+      if (badge1El) {
+        badge1El.textContent = trophy.emoji;
+        badge1El.title = trophy.name + ' (' + totalClicks.toLocaleString() + ' taps)';
+        badge1El.setAttribute('aria-label', trophy.name);
+        // Update border color to match trophy tier
+        badge1El.className = badge1El.className.replace(/border-(?:gray-600|neon-cyan|neon-green|neon-yellow|neon-pink)/g, '');
+        badge1El.classList.add('border-' + trophy.color);
+      }
+      var badge1Boost = document.getElementById('badge-boost-1');
+      if (badge1Boost) {
+        badge1Boost.textContent = trophy.emoji;
+        badge1Boost.title = trophy.name;
+      }
+      // Other badges: unlock based on milestones
       const pairs = [
-        [['badge-1', 'badge-boost-1'], totalClicks >= 25000],
         [['badge-2', 'badge-boost-2'], totalClicks >= 100],
         [['badge-3', 'badge-boost-3'], totalClicks >= 500],
         [['badge-4', 'badge-boost-4'], totalClicks >= 1000],
@@ -2154,10 +2194,8 @@
           const el = document.getElementById(id);
           if (!el) return;
           el.classList.toggle('opacity-50', !unlocked);
-          if (id !== 'badge-1') {
-            el.classList.toggle('border-neon-yellow', !!unlocked);
-            el.classList.toggle('border-gray-600', !unlocked);
-          }
+          el.classList.toggle('border-neon-yellow', !!unlocked);
+          el.classList.toggle('border-gray-600', !unlocked);
         });
       });
     }
