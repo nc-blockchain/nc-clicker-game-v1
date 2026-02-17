@@ -329,8 +329,8 @@
       </div>
     </div>
   </div>
-  <!-- Toast: friend accepted invite -->
-  <div id="friend-accepted-toast" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[10002] px-4 py-2 rounded-lg border-2 border-neon-green bg-black/95 text-neon-green text-[10px] font-bold shadow-lg" style="max-width:90vw;"></div>
+  <!-- Toast: reusable in-game toast notification -->
+  <div id="game-toast" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[10002] px-4 py-2 rounded-lg border-2 border-neon-green bg-black/95 text-neon-green text-[10px] font-bold shadow-lg transition-opacity" style="max-width:90vw;"></div>
   <!-- Notifications center -->
   <div id="notifications-modal" class="hidden" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-yellow rounded-lg p-4 max-w-sm w-full max-h-[80vh] flex flex-col">
@@ -3980,6 +3980,20 @@
       if (refCode) delete c.byRefCode[(refCode || '').toUpperCase()];
       setFriendTokenCache(c);
     }
+    // Reusable in-game toast notification
+    var gameToastTimer = null;
+    function showGameToast(message, color) {
+      var toast = document.getElementById('game-toast');
+      if (!toast) return;
+      // Reset border/text color classes
+      toast.className = toast.className.replace(/border-neon-\S+/g, '').replace(/text-neon-\S+/g, '').trim();
+      var c = color || 'neon-green';
+      toast.classList.add('border-' + c, 'text-' + c);
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      if (gameToastTimer) clearTimeout(gameToastTimer);
+      gameToastTimer = setTimeout(function() { toast.classList.add('hidden'); gameToastTimer = null; }, 4500);
+    }
     var friendsReferralsChannel = null;
     var referralsRealtimeFailed = false;
     function subscribeReferralsRealtime() {
@@ -3991,15 +4005,8 @@
           var row = payload.new;
           if (!row) return;
           var name = (row.invited_name || 'Someone').trim();
-          function showFriendAcceptedToast() {
-            var toast = document.getElementById('friend-accepted-toast');
-            if (!toast) return;
-            toast.textContent = name + ' accepted your invite!';
-            toast.classList.remove('hidden');
-            setTimeout(function() { toast.classList.add('hidden'); }, 4000);
-          }
           if (typeof pushNotification === 'function') pushNotification(name + ' accepted your invite!');
-          showFriendAcceptedToast();
+          showGameToast(name + ' accepted your invite!', 'neon-green');
           if (typeof loadFriendsInvited === 'function') loadFriendsInvited();
         });
         friendsReferralsChannel = ch;
@@ -4099,12 +4106,8 @@
           if (!row || (row.from_wallet || '').trim() !== meId) return;
           if ((row.status || '').toLowerCase() !== 'accepted') return;
           var accepterName = (row.to_name || 'Someone').trim();
-          function showToast() {
-            var toast = document.getElementById('friend-accepted-toast');
-            if (toast) { toast.textContent = accepterName + ' accepted your invite!'; toast.classList.remove('hidden'); setTimeout(function() { toast.classList.add('hidden'); }, 4000); }
-          }
           try { if (typeof pushNotification === 'function') pushNotification(accepterName + ' accepted your invite!'); } catch (e) {}
-          showToast();
+          showGameToast(accepterName + ' accepted your invite!', 'neon-green');
           if (typeof loadFriendsAddedByCode === 'function') loadFriendsAddedByCode();
         });
         friendRequestAcceptedChannel = ch;
@@ -4135,7 +4138,8 @@
           if (!row || (row.recipient_player_id || '').trim() !== meId) return;
           var senderName = (row.sender_name || 'Someone').trim();
           var amt = row.amount != null ? parseInt(row.amount, 10) : 0;
-          var msg = 'You received ' + (amt > 0 ? amt + ' tokens from ' + senderName : 'tokens from ' + senderName) + '.';
+          var msg = (amt > 0 ? '+' + amt + ' tokens from ' + senderName + '!' : 'Tokens received from ' + senderName + '!');
+          showGameToast(msg, 'neon-yellow');
           if (typeof syncTokensFromLeaderboard === 'function') syncTokensFromLeaderboard(function() {
             try { if (typeof pushNotification === 'function') pushNotification(msg); } catch (e) {}
           });
@@ -5693,11 +5697,7 @@
       resultEl.classList.remove('hidden');
       var me = getPvpPlayerId();
       var winnerWallet = room.winner_wallet;
-      if (winnerWallet && typeof upsertLeaderboardWin === 'function') {
-        var winName = room.player1_wallet === winnerWallet ? room.player1_name : room.player2_name;
-        var stakeNum = room.stake_amount != null ? parseInt(room.stake_amount, 10) : 0;
-        upsertLeaderboardWin(winnerWallet, winName, isNaN(stakeNum) ? 0 : stakeNum);
-      }
+      // Note: upsertLeaderboardWin is called in endDuelGame(), not here, to avoid double-counting wins
       var winName = room.player1_wallet === winnerWallet ? room.player1_name : (room.player2_name || 'Winner');
       var stake = room.stake_amount != null ? parseInt(room.stake_amount, 10) : 5;
       if (isNaN(stake) || stake < 1) stake = 5;
