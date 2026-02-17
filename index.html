@@ -310,7 +310,7 @@
   </div>
 
   <!-- First-time only: set name when you first get the app (no name in storage) -->
-  <div id="welcome-name-modal" class="hidden" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+  <div id="welcome-name-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Set your name" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-6 max-w-sm w-full text-center">
       <p class="text-neon-cyan text-[10px] font-bold mb-3">WELCOME TO 1N TOKEN CLICKER</p>
       <p class="text-gray-300 text-[9px] mb-4">Enter your display name once. You can change it later in Wallet → Settings.</p>
@@ -319,7 +319,7 @@
     </div>
   </div>
   <!-- Profile: change name (opened from Wallet → Settings) -->
-  <div id="profile-name-modal" class="hidden" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+  <div id="profile-name-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Change name" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-6 max-w-sm w-full text-center">
       <p class="text-neon-cyan text-[10px] font-bold mb-3">CHANGE DISPLAY NAME</p>
       <input type="text" id="profile-name-input" placeholder="Your name" maxlength="20" class="w-full bg-black border-2 border-gray-600 rounded px-3 py-2 text-white text-[10px] mb-3" />
@@ -330,9 +330,9 @@
     </div>
   </div>
   <!-- Toast: reusable in-game toast notification -->
-  <div id="game-toast" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[10002] px-4 py-2 rounded-lg border-2 border-neon-green bg-black/95 text-neon-green text-[10px] font-bold shadow-lg transition-opacity" style="max-width:90vw;"></div>
+  <div id="game-toast" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[10002] px-4 py-2 rounded-lg border-2 border-neon-green bg-black/95 text-neon-green text-[10px] font-bold shadow-lg transition-opacity" style="max-width:90vw;" role="status" aria-live="polite"></div>
   <!-- Notifications center -->
-  <div id="notifications-modal" class="hidden" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+  <div id="notifications-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Notifications" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-yellow rounded-lg p-4 max-w-sm w-full max-h-[80vh] flex flex-col">
       <p class="text-neon-yellow text-[10px] font-bold mb-3">NOTIFICATIONS</p>
       <div class="mb-3">
@@ -345,7 +345,7 @@
     </div>
   </div>
   <!-- Wallet Settings modal (opened by SETTINGS button in Wallet) -->
-  <div id="wallet-settings-modal" class="hidden" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+  <div id="wallet-settings-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Settings" style="position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-4 max-w-sm w-full max-h-[90vh] overflow-y-auto relative">
       <div class="flex items-center justify-between mb-3">
         <p class="text-neon-cyan text-[10px] font-bold">SETTINGS</p>
@@ -483,7 +483,7 @@
     </div>
   </div>
   <!-- Death modal: bird died from inactivity, revive with tokens or wait 48h for egg hatch -->
-  <div id="death-modal" class="hidden" style="position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;">
+  <div id="death-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Bird has died" style="position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-gray-600 rounded-lg p-6 max-w-sm w-full text-center">
       <p class="text-4xl mb-2">🕊️</p>
       <p class="text-neon-yellow text-[10px] font-bold mb-2">YOUR BIRD DIED</p>
@@ -501,7 +501,7 @@
     </div>
   </div>
   <!-- Share confirmation: proof user shared on platform -->
-  <div id="share-confirm-modal" class="hidden" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+  <div id="share-confirm-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Share confirmation" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-6 max-w-sm w-full text-center">
       <p class="text-neon-cyan text-[10px] font-bold mb-2">SHARE CONFIRMATION</p>
       <p id="share-confirm-msg" class="text-gray-300 text-[9px] mb-4">Did you share the game?</p>
@@ -512,7 +512,7 @@
     </div>
   </div>
   <!-- PVP Onboarding: name + enough in-game tokens for wager -->
-  <div id="pvp-full-list-modal" class="hidden" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+  <div id="pvp-full-list-modal" class="hidden" role="dialog" aria-modal="true" aria-label="PVP leaderboard" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-pink rounded-lg p-4 max-w-sm w-full max-h-[80vh] flex flex-col">
       <p class="text-neon-pink text-[10px] font-bold mb-3">PVP DUEL WINS (TOP 100)</p>
       <ol id="pvp-full-list-content" class="space-y-1 text-[10px] list-decimal list-inside text-gray-300 overflow-y-auto flex-1 min-h-[120px]">
@@ -523,7 +523,7 @@
   </div>
   <!-- Friends modal: invite & requests (opened by FRIENDS button in header) -->
   <!-- Friends: scan QR to add friend by their invite code -->
-  <div id="friends-scan-qr-modal" class="hidden" style="position:fixed;inset:0;z-index:10004;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;">
+  <div id="friends-scan-qr-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Scan QR code" style="position:fixed;inset:0;z-index:10004;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-4 max-w-sm w-full">
       <div class="flex items-center justify-between gap-2 mb-2">
         <p class="text-neon-cyan text-[10px] font-bold">Scan friend's invite QR</p>
@@ -543,7 +543,7 @@
     </div>
   </div>
   <!-- Create new room dialog: opened when clicking Duel or Create room (for both players) -->
-  <div id="pvp-create-room-modal" class="hidden" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
+  <div id="pvp-create-room-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Create room" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
     <div class="bg-pixel-panel border-2 border-neon-green/60 rounded-lg p-4 max-w-sm w-full my-4">
       <div class="flex items-center justify-between gap-2 mb-3 border-b border-gray-700 pb-2">
         <p id="pvp-create-modal-title" class="text-neon-green text-[10px] font-bold">➕ CREATE NEW ROOM</p>
@@ -571,7 +571,7 @@
     </div>
   </div>
   <!-- Customize quick buffs: reorder and add buffs to main clicker strip -->
-  <div id="customize-buffs-modal" class="hidden" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
+  <div id="customize-buffs-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Customize buffs" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
     <div class="bg-pixel-panel border-2 border-neon-cyan/50 rounded-lg p-4 max-w-sm w-full my-4">
       <div class="flex items-center justify-between gap-2 mb-3 border-b border-gray-700 pb-2">
         <p class="text-neon-cyan text-[10px] font-bold">Customize quick buffs</p>
@@ -590,7 +590,7 @@
     </div>
   </div>
   <!-- Room settings: change room name, copy link (opened by cog on room card) -->
-  <div id="room-settings-modal" class="hidden" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
+  <div id="room-settings-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Room settings" style="position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
     <div class="bg-pixel-panel border-2 border-neon-cyan rounded-lg p-4 max-w-sm w-full">
       <div class="flex items-center justify-between gap-2 mb-3">
         <p class="text-neon-cyan text-[10px] font-bold">ROOM SETTINGS</p>
@@ -640,7 +640,7 @@
       </div>
     </div>
   </div>
-  <div id="pvp-onboarding-modal" class="hidden" style="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
+  <div id="pvp-onboarding-modal" class="hidden" role="dialog" aria-modal="true" aria-label="PVP setup" style="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;padding:20px;">
     <div class="bg-pixel-panel border-2 border-neon-pink rounded-lg p-6 max-w-sm w-full text-center">
       <p class="text-neon-pink text-[10px] font-bold mb-3">JOIN PVP DUEL</p>
       <p id="pvp-onboarding-msg" class="text-gray-300 text-[9px] mb-4">Enter your name to play. You need enough in-game tokens for the room's wager.</p>
@@ -1485,7 +1485,7 @@
 
     // --- State (load from localStorage) ---
     let totalClicks = parseInt(localStorage.getItem('tokenClicker_totalClicks') || '0', 10);
-    let tokens = parseInt(localStorage.getItem('tokenClicker_tokens') || '', 10);
+    let tokens = parseInt(localStorage.getItem('tokenClicker_tokens') || '0', 10);
     if (isNaN(tokens) || tokens < 0) tokens = Math.floor(totalClicks / CLICKS_PER_TOKEN);
     let baseTapPower = 1;
     let buffAutoclickerUntil = parseInt(localStorage.getItem('tokenClicker_buffAcUntil') || '0', 10);
@@ -2989,6 +2989,7 @@
         const id = btn.dataset.id;
         const reward = parseInt(btn.dataset.reward, 10);
         if (!id || btn.disabled) return;
+        btn.disabled = true; // Prevent double-click
         let didClaim = false;
         if (id === 'daily' && lastDailyClaim !== todayKey()) { lastDailyClaim = todayKey(); addTokens(reward); didClaim = true; }
         if (id === '50today' && clicksToday >= 50 && !claimed50Today) { claimed50Today = true; addTokens(reward); didClaim = true; }
@@ -5077,6 +5078,7 @@
             return new Date(b.created_at) - new Date(a.created_at);
           });
           var me = getPvpPlayerId();
+          function escHtml(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
           list.innerHTML = rooms.map(function(room) {
             var p1 = room.player1_wallet || '—';
             var p2 = room.player2_wallet || '—';
@@ -5106,14 +5108,14 @@
               statusText = alreadyInDuel ? 'You are in this duel' : 'Race in progress — tap ENTER DUEL';
             } else if (room.status === 'open' && count === 1) {
               var whoInRoom = (room.player1_name && room.player1_name.trim()) || (room.player2_name && room.player2_name.trim()) || null;
-              statusText = whoInRoom ? whoInRoom + ' in room — waiting for player to join' : 'Waiting for player to join';
+              statusText = whoInRoom ? escHtml(whoInRoom) + ' in room — waiting for player to join' : 'Waiting for player to join';
             } else {
               statusText = count + '/2 · ' + room.status;
             }
             var statusLine = room.status === 'open' && count === 1 ? statusText : (count + '/2 · ' + statusText);
             return '<div class="pvp-room-card bg-pixel-panel border-2 border-gray-700 p-3 rounded text-left cursor-pointer hover:border-gray-500 relative" data-room-id="' + room.id + '" data-room-action="' + cardAction + '" data-room-stake="' + stake + '">' +
               '<div class="flex justify-between items-center gap-2">' +
-              '<span class="text-[10px] text-neon-pink truncate">Room ' + (room.room_name && room.room_name.trim() ? room.room_name.trim() : (typeof getLocalRoomName === 'function' ? getLocalRoomName(room.id) : '') || shortId) + (isMine ? ' (you)' : '') + ' · ' + stake + ' tokens</span>' + closeXBtn +
+              '<span class="text-[10px] text-neon-pink truncate">Room ' + escHtml(room.room_name && room.room_name.trim() ? room.room_name.trim() : (typeof getLocalRoomName === 'function' ? getLocalRoomName(room.id) : '') || shortId) + (isMine ? ' (you)' : '') + ' · ' + stake + ' tokens</span>' + closeXBtn +
               '</div>' +
               '<div class="text-gray-500 text-[9px] mt-1">' + statusLine + '</div>' +
               '<div class="mt-2 flex flex-wrap gap-2 items-center justify-between">' +
@@ -6161,6 +6163,7 @@
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       const el = document.getElementById('page-' + pageId);
       if (el) el.classList.add('active');
+      window.scrollTo(0, 0);
       updatePvpInviteBanner();
       if (pageId === 'home' && typeof updateUI === 'function') updateUI();
       if (pageId === 'multiplayer') {
@@ -6196,6 +6199,17 @@
       }
     }
     window.addEventListener('hashchange', () => showPage(getPageFromHash()));
+
+    // Visibility change: save state when hidden, refresh on return
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        if (typeof save === 'function') save();
+      } else {
+        checkDeath();
+        if (typeof updateUI === 'function') updateUI();
+        if (typeof updateBountiesUI === 'function') updateBountiesUI();
+      }
+    });
 
     // Onboarding: multi-step intro for new users
     const app = document.getElementById('app');
@@ -6267,6 +6281,7 @@
     window.addEventListener('load', () => {
       createStars();
       checkDeath();
+      setInterval(checkDeath, 300000); // Re-check death every 5 minutes
       updateBuffState();
       updateBountyProgress();
       save();
