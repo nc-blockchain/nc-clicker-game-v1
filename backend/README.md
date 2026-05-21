@@ -1,13 +1,15 @@
 # Token Clicker Backend
 
-Admin wallet and $CARD mint API. Add your **minter address** and **admin mnemonic** in `.env`; the app loads the minter from `GET /api/config`.
+Admin wallet and $NCCC mint API. Add your **minter address** and **admin mnemonic** in `.env`; the app loads the minter from `GET /api/config`.
+
+> **Note:** The platform migrated $CARD → $NCCC on 2026-05-21. The live faucet now pays NCCC on **Base mainnet** (see the 1nc-blockchain repo). This TON-side backend is kept for the in-game swap/withdraw UX and historical reference. Env var name `TON_CARD_MINTER_ADDRESS` retains its `CARD_` prefix for backward compatibility with existing deploys.
 
 ## Setup
 
 1. Copy `.env.example` to `.env`.
 2. Set:
-   - **ADMIN_MNEMONIC** – 24-word mnemonic of the wallet that is the **minter admin** (only this wallet can mint $CARD).
-   - **TON_CARD_MINTER_ADDRESS** – Your deployed $CARD Jetton minter contract address.
+   - **ADMIN_MNEMONIC** – 24-word mnemonic of the wallet that is the **minter admin** (only this wallet can mint $NCCC).
+   - **TON_CARD_MINTER_ADDRESS** – Your deployed $NCCC Jetton minter contract address.
    - **TON_NETWORK** – `testnet` or `mainnet`.
    - **ADMIN_API_KEY** (optional) – Secret for `/api/admin/*` endpoints.
 
@@ -23,8 +25,8 @@ npm start
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/config` | Public. Returns `{ cardMinterAddress, network }`. App uses this to show minter and enable withdraw. |
-| POST | `/api/withdraw` | Body: `{ address, amount }`. Mints `amount` $CARD to `address` (admin wallet sends tx). |
+| GET | `/api/config` | Public. Returns `{ cardMinterAddress, network }`. App uses this to show minter and enable withdraw. (Field name `cardMinterAddress` retained for backward compat.) |
+| POST | `/api/withdraw` | Body: `{ address, amount }`. Mints `amount` $NCCC to `address` (admin wallet sends tx). |
 | POST | `/api/admin/mint` | Same as withdraw; requires header `x-api-key: ADMIN_API_KEY`. |
 | GET | `/api/admin/status` | Requires `x-api-key`. Returns config status (no secrets). |
 
@@ -40,7 +42,7 @@ window.TON_CONFIG = {
 
 The app will:
 1. Fetch `GET /api/config` and set the minter address (and show it in Wallet).
-2. On "Withdraw", call `POST /api/withdraw` with the connected wallet address and amount; backend mints $CARD to that address.
+2. On "Withdraw", call `POST /api/withdraw` with the connected wallet address and amount; backend mints $NCCC to that address.
 
 ## Admin controls
 

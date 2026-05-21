@@ -56,12 +56,14 @@ Or: `npm start` (uses http-server on port 3001). Then open **http://localhost:30
 | **4** | Multiplayer (lobby, rooms, duels, NFT stakes) |
 | **5** | Marketplace, improved NFT art, social |
 
-## TON wallet & $CARD token
+## TON wallet & $NCCC token
+
+> **Note:** The platform migrated $CARD → $NCCC on 2026-05-21. The live faucet now pays NCCC on **Base mainnet** (handled by the 1nc-blockchain repo's distributor wallet). The TON-side Jetton flow described below is the in-game swap/withdraw UX and historical reference.
 
 - **Wallet:** [TonConnect](https://ton.org/ecosystem/ton-connect) – connect **Tonkeeper** or **Telegram Wallet** from the Wallet page.
-- **Token:** **$CARD** Jetton on TON. Contract and deploy: see [contracts/README.md](./contracts/README.md).
-- **Minter address:** Add your deployed minter address only in the **backend** [backend/.env](backend/.env) (`TON_CARD_MINTER_ADDRESS`). The app loads it from `GET /api/config`; no need to edit the frontend.
-- **Backend & admin:** [backend/README.md](backend/README.md) – admin wallet (mnemonic in `.env`), `POST /api/withdraw` (mint $CARD to user), `POST /api/admin/mint` (admin-only). Set `backendUrl` in [ton-config.js](ton-config.js) so the app can call the API.
+- **Token:** **$NCCC** Jetton on TON. Contract and deploy: see [contracts/README.md](./contracts/README.md).
+- **Minter address:** Add your deployed minter address only in the **backend** [backend/.env](backend/.env) (`TON_CARD_MINTER_ADDRESS` — env var name kept for backward compat). The app loads it from `GET /api/config`; no need to edit the frontend.
+- **Backend & admin:** [backend/README.md](backend/README.md) – admin wallet (mnemonic in `.env`), `POST /api/withdraw` (mint $NCCC to user), `POST /api/admin/mint` (admin-only). Set `backendUrl` in [ton-config.js](ton-config.js) so the app can call the API.
 - **Setup:** `npm install` and `npm run build:wallet` for the frontend; in `backend/` run `npm install` and `npm start`. Serve the app so `tonconnect-manifest.json` is at the app root.
 - **Mobile / other device:** You can approve in Tonkeeper on your phone while the game is open on desktop. You don’t need the game on the phone; return to the game tab after approving. If Tonkeeper says “application is not on this device”, the connection still completes on the device where the game is open. For Tonkeeper to open the game on your phone after connecting, deploy the app and set the `url` in [tonconnect-manifest.json](tonconnect-manifest.json) to your deployed URL (e.g. `https://yourusername.github.io/nc-clicker-game-v1` for GitHub Pages).
 
@@ -69,7 +71,7 @@ Or: `npm start` (uses http-server on port 3001). Then open **http://localhost:30
 
 - **Frontend**: Tailwind CSS (CDN), vanilla JS, hash routing, TonConnect SDK.
 - **Backend**: Supabase (Phase 3) for users, clicks, tokens, leaderboards, rooms.
-- **Token**: $CARD Jetton (FunC) on TON; minting via admin wallet or backend.
+- **Token**: $NCCC Jetton (FunC) on TON; minting via admin wallet or backend. (Live faucet for the platform now pays NCCC on Base — see 1nc-blockchain repo.)
 
 ## License
 

@@ -1,7 +1,7 @@
 {
   "name": "nc-clicker-game-v1-backend",
   "version": "1.0.0",
-  "description": "Backend: admin wallet, $CARD mint, withdraw",
+  "description": "Backend: admin wallet, $NCCC mint, withdraw",
   "type": "module",
   "main": "index.js",
   "scripts": {

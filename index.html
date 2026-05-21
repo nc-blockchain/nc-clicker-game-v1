@@ -19,10 +19,10 @@
       document.write('<base href="' + origin + basePath + '" />');
     })();
   </script>
-  <title>1N Blockchain Token Clicker – Tap to earn $CARD</title>
+  <title>1N Blockchain Token Clicker – Tap to earn $NCCC</title>
   <!-- Share preview: opens nicely on mobile when link is shared -->
   <meta property="og:title" content="1N Blockchain Token Clicker" />
-  <meta property="og:description" content="Tap the Cardinal to earn tokens. Play on your phone – connect wallet, claim $CARD, challenge friends in PVP." />
+  <meta property="og:description" content="Tap the Cardinal to earn tokens. Play on your phone – connect wallet, claim $NCCC, challenge friends in PVP." />
   <meta property="og:image" content="https://biggleem.github.io/nc-clicker-game-v1/assets/cardinal.png" />
   <meta property="og:url" content="https://biggleem.github.io/nc-clicker-game-v1/" />
   <meta property="og:type" content="website" />
@@ -1167,7 +1167,7 @@
         <h2 class="text-neon-yellow m-0">WALLET</h2>
         <button type="button" id="wallet-header-connect-btn" class="wallet-header-connect-btn py-1.5 px-3 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] font-medium hover:bg-neon-cyan/10 shrink-0">🔗 Connect</button>
       </div>
-      <p class="text-gray-400 text-[10px] mb-3">Connect your wallet to buy more tokens and boosts with $CARD.</p>
+      <p class="text-gray-400 text-[10px] mb-3">Connect your wallet to buy more tokens and boosts with $NCCC.</p>
       <!-- Wallet tabs -->
       <div class="flex flex-wrap gap-1 mb-3 border-b-2 border-gray-700 pb-2">
         <button type="button" class="wallet-tab-btn py-1.5 px-2.5 border-2 border-neon-cyan text-neon-cyan rounded text-[9px] font-bold bg-neon-cyan/10" data-wallet-tab="balance">💰 Balance</button>
@@ -1186,7 +1186,7 @@
               <div class="text-gray-600 text-[8px] mt-0.5">Earn by tapping & bounties. Use for Boosts & PVP.</div>
             </div>
             <div>
-              <div class="text-gray-500 text-[10px]">$CARD (on-chain)</div>
+              <div class="text-gray-500 text-[10px]">$NCCC (on-chain)</div>
               <div id="card-balance" class="text-xl neon-text-cyan">—</div>
               <div class="text-gray-500 text-[9px]" id="wallet-config-hint">connect wallet</div>
             </div>
@@ -1216,15 +1216,15 @@
       <div id="wallet-panel-swap" class="wallet-panel hidden" data-wallet-panel="swap">
         <div class="bg-pixel-panel border-2 border-neon-green/30 p-4 rounded mb-4" id="swap-area">
           <div class="flex items-center justify-between gap-2 mb-2">
-            <span class="text-gray-500 text-[10px]">SWAP $CARD → TOKENS</span>
+            <span class="text-gray-500 text-[10px]">SWAP $NCCC → TOKENS</span>
             <span id="ton-price-display" class="text-[9px] text-gray-400">TON: —</span>
           </div>
-          <p class="text-[10px] text-gray-400 mb-2">Exchange on-chain $CARD for in-game tokens to buy boosts and play.</p>
+          <p class="text-[10px] text-gray-400 mb-2">Exchange on-chain $NCCC for in-game tokens to buy boosts and play.</p>
           <div class="flex gap-2 items-center flex-wrap">
-            <input type="number" id="swap-amount" min="1" step="1" placeholder="$CARD amount" class="bg-black border-2 border-gray-600 rounded px-2 py-2 text-neon-cyan w-28 text-[10px]" />
+            <input type="number" id="swap-amount" min="1" step="1" placeholder="$NCCC amount" class="bg-black border-2 border-gray-600 rounded px-2 py-2 text-neon-cyan w-28 text-[10px]" />
             <button type="button" id="swap-btn" class="border-2 border-neon-green text-neon-green px-3 py-2 rounded text-[10px] hover:bg-neon-green/10 disabled:opacity-50">SWAP</button>
           </div>
-          <p class="text-gray-500 text-[9px] mt-1">Rate: 1 $CARD = 10 in-game tokens</p>
+          <p class="text-gray-500 text-[9px] mt-1">Rate: 1 $NCCC = 10 in-game tokens</p>
           <p id="swap-preview" class="text-neon-yellow text-[9px] mt-0.5 hidden">You get ~<span id="swap-preview-value">0</span> tokens</p>
           <p id="swap-feedback" class="text-[10px] mt-2 hidden"></p>
         </div>
@@ -1232,8 +1232,8 @@
       <!-- Withdraw -->
       <div id="wallet-panel-withdraw" class="wallet-panel hidden" data-wallet-panel="withdraw">
         <div class="bg-pixel-panel border-2 border-gray-700 p-4 rounded mb-4" id="withdraw-area">
-          <div class="text-gray-500 text-[10px] mb-2">WITHDRAW TOKENS → $CARD</div>
-          <p id="withdraw-area-hint" class="text-[10px] text-gray-400 mb-2">Convert in-game tokens to on-chain $CARD (sent to your connected wallet).</p>
+          <div class="text-gray-500 text-[10px] mb-2">WITHDRAW TOKENS → $NCCC</div>
+          <p id="withdraw-area-hint" class="text-[10px] text-gray-400 mb-2">Convert in-game tokens to on-chain $NCCC (sent to your connected wallet).</p>
           <div class="flex gap-2 items-center flex-wrap">
             <input type="number" id="withdraw-amount" min="1" placeholder="Amount" class="bg-black border-2 border-gray-600 rounded px-2 py-2 text-neon-cyan w-24 text-[10px]" />
             <button type="button" id="withdraw-max-btn" class="border-2 border-gray-500 text-gray-400 px-2 py-2 rounded text-[9px] hover:bg-gray-700 hover:border-gray-400">MAX</button>
@@ -3714,7 +3714,7 @@
       if (walletAdminSetupLink) walletAdminSetupLink.href = backendUrl.replace(/\/$/, '') + '/setup';
     }
 
-    // Withdraw: send in-game tokens to backend, backend mints $CARD to user
+    // Withdraw: send in-game tokens to backend, backend mints $NCCC to user
     const withdrawAmount = document.getElementById('withdraw-amount');
     const withdrawBtn = document.getElementById('withdraw-btn');
     const withdrawFeedback = document.getElementById('withdraw-feedback');
@@ -3740,7 +3740,7 @@
             tokens -= amount;
             save();
             updateUI();
-            withdrawFeedback.textContent = 'Withdraw sent! Check your wallet for $CARD.';
+            withdrawFeedback.textContent = 'Withdraw sent! Check your wallet for $NCCC.';
             withdrawFeedback.classList.add('text-neon-green');
             if (withdrawAmount) withdrawAmount.value = '';
           } else {
@@ -4043,7 +4043,7 @@
         if (e.target && e.target.id === 'send-scan-qr-modal') closeSendScanModal();
       });
     })();
-    // Swap: $CARD → in-game tokens (backend verifies balance, frontend credits tokens)
+    // Swap: $NCCC → in-game tokens (backend verifies balance, frontend credits tokens)
     var swapAmountEl = document.getElementById('swap-amount');
     var swapBtn = document.getElementById('swap-btn');
     var swapFeedback = document.getElementById('swap-feedback');
@@ -4051,7 +4051,7 @@
       swapBtn.addEventListener('click', async function() {
         var amount = swapAmountEl ? parseInt(swapAmountEl.value, 10) : 0;
         if (!amount || amount < 1) {
-          if (swapFeedback) { swapFeedback.textContent = 'Enter $CARD amount (1+).'; swapFeedback.classList.remove('hidden'); }
+          if (swapFeedback) { swapFeedback.textContent = 'Enter $NCCC amount (1+).'; swapFeedback.classList.remove('hidden'); }
           return;
         }
         var addr = window.TonWallet && window.TonWallet.getAddress();
@@ -4085,7 +4085,7 @@
             var errMsg = data.error || 'Swap failed.';
             if (swapFeedback) {
               if (/not enough|insufficient/i.test(errMsg) && window.TonWallet && window.TonWallet.cardBalance != null) {
-                errMsg += ' Your $CARD balance: ' + Math.max(0, Number(window.TonWallet.cardBalance));
+                errMsg += ' Your $NCCC balance: ' + Math.max(0, Number(window.TonWallet.cardBalance));
               }
               swapFeedback.textContent = errMsg;
               swapFeedback.classList.add('text-neon-pink');
@@ -6633,7 +6633,7 @@
       { icon: '⚡', title: 'BOOSTS', desc: 'Spend tokens on Power (2x), Autoclicker, and faster cooldown. Earn more tokens faster!' },
       { icon: '🎯', title: 'BOUNTIES', desc: 'Claim daily rewards, weekly challenges, and tap milestones. Free tokens for completing goals!' },
       { icon: '🏆', title: 'PVP DUELS', desc: 'Challenge friends in 30-second click races. Stake tokens — winner takes all!' },
-      { icon: '👛', title: 'WALLET', desc: 'Connect Tonkeeper to swap $CARD for tokens or withdraw tokens to on-chain $CARD.' }
+      { icon: '👛', title: 'WALLET', desc: 'Connect Tonkeeper to swap $NCCC for tokens or withdraw tokens to on-chain $NCCC.' }
     ];
     let onboardingStep = 0;
     function showOnboardingStep(step) {

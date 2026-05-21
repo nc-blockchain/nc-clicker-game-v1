@@ -1,6 +1,6 @@
 {
-  "name": "$CARD",
-  "symbol": "CARD",
+  "name": "$NCCC",
+  "symbol": "NCCC",
   "decimals": 9,
   "description": "1N Blockchain Token Clicker – earn by tapping the Cardinal.",
   "image": "https://raw.githubusercontent.com/biggleem/nc-clicker-game-v1/main/assets/cardinal.png",

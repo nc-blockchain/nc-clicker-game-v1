@@ -1,6 +1,10 @@
-# Create $CARD minter contract address
+# Create $NCCC minter contract address
 
-You need a **Jetton minter contract** on TON so the game backend can mint $CARD to players. The minter address goes in the backend Setup (http://localhost:3002/setup) as **$CARD minter contract address**.
+> Historical filename `DEPLOY-CARD.md` is kept to avoid breaking `scripts/prepare-deploy-to-repo.js` references. The token is now branded **$NCCC** (post-2026-05-21 migration from $CARD).
+
+You need a **Jetton minter contract** on TON so the game backend can mint $NCCC to players. The minter address goes in the backend Setup (http://localhost:3002/setup) as **$NCCC minter contract address**.
+
+> **Note:** As of 2026-05-21, the live platform faucet pays NCCC on **Base mainnet** (not TON). This TON Jetton deploy guide is kept for historical reference and any future TON-side reintroduction. For the current Base-side NCCC distributor, see the 1nc-blockchain repo.
 
 ## Option A: Official web deployer (easiest)
 
@@ -18,8 +22,8 @@ Use the official TON Jetton deployer. No code required.
    Click **Connect Wallet** and connect Tonkeeper or Telegram Wallet (use the same wallet that has testnet TON).
 
 4. **Fill the form**
-   - **Name:** `$CARD`
-   - **Ticker:** `CARD`
+   - **Name:** `$NCCC`
+   - **Ticker:** `NCCC`
    - **Image URL:** `https://raw.githubusercontent.com/biggleem/nc-clicker-game-v1/main/assets/cardinal.png`  
      (or any public image URL)
    - **Description (optional):** `1N Blockchain Token Clicker – earn by tapping the Cardinal.`
@@ -28,11 +32,11 @@ Use the official TON Jetton deployer. No code required.
    Click **Deploy** and approve the transaction in your wallet. You need about **0.25 TON** (testnet is free from the faucet).
 
 6. **Copy the minter address**  
-   After the transaction confirms, the page shows your Jetton. The **contract address** of the minter (starts with `EQ...` or `UQ...`) is your **$CARD minter contract address**. Copy it.
+   After the transaction confirms, the page shows your Jetton. The **contract address** of the minter (starts with `EQ...` or `UQ...`) is your **$NCCC minter contract address**. Copy it.
 
 7. **Use it in Token Clicker**  
    - Open http://localhost:3002/setup  
-   - Paste this address into **$CARD minter contract address**  
+   - Paste this address into **$NCCC minter contract address**  
    - Use the **same wallet’s** 24 words as **Admin mnemonic** (the deployer makes that wallet the minter admin)  
    - Save and restart the backend  
 
@@ -50,9 +54,9 @@ If you prefer to deploy from code and have Node.js installed:
 
 ```bash
 # From nc-clicker-game-v1 repo root
-npx create-ton@latest card-jetton -- --template tact-counter
+npx create-ton@latest nccc-jetton -- --template tact-counter
 # Or use the Jetton template if your create-ton version offers it
-cd card-jetton
+cd nccc-jetton
 npm install
 npm run build
 npx blueprint run
@@ -66,7 +70,7 @@ Then copy the deployed minter address into the backend Setup.
 
 1. Open **http://localhost:3002/setup**
 2. **Admin mnemonic:** 24 words of the wallet that **deployed** the Jetton (that wallet is the minter admin and pays for minting).
-3. **$CARD minter contract address:** The minter address you got from minter.ton.org (or Blueprint).
+3. **$NCCC minter contract address:** The minter address you got from minter.ton.org (or Blueprint).
 4. **Network:** Testnet or Mainnet, same as where you deployed.
 5. Click **Save to .env**, then **restart the backend** (stop and run `node index.js` again in the `backend/` folder).
 

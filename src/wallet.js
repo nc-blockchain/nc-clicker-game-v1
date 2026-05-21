@@ -8,8 +8,10 @@ import TonConnect, { isWalletInfoRemote, isWalletInfoCurrentlyInjected } from '@
 const PRODUCTION_MANIFEST = 'https://biggleem.github.io/nc-clicker-game-v1/tonconnect-manifest.json';
 
 let connector;
+// Note: var names use legacy `card*` for backward-compat with backend route
+// `/api/wallet/card-balance` and HTML id `card-balance`. UI labels say $NCCC.
 let cardBalance = null;
-let cardMinterAddress = null; // Set after deploying $CARD Jetton
+let cardMinterAddress = null; // Set after deploying token Jetton (legacy $CARD; UI now shows $NCCC)
 
 function getManifestUrl() {
   if (typeof window === 'undefined' || !window.location) return PRODUCTION_MANIFEST;
@@ -117,7 +119,7 @@ function getAccount() {
 async function fetchCardBalance() {
   if (!cardMinterAddress) return null;
   try {
-    // When $CARD Jetton is deployed: get user's Jetton wallet address from minter,
+    // When the token Jetton is deployed: get user's Jetton wallet address from minter,
     // then read balance from Jetton wallet contract. For now return stored value.
     return cardBalance;
   } catch (_) {

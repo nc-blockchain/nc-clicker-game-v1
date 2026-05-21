@@ -1,6 +1,7 @@
 /**
- * Token Clicker backend: config, withdraw (mint $CARD), admin mint.
+ * Token Clicker backend: config, withdraw (mint $NCCC), admin mint.
  * Set TON_CARD_MINTER_ADDRESS and ADMIN_MNEMONIC in .env or via /setup UI.
+ * (Env var names retain `CARD` prefix for backward compatibility with existing deploys.)
  */
 import 'dotenv/config';
 import express from 'express';
@@ -35,7 +36,7 @@ app.get('/tonconnect-manifest.json', (req, res) => {
     url: origin.replace(/\/$/, ''),
     name: '1N Blockchain Token Clicker',
     iconUrl: origin.replace(/\/$/, '') + '/assets/cardinal.png',
-    description: 'Tap the Cardinal to earn $CARD tokens. Connect TON wallet to withdraw.',
+    description: 'Tap the Cardinal to earn $NCCC tokens. Connect TON wallet to withdraw.',
     socialUrls: ['https://github.com/biggleem/nc-clicker-game-v1'],
   });
 });
@@ -62,8 +63,8 @@ app.get('/', (req, res) => {
     endpoints: {
       'GET /setup': 'Admin setup UI (mnemonic, minter, etc.)',
       'GET /api/config': 'minter address & network',
-      'GET /api/wallet/card-balance': 'query: address – $CARD balance from chain',
-      'POST /api/swap': 'body: { address, amount } — verify $CARD balance, return tokensToCredit (1 $CARD = 10 tokens)',
+      'GET /api/wallet/card-balance': 'query: address – $NCCC balance from chain (route name retained for backward compat)',
+      'POST /api/swap': 'body: { address, amount } — verify $NCCC balance, return tokensToCredit (1 $NCCC = 10 tokens)',
       'POST /api/withdraw': 'body: { address, amount }',
       'POST /api/admin/mint': 'body: { address, amount }, header: x-api-key',
       'GET /api/admin/status': 'header: x-api-key',
@@ -93,7 +94,7 @@ app.post('/api/setup', (req, res) => {
     return res.status(400).json({ error: 'Admin mnemonic required (12–24 words)' });
   }
   if (!minter) {
-    return res.status(400).json({ error: '$CARD minter address required' });
+    return res.status(400).json({ error: '$NCCC minter address required' });
   }
   const envPath = path.join(__dirname, '.env');
   const lines = [
@@ -121,7 +122,7 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-// --- $CARD balance for a wallet address (read from chain) ---
+// --- $NCCC balance for a wallet address (read from chain) ---
 const JETTON_DECIMALS = 9;
 app.get('/api/wallet/card-balance', async (req, res) => {
   const address = (req.query.address || '').toString().trim();
@@ -162,8 +163,8 @@ function authAdmin(req) {
   return key === ADMIN_API_KEY;
 }
 
-// --- Swap: verify user has $CARD, return tokens to credit (1 $CARD = 10 tokens) ---
-const SWAP_RATE = 10; // 1 $CARD = 10 in-game tokens
+// --- Swap: verify user has $NCCC, return tokens to credit (1 $NCCC = 10 tokens) ---
+const SWAP_RATE = 10; // 1 $NCCC = 10 in-game tokens
 app.post('/api/swap', async (req, res) => {
   const { address, amount } = req.body || {};
   const cardAmount = typeof amount === 'number' ? amount : parseInt(amount, 10);
@@ -182,7 +183,7 @@ app.post('/api/swap', async (req, res) => {
       { type: 'slice', cell: ownerSlice },
     ]);
     if (getWalletRes.exit_code !== 0) {
-      return res.json({ success: false, error: 'Could not get $CARD wallet' });
+      return res.json({ success: false, error: 'Could not get $NCCC wallet' });
     }
     const jettonWalletAddress = getWalletRes.stack.readAddress();
     const dataRes = await client.runMethod(jettonWalletAddress, 'get_wallet_data');
@@ -192,7 +193,7 @@ app.post('/api/swap', async (req, res) => {
     const balanceRaw = dataRes.stack.readBigNumber();
     const balance = Number(balanceRaw) / Math.pow(10, JETTON_DECIMALS);
     if (balance < cardAmount) {
-      return res.json({ success: false, error: 'Not enough $CARD. You have ' + balance + ', need ' + cardAmount });
+      return res.json({ success: false, error: 'Not enough $NCCC. You have ' + balance + ', need ' + cardAmount });
     }
     const tokensToCredit = cardAmount * SWAP_RATE;
     res.json({ success: true, tokensToCredit, cardAmount });
@@ -202,7 +203,7 @@ app.post('/api/swap', async (req, res) => {
   }
 });
 
-// --- Withdraw: mint $CARD to user (admin sends tx) ---
+// --- Withdraw: mint $NCCC to user (admin sends tx) ---
 app.post('/api/withdraw', async (req, res) => {
   const { address, amount } = req.body || {};
   if (!address || typeof amount !== 'number' || amount < 1) {
@@ -220,7 +221,7 @@ app.post('/api/withdraw', async (req, res) => {
   }
 });
 
-// --- Admin: mint $CARD to any address ---
+// --- Admin: mint $NCCC to any address ---
 app.post('/api/admin/mint', async (req, res) => {
   if (!authAdmin(req)) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -331,8 +332,8 @@ function getSetupHtml() {
     <label>Admin mnemonic (12–24 words)</label>
     <p style="color:#666;font-size:0.75rem;margin:-8px 0 8px 0;">Wallet that pays for minting. Use a separate dev wallet, not your main one.</p>
     <textarea name="adminMnemonic" placeholder="word1 word2 word3 ..." required></textarea>
-    <label>$CARD minter contract address</label>
-    <p style="color:#666;font-size:0.75rem;margin:-8px 0 8px 0;">The Jetton <strong>contract</strong> address (EQ... or UQ...) from deploying $CARD — <em>not</em> your personal wallet address. See contracts/README.md.</p>
+    <label>$NCCC minter contract address</label>
+    <p style="color:#666;font-size:0.75rem;margin:-8px 0 8px 0;">The Jetton <strong>contract</strong> address (EQ... or UQ...) from deploying $NCCC — <em>not</em> your personal wallet address. See contracts/README.md.</p>
     <input type="text" name="cardMinterAddress" placeholder="EQ... or UQ..." required />
     <label>Network</label>
     <select name="network">
@@ -398,7 +399,7 @@ app.listen(PORT, () => {
   console.log(`Token Clicker backend on http://localhost:${PORT}`);
   console.log('  GET  /setup            - Admin setup UI (enter mnemonic, minter, etc.)');
   console.log('  GET  /api/config       - minter address & network');
-  console.log('  POST /api/swap        - body: { address, amount } ($CARD → tokens)');
+  console.log('  POST /api/swap        - body: { address, amount } ($NCCC → tokens)');
   console.log('  POST /api/withdraw     - body: { address, amount }');
   console.log('  POST /api/admin/mint   - body: { address, amount }, header: x-api-key');
   console.log('  GET  /api/admin/status - header: x-api-key');
